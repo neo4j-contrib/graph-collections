@@ -8,7 +8,7 @@
   </parent>
 
   <groupId>org.neo4j</groupId>
-  <artifactId>neo4j-collections</artifactId>
+  <artifactId>neo4j-graph-collections</artifactId>
   <version>1.4-SNAPSHOT</version>
   <name>Neo4j - Collections</name>
   <description>Providing in-graph collections.</description>
