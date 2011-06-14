@@ -267,8 +267,9 @@ public class Timeline implements TimelineIndex
                 }
                 else if ( timestamp == previousTime )
                 {
-                    previousLast.createRelationshipTo( nodeToAdd,
+                	Relationship instanceRel = previousLast.createRelationshipTo( nodeToAdd,
                             RelTypes.TIMELINE_INSTANCE );
+                	instanceRel.setProperty( TIMELINE_NAME, name );
                 }
                 else
                 {
@@ -288,16 +289,18 @@ public class Timeline implements TimelineIndex
                     if ( previousTimestamp == timestamp )
                     {
                         // just connect previous with node to add
-                        previous.createRelationshipTo( nodeToAdd,
+                    	Relationship instanceRel = previous.createRelationshipTo( nodeToAdd,
                                 RelTypes.TIMELINE_INSTANCE );
+                    	instanceRel.setProperty( TIMELINE_NAME, name );
                         return;
                     }
                     long nextTimestamp = (Long) next.getProperty( TIMESTAMP );
                     if ( nextTimestamp == timestamp )
                     {
                         // just connect next with node to add
-                        next.createRelationshipTo( nodeToAdd,
+                    	Relationship instanceRel = next.createRelationshipTo( nodeToAdd,
                                 RelTypes.TIMELINE_INSTANCE );
+                    	instanceRel.setProperty( TIMELINE_NAME, name );
                         return;
                     }
 
