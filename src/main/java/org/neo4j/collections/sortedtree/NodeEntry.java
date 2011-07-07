@@ -19,10 +19,13 @@
  */
 package org.neo4j.collections.sortedtree;
 
+import java.util.Iterator;
+import java.util.ArrayList;
+
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.btree.BTree.RelTypes;
+import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
 
 class NodeEntry
 {
@@ -99,16 +102,18 @@ class NodeEntry
 		}
 		return null;
 	}
-	
+
+/*	
 	public void remove()
 	{
         treeNode.removeEntry( this.getTheNode() );
 	}
+*/
     
 	@Override
 	public String toString()
 	{
-		return "Entry[" + getTheNode() + "]";
+		return "Entry[" + getNodes() + "]";
 	}
 	
 	boolean isLeaf()
@@ -126,15 +131,65 @@ class NodeEntry
 		return true;
 	}
 	
-    Node getTheNode()
+	Node getANode()
+	{
+			Iterable<Relationship> rels = getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING);
+			for(Relationship rel: rels){
+				return rel.getEndNode();
+			}
+			throw new RuntimeException("Key entry is empty");
+	}
+	
+	class NodeIterator implements Iterator<Node>{
+		
+		Iterator<Relationship> rels;
+		
+		NodeIterator(Iterator<Relationship> rels){
+			this.rels = rels;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return rels.hasNext();
+		}
+
+		@Override
+		public Node next() {
+			return rels.next().getEndNode();
+		}
+
+		@Override
+		public void remove() {
+			rels.remove();
+		}
+	}
+
+	class NodeIterable implements Iterable<Node>{
+
+		@Override
+		public Iterator<Node> iterator() {
+			Iterable<Relationship> rels = getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING);
+			return new NodeIterator(rels.iterator());
+		}
+		
+	}
+	
+    Iterable<Node> getNodes()
     {
-        return getBTree().getGraphDb().getNodeById( 
-            (Long) getUnderlyingRelationship().getProperty( NODE_ID ) ); 
+    	return new NodeIterable();
+    	
+    	
+//        return getBTree().getGraphDb().getNodeById( 
+//            (Long) getUnderlyingRelationship().getProperty( NODE_ID ) ); 
     }
     
-    void setTheNode( Node node )
+    void setNode( Node node )
     {
-        getUnderlyingRelationship().setProperty( NODE_ID, node.getId() );
+    	Relationship rel = getEndNode().createRelationshipTo(node, RelTypes.KEY_VALUE);
+    	String treeName = treeNode.getBTree().getTreeName();
+    	if(treeName != null){
+    		rel.setProperty(SortedTree.TREE_NAME, treeName);
+    	}
     }
     
     
@@ -152,10 +207,22 @@ class NodeEntry
     {
 		assert node != null;
 		this.treeNode = node;
-		Node theNode = getTheNode();
+//		Node theNode = getTheNode();
+		String tmp = "";
+		ArrayList<Node> nle = new ArrayList<Node>();
+		for(Node n: getNodes()){
+			tmp = tmp + " " + n.getProperty("name") + n;
+			nle.add(n);
+		}
+		
+		for(Relationship rel: getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING)){
+			rel.delete();
+		}
 		entryRelationship.delete();
 		entryRelationship = startNode.createRelationshipTo( endNode, 
 			RelTypes.KEY_ENTRY );
-        setTheNode( theNode );
+		for(Node n: nle){
+			setNode( n );
+		}
     }
 }
