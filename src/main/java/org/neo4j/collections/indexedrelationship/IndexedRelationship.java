@@ -48,6 +48,7 @@
 package org.neo4j.collections.indexedrelationship;
 
 import java.util.Comparator;
+import java.util.Iterator;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -56,19 +57,161 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.sortedtree.SortedTree;
 
-public class IndexedRelationship {
+public class IndexedRelationship implements Iterable<Relationship>{
+
+	public static final String directionPropertyName = "relationship_direction"; 
 	
 	private final GraphDatabaseService graphDb; 
 	private final SortedTree bTree;
 	private final Node indexedNode;
-	private final RelationshipType relType; 
-	
+	private final RelationshipType relType;
+	private final Direction direction;
 	
 	private Node createTreeRoot(Node node){
 		Node treeRoot = graphDb.createNode();
 		indexedNode.createRelationshipTo(treeRoot, SortedTree.RelTypes.TREE_ROOT);
 		return treeRoot;
 		
+	}
+	
+	private class DirectRelationship implements Relationship{
+
+		final Node startNode;
+		final Node endNode;
+		final RelationshipType relType;
+		final Direction direction;
+		final Relationship endRelationship;
+		
+		DirectRelationship(Node startNode, Node endNode, RelationshipType relType, Direction direction){
+			this.startNode = startNode;
+			this.endNode = endNode;
+			this.relType = relType;
+			this.direction = direction;
+			this.endRelationship = endNode.getSingleRelationship(SortedTree.RelTypes.KEY_VALUE, Direction.INCOMING); 
+		}
+		
+		@Override
+		public GraphDatabaseService getGraphDatabase() {
+			return graphDb;
+		}
+
+		@Override
+		public Object getProperty(String key) {
+			return endRelationship.getProperty(key);
+		}
+
+		@Override
+		public Object getProperty(String key, Object defaultValue) {
+			return endRelationship.getProperty(key, defaultValue);
+		}
+
+		@Override
+		public Iterable<String> getPropertyKeys() {
+			return endRelationship.getPropertyKeys();
+		}
+
+		@Override
+		@Deprecated
+		public Iterable<Object> getPropertyValues() {
+			return endRelationship.getPropertyValues();
+		}
+
+		@Override
+		public boolean hasProperty(String key) {
+			return endRelationship.hasProperty(key);
+		}
+
+		@Override
+		public Object removeProperty(String key) {
+			return endRelationship.removeProperty(key);
+		}
+
+		@Override
+		public void setProperty(String key, Object value) {
+			if(key.equals(SortedTree.TREE_NAME) || key.equals(SortedTree.COMPARATOR_CLASS) || key.equals(SortedTree.IS_UNIQUE_INDEX)){
+				throw new RuntimeException("Property value "+key+" is not a valid property name. This property is maintained by the SortedTree implementation");
+			}
+			endRelationship.setProperty(key, value);
+		}
+
+		@Override
+		public void delete() {
+			removeRelationshipTo(endNode);
+			
+		}
+
+		@Override
+		public Node getEndNode() {
+			return endNode;
+		}
+
+		@Override
+		public long getId() {
+			throw new UnsupportedOperationException("Indexed relationships don't have an ID");
+		}
+
+		@Override
+		public Node[] getNodes() {
+			Node[] nodes = new Node[2];
+			nodes[0] = startNode;
+			nodes[1] = endNode;
+			return nodes;
+		}
+
+		@Override
+		public Node getOtherNode(Node node) {
+			if(node.equals(startNode)){
+				return endNode;
+			}else if(node.equals(endNode)){
+				return startNode;
+			}else{
+				throw new RuntimeException("Node is neither the start nor the end node");
+			}
+		}
+
+		@Override
+		public Node getStartNode() {
+			return startNode;
+		}
+
+		@Override
+		public RelationshipType getType() {
+			return relType;
+		}
+
+		@Override
+		public boolean isType(RelationshipType relType) {
+			if(relType.equals(this.relType)){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		
+	}
+	
+	private class RelationshipIterator implements Iterator{
+
+		Iterator<Node> it = bTree.iterator();
+		Node currentNode = null;
+		
+		@Override
+		public boolean hasNext() {
+			return it.hasNext();
+		}
+
+		@Override
+		public Object next() {
+			currentNode = it.next();
+			return new DirectRelationship(indexedNode, currentNode, relType, Direction.OUTGOING);
+		}
+
+		@Override
+		public void remove() {
+			if(currentNode != null){
+				removeRelationshipTo(currentNode);
+			}
+		}
 	}
 	
 	/**
@@ -78,10 +221,11 @@ public class IndexedRelationship {
 	 * @param node the start node of the relationship. 
 	 * @param graphDb the {@link GraphDatabaseService} instance.
 	 */
-	public IndexedRelationship(RelationshipType relType, Comparator<Node> nodeComparator, boolean isUniqueIndex, Node node, GraphDatabaseService graphDb){
+	public IndexedRelationship(RelationshipType relType, Direction direction, Comparator<Node> nodeComparator, boolean isUniqueIndex, Node node, GraphDatabaseService graphDb){
 		indexedNode = node;
 		this.relType = relType;
 		this.graphDb = graphDb;
+		this.direction = direction;
 		Relationship rel = node.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
 		Node treeNode = ( rel == null ) ? createTreeRoot(node) : rel.getEndNode();
 		bTree = new SortedTree(graphDb, treeNode, nodeComparator, isUniqueIndex, relType.name());
@@ -93,8 +237,9 @@ public class IndexedRelationship {
 	 * @return {@code true} if this call modified the index, i.e. if the node
 	 * wasn't already added.
 	 */
-	public boolean createRelationshipTo(Node node){
-		return bTree.addNode(node);
+	public Relationship createRelationshipTo(Node node){
+		bTree.addNode(node);
+		return new DirectRelationship(indexedNode, node, relType, Direction.OUTGOING);
 	}
 
 	/**
@@ -131,8 +276,8 @@ public class IndexedRelationship {
 	/**
 	 * @return the {@link Node}s whose incoming relationships are being indexed.  
 	 */
-	public Iterable<Node> getIndexEntries(){
-		return bTree;
+	public Iterator<Relationship> iterator(){
+		return new RelationshipIterator();
 	}
 	
 }
