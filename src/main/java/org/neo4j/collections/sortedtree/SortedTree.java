@@ -30,14 +30,9 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.collections.btree.BTree;
 
 /**
- * A sorted list of nodes (structured as a tree in neo4j).
- * 
- * This class isn't ready for general usage yet and use of it is discouraged.
- * 
- * Builds in {@link BTree}.
+ * A sorted list of nodes (structured as a Btree in neo4j).
  */
 public class SortedTree implements Iterable<Node>
 {
@@ -118,7 +113,12 @@ public class SortedTree implements Iterable<Node>
         	treeRoot.getUnderlyingNode().getSingleRelationship(RelTypes.TREE_ROOT, Direction.INCOMING).setProperty( key, value );
         }
     }
-	
+
+    private void acquireLock(){
+    	Relationship rel = treeRoot.getUnderlyingNode().getSingleRelationship(RelTypes.TREE_ROOT, Direction.INCOMING);
+    	rel.getStartNode().removeProperty("___dummy_property_to_acquire_lock_____");
+    }
+    
 	void makeRoot( TreeNode newRoot )
 	{
 		Relationship rel = treeRoot.getUnderlyingNode().getSingleRelationship( 
@@ -138,6 +138,7 @@ public class SortedTree implements Iterable<Node>
 	 */
 	public void delete()
 	{
+		acquireLock();
 		Relationship rel = treeRoot.getUnderlyingNode().getSingleRelationship( 
 			RelTypes.TREE_ROOT, Direction.INCOMING );
 		treeRoot.delete();
@@ -152,6 +153,7 @@ public class SortedTree implements Iterable<Node>
 	 */
 	public void delete( int commitInterval )
 	{
+		acquireLock();
 		Relationship rel = treeRoot.getUnderlyingNode().getSingleRelationship( 
 			RelTypes.TREE_ROOT, Direction.INCOMING );
 		treeRoot.delete( commitInterval, 0);
@@ -166,6 +168,7 @@ public class SortedTree implements Iterable<Node>
 	 */
 	public boolean addNode( Node node )
 	{
+		acquireLock();
 		return treeRoot.addEntry( node, true );
 	}
     
@@ -187,6 +190,7 @@ public class SortedTree implements Iterable<Node>
 	 */
 	public boolean removeNode( Node node )
 	{
+		acquireLock();
 		return treeRoot.removeEntry( node );
 	}
 	
