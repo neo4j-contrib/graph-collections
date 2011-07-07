@@ -58,10 +58,18 @@ import org.neo4j.collections.sortedtree.SortedTree;
 
 public class IndexedRelationship {
 	
+	private final GraphDatabaseService graphDb; 
 	private final SortedTree bTree;
 	private final Node indexedNode;
 	private final RelationshipType relType; 
 	
+	
+	private Node createTreeRoot(Node node){
+		Node treeRoot = graphDb.createNode();
+		indexedNode.createRelationshipTo(treeRoot, SortedTree.RelTypes.TREE_ROOT);
+		return treeRoot;
+		
+	}
 	
 	/**
   	 * @param relType {@link RelationshipType} of the relationships maintained in the index.
@@ -73,8 +81,9 @@ public class IndexedRelationship {
 	public IndexedRelationship(RelationshipType relType, Comparator<Node> nodeComparator, boolean isUniqueIndex, Node node, GraphDatabaseService graphDb){
 		indexedNode = node;
 		this.relType = relType;
+		this.graphDb = graphDb;
 		Relationship rel = node.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
-		Node treeNode = ( rel == null ) ? graphDb.createNode() : rel.getEndNode();
+		Node treeNode = ( rel == null ) ? createTreeRoot(node) : rel.getEndNode();
 		bTree = new SortedTree(graphDb, treeNode, nodeComparator, isUniqueIndex, relType.name());
 	}
 
