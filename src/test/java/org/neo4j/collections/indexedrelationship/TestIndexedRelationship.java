@@ -84,8 +84,9 @@ public class TestIndexedRelationship extends Neo4jTestCase
 			if(count == 1){
 				assertTrue( rel.getEndNode().equals(n1) || rel.getEndNode().equals(n3));
 			}
-			
+			count++;
 		}
+		assertTrue(count == 2);
 		count = 0;
 		for(Relationship rel: re2.expand(indexedNode)){
 			if(count == 0){
@@ -94,7 +95,8 @@ public class TestIndexedRelationship extends Neo4jTestCase
 			if(count == 1){
 				assertTrue( rel.getEndNode().equals(n4) );
 			}
-			
+			count++;
 		}
+		assertTrue(count == 2);
 	}
 }

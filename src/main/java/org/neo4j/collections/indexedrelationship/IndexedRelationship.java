@@ -69,7 +69,8 @@ public class IndexedRelationship implements Iterable<Relationship>{
 	
 	private Node createTreeRoot(Node node){
 		Node treeRoot = graphDb.createNode();
-		indexedNode.createRelationshipTo(treeRoot, SortedTree.RelTypes.TREE_ROOT);
+		Relationship rel = indexedNode.createRelationshipTo(treeRoot, SortedTree.RelTypes.TREE_ROOT);
+		rel.setProperty(directionPropertyName, direction.name());		
 		return treeRoot;
 		
 	}
@@ -239,6 +240,13 @@ public class IndexedRelationship implements Iterable<Relationship>{
 	 */
 	public Relationship createRelationshipTo(Node node){
 		bTree.addNode(node);
+		for(Relationship rel: node.getRelationships(SortedTree.RelTypes.KEY_VALUE, Direction.INCOMING)){
+			if(rel.getProperty(SortedTree.TREE_NAME).equals(relType.name())){
+				if(!rel.hasProperty(directionPropertyName)){
+					rel.setProperty(directionPropertyName, direction.name());
+				}
+			}
+		}
 		return new DirectRelationship(indexedNode, node, relType, Direction.OUTGOING);
 	}
 
