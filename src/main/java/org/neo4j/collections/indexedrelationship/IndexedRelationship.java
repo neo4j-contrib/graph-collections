@@ -56,6 +56,9 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.sortedtree.SortedTree;
+import org.neo4j.collections.sortedtree.PropertySortedTree;
+
+import org.neo4j.collections.propertytype.ComparablePropertyType;
 
 public class IndexedRelationship implements Iterable<Relationship>{
 
@@ -191,7 +194,7 @@ public class IndexedRelationship implements Iterable<Relationship>{
 		
 	}
 	
-	private class RelationshipIterator implements Iterator{
+	private class RelationshipIterator implements Iterator<Relationship>{
 
 		Iterator<Node> it = bTree.iterator();
 		Node currentNode = null;
@@ -202,7 +205,7 @@ public class IndexedRelationship implements Iterable<Relationship>{
 		}
 
 		@Override
-		public Object next() {
+		public Relationship next() {
 			currentNode = it.next();
 			return new DirectRelationship(indexedNode, currentNode, relType, Direction.OUTGOING);
 		}
@@ -214,6 +217,24 @@ public class IndexedRelationship implements Iterable<Relationship>{
 			}
 		}
 	}
+
+	/**
+  	 * @param relType {@link RelationshipType} of the relationships maintained in the index.
+	 * @param nodeComparator the {@link Comparator} to use to sort the nodes.
+	 * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
+	 * @param node the start node of the relationship. 
+	 * @param graphDb the {@link GraphDatabaseService} instance.
+	 */
+	public <T> IndexedRelationship(RelationshipType relType, Direction direction, ComparablePropertyType<T> propertyType, boolean isUniqueIndex, Node node, GraphDatabaseService graphDb){
+		indexedNode = node;
+		this.relType = relType;
+		this.graphDb = graphDb;
+		this.direction = direction;
+		Relationship rel = node.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
+		Node treeNode = ( rel == null ) ? createTreeRoot(node) : rel.getEndNode();
+		bTree = new PropertySortedTree<T>(graphDb, treeNode, propertyType, isUniqueIndex, relType.name());
+	}
+	
 	
 	/**
   	 * @param relType {@link RelationshipType} of the relationships maintained in the index.

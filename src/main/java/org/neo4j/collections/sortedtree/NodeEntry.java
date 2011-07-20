@@ -207,22 +207,19 @@ class NodeEntry
     {
 		assert node != null;
 		this.treeNode = node;
-//		Node theNode = getTheNode();
-		String tmp = "";
-		ArrayList<Node> nle = new ArrayList<Node>();
-		for(Node n: getNodes()){
-			tmp = tmp + " " + n.getProperty("name") + n;
-			nle.add(n);
-		}
-		
+		ArrayList<TempRelationship> trls = new ArrayList<TempRelationship>();
 		for(Relationship rel: getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING)){
+			trls.add(new TempRelationship(rel));
 			rel.delete();
 		}
 		entryRelationship.delete();
 		entryRelationship = startNode.createRelationshipTo( endNode, 
 			RelTypes.KEY_ENTRY );
-		for(Node n: nle){
-			setNode( n );
+		for(TempRelationship trl: trls){
+			Relationship rel = getEndNode().createRelationshipTo(trl.getEndNode(), RelTypes.KEY_VALUE);	
+			for(String key: trl.getProperties().keySet()){
+				rel.setProperty(key, trl.getProperties().get(key));
+			}
 		}
     }
 }

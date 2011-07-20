@@ -23,6 +23,7 @@ import java.lang.UnsupportedOperationException;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.HashMap;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -30,6 +31,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.collections.propertytype.ComparablePropertyType;
 
 /**
  * A sorted list of nodes (structured as a Btree in neo4j).
@@ -124,12 +126,16 @@ public class SortedTree implements Iterable<Node>
 		Relationship rel = treeRoot.getUnderlyingNode().getSingleRelationship( 
 			RelTypes.TREE_ROOT, Direction.INCOMING );
 		Node startNode = rel.getStartNode();
+		HashMap<String, Object> props = new HashMap<String, Object>();
+		for(String key: rel.getPropertyKeys()){
+			props.put(key, rel.getProperty(key));
+		}
 		rel.delete();
 		Relationship newRel = startNode.createRelationshipTo( newRoot.getUnderlyingNode(), 
 			RelTypes.TREE_ROOT );
-		newRel.setProperty(TREE_NAME, treeName);
-		newRel.setProperty(IS_UNIQUE_INDEX, isUniqueIndex);
-		newRel.setProperty(COMPARATOR_CLASS, nodeComparator.getClass().getName());
+		for(String key: props.keySet()){
+			newRel.setProperty(key, props.get(key));
+		}
 		treeRoot = newRoot;
 	}
 	
@@ -173,7 +179,7 @@ public class SortedTree implements Iterable<Node>
 	}
     
     /**
-     * @param node the {@link Node} to check if it's in the list.
+     * @param node the {@link Node} to check if it's in the tree.
      * @return {@code true} if this list contains the node, otherwise
      * {@code false}.
      */
@@ -181,6 +187,11 @@ public class SortedTree implements Iterable<Node>
     {
         return treeRoot.containsEntry( node );
     }
+
+
+	protected <T> boolean containsValue(T val, ComparablePropertyType<T> comp) {
+		return treeRoot.containsValue( val, comp );
+	}
 	
 	/**
 	 * Removes the node from this list.
@@ -196,7 +207,7 @@ public class SortedTree implements Iterable<Node>
 	
 	int getOrder()
 	{
-		return 9;
+		return 25;
 	}
 	
 	GraphDatabaseService getGraphDb()

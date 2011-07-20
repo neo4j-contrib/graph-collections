@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.collections.propertytype.ComparablePropertyType;
 import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
 import org.neo4j.kernel.AbstractGraphDatabase;
 
@@ -269,6 +270,39 @@ class TreeNode {
 		return true;
 	}
 
+	<T> boolean containsValue(T val, ComparablePropertyType<T> comp) {
+		int entryCount = 0;
+		NodeEntry keyEntry = getFirstEntry();
+		while (keyEntry != null) {
+			Node currentNode = keyEntry.getANode();
+			if (comp.compare(val, currentNode) == 0) {
+				return true;
+			}
+			entryCount++;
+			if (comp.compare(val, currentNode) < 0) {
+				// check if we have subtree
+				TreeNode subTree = keyEntry.getBeforeSubTree();
+				if (subTree != null) {
+					return subTree.containsValue(val, comp);
+				}
+				return false;
+			}
+			// else if last entry, check for sub tree or add last
+			if (keyEntry.getNextKey() == null) {
+				// check if we have subtree
+				TreeNode subTree = keyEntry.getAfterSubTree();
+				if (subTree != null) {
+					return subTree.containsValue(val, comp);
+				}
+				// ok just append the element
+				return false;
+			}
+			keyEntry = keyEntry.getNextKey();
+		}
+		return false;
+	}
+	
+	
 	boolean containsEntry(Node theNode) {
 		int entryCount = 0;
 		NodeEntry keyEntry = getFirstEntry();
@@ -521,26 +555,32 @@ class TreeNode {
 		}
 		entryToMoveUp.getEndNode().delete();
 		
-		ArrayList<Node> nl1 = new ArrayList<Node>();
+		ArrayList<TempRelationship> nl1 = new ArrayList<TempRelationship>();
 		for(Relationship rel: entryToMoveDown.getEndNode().getRelationships(SortedTree.RelTypes.KEY_VALUE, Direction.OUTGOING)){
-			nl1.add(rel.getEndNode());
+			nl1.add(new TempRelationship(rel));
 			rel.delete();
 		}
 		entryToMoveUp.move(parentNode, entryToMoveDown.getStartNode(), entryToMoveDown.getEndNode());
-		ArrayList<Node> nl2 = new ArrayList<Node>();
+		ArrayList<TempRelationship> nl2 = new ArrayList<TempRelationship>();
 		for(Relationship rel: entryToMoveDown.getEndNode().getRelationships(SortedTree.RelTypes.KEY_VALUE, Direction.OUTGOING)){
-			nl2.add(rel.getEndNode());
+			nl2.add(new TempRelationship(rel));
 			rel.delete();
 		}
-		for(Node n: nl1){
-			entryToMoveDown.getEndNode().createRelationshipTo(n, SortedTree.RelTypes.KEY_VALUE);
+		for(TempRelationship trl: nl1){
+			Relationship rel = entryToMoveDown.getEndNode().createRelationshipTo(trl.getEndNode(), SortedTree.RelTypes.KEY_VALUE);
+			for(String key: trl.getProperties().keySet()){
+				rel.setProperty(key, trl.getProperties().get(key));
+			}
 		}
 		
 		Node newStartNode = bTree.getGraphDb().createNode();
 		Node oetmd = entryToMoveDown.getEndNode(); 
 		entryToMoveDown.move(this, newStartNode, treeNode);
-		for(Node n: nl2){
-			oetmd.createRelationshipTo(n, SortedTree.RelTypes.KEY_VALUE);
+		for(TempRelationship trl: nl2){
+			Relationship rel = oetmd.createRelationshipTo(trl.getEndNode(), SortedTree.RelTypes.KEY_VALUE);
+			for(String key: trl.getProperties().keySet()){
+				rel.setProperty(key, trl.getProperties().get(key));
+			}
 		}
 		Node parentToReAttachTo = disconnectFromParent();
 		treeNode = newStartNode;
@@ -569,25 +609,31 @@ class TreeNode {
 		rightSibling.treeNode = entryToMoveUp.getEndNode();
 		rightSibling.connectToParent(rightParentToReAttachTo);
 		entryToMoveUp.getStartNode().delete();
-		ArrayList<Node> nl1 = new ArrayList<Node>();
+		ArrayList<TempRelationship> nl1 = new ArrayList<TempRelationship>();
 		for(Relationship rel: entryToMoveDown.getEndNode().getRelationships(SortedTree.RelTypes.KEY_VALUE, Direction.OUTGOING)){
-			nl1.add(rel.getEndNode());
+			nl1.add(new TempRelationship(rel));
 			rel.delete();
 		}
 		entryToMoveUp.move(parentNode, entryToMoveDown.getStartNode(), entryToMoveDown.getEndNode());
-		ArrayList<Node> nl2 = new ArrayList<Node>();
+		ArrayList<TempRelationship> nl2 = new ArrayList<TempRelationship>();
 		for(Relationship rel: entryToMoveDown.getEndNode().getRelationships(SortedTree.RelTypes.KEY_VALUE, Direction.OUTGOING)){
-			nl2.add(rel.getEndNode());
+			nl2.add(new TempRelationship(rel));
 			rel.delete();
 		}
-		for(Node n: nl1){
-			entryToMoveDown.getEndNode().createRelationshipTo(n, SortedTree.RelTypes.KEY_VALUE);
+		for(TempRelationship trl: nl1){
+			Relationship rel = entryToMoveDown.getEndNode().createRelationshipTo(trl.getEndNode(), SortedTree.RelTypes.KEY_VALUE);
+			for(String key: trl.getProperties().keySet()){
+				rel.setProperty(key, trl.getProperties().get(key));
+			}
 		}
 		Node newLastNode = bTree.getGraphDb().createNode();
 		Node oetmd = entryToMoveDown.getEndNode();		
 		entryToMoveDown.move(this, this.getLastEntry().getEndNode(), newLastNode);
-		for(Node n: nl2){
-			oetmd.createRelationshipTo(n, SortedTree.RelTypes.KEY_VALUE);
+		for(TempRelationship trl: nl2){
+			Relationship rel = oetmd.createRelationshipTo(trl.getEndNode(), SortedTree.RelTypes.KEY_VALUE);
+			for(String key: trl.getProperties().keySet()){
+				rel.setProperty(key, trl.getProperties().get(key));
+			}
 		}
 		if (subTree != null) {
 			subTree.connectToParent(newLastNode);
