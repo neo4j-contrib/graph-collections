@@ -27,7 +27,7 @@ import java.util.Iterator;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.propertytype.ComparablePropertyType;
+import org.neo4j.collections.propertytype.PropertyComparator;
 import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
 import org.neo4j.kernel.AbstractGraphDatabase;
 
@@ -271,7 +271,7 @@ class TreeNode {
 		return true;
 	}
 
-	<T> Iterable<Node> getWithValue(T val, ComparablePropertyType<T> comp) {
+	<T> Iterable<Node> getWithValue(T val, PropertyComparator<T> comp) {
 		int entryCount = 0;
 		NodeEntry keyEntry = getFirstEntry();
 		while (keyEntry != null) {
@@ -330,7 +330,7 @@ class TreeNode {
 		
 	}
 	
-	<T> boolean containsValue(T val, ComparablePropertyType<T> comp) {
+	<T> boolean containsValue(T val, PropertyComparator<T> comp) {
 		int entryCount = 0;
 		NodeEntry keyEntry = getFirstEntry();
 		while (keyEntry != null) {

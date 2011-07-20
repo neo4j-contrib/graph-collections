@@ -31,7 +31,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.collections.propertytype.ComparablePropertyType;
+import org.neo4j.collections.propertytype.PropertyComparator;
 
 /**
  * A sorted list of nodes (structured as a Btree in neo4j).
@@ -189,11 +189,11 @@ public class SortedTree implements Iterable<Node>
     }
 
 
-	protected <T> boolean containsValue(T val, ComparablePropertyType<T> comp) {
+	protected <T> boolean containsValue(T val, PropertyComparator<T> comp) {
 		return treeRoot.containsValue( val, comp );
 	}
 
-    protected <T> Iterable<Node> getWithValue(T val, ComparablePropertyType<T> comp){
+    protected <T> Iterable<Node> getWithValue(T val, PropertyComparator<T> comp){
     	return treeRoot.getWithValue(val, comp);
     }
 
