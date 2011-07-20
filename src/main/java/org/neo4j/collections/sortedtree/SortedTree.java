@@ -192,6 +192,11 @@ public class SortedTree implements Iterable<Node>
 	protected <T> boolean containsValue(T val, ComparablePropertyType<T> comp) {
 		return treeRoot.containsValue( val, comp );
 	}
+
+    protected <T> Iterable<Node> getWithValue(T val, ComparablePropertyType<T> comp){
+    	return treeRoot.getWithValue(val, comp);
+    }
+
 	
 	/**
 	 * Removes the node from this list.

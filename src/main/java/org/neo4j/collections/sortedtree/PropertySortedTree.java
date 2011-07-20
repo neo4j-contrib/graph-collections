@@ -37,6 +37,10 @@ public class PropertySortedTree<T> extends SortedTree{
     	return containsValue(val, propertyType);
     }
     
+    public Iterable<Node> getWithValue(T val){
+    	return getWithValue(val, propertyType);
+    }
+    
 	public PropertySortedTree(GraphDatabaseService graphDb, Node rootNode,
 			ComparablePropertyType<T> propertyType, boolean isUniqueIndex,
 			String treeName) {

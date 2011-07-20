@@ -22,6 +22,7 @@ package org.neo4j.collections.sortedtree;
 import javax.transaction.Transaction;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
@@ -270,6 +271,65 @@ class TreeNode {
 		return true;
 	}
 
+	<T> Iterable<Node> getWithValue(T val, ComparablePropertyType<T> comp) {
+		int entryCount = 0;
+		NodeEntry keyEntry = getFirstEntry();
+		while (keyEntry != null) {
+			Node currentNode = keyEntry.getANode();
+			if (comp.compare(val, currentNode) == 0) {
+				return keyEntry.getNodes();
+			}
+			entryCount++;
+			if (comp.compare(val, currentNode) < 0) {
+				// check if we have subtree
+				TreeNode subTree = keyEntry.getBeforeSubTree();
+				if (subTree != null) {
+					return subTree.getWithValue(val, comp);
+				}
+				return new EmptyNodeIterable();
+			}
+			// else if last entry, check for sub tree or add last
+			if (keyEntry.getNextKey() == null) {
+				// check if we have subtree
+				TreeNode subTree = keyEntry.getAfterSubTree();
+				if (subTree != null) {
+					return subTree.getWithValue(val, comp);
+				}
+				// ok just append the element
+				return new EmptyNodeIterable();
+			}
+			keyEntry = keyEntry.getNextKey();
+		}
+		return new EmptyNodeIterable();
+	}
+
+	private class EmptyNodeIterable implements Iterable<Node>{
+
+		@Override
+		public Iterator<Node> iterator() {
+			return new EmptyNodeIterator();
+		}
+		
+	}
+	
+	private class EmptyNodeIterator implements Iterator<Node>{
+
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
+
+		@Override
+		public Node next() {
+			return null;
+		}
+
+		@Override
+		public void remove() {
+		}
+		
+	}
+	
 	<T> boolean containsValue(T val, ComparablePropertyType<T> comp) {
 		int entryCount = 0;
 		NodeEntry keyEntry = getFirstEntry();
