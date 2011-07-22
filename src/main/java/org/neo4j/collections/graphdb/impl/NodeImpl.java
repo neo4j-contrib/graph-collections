@@ -21,8 +21,6 @@ package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
-import org.neo4j.collections.graphdb.Property;
-import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipContainer;
 
@@ -34,7 +32,7 @@ import org.neo4j.graphdb.StopEvaluator;
 import org.neo4j.graphdb.Traverser;
 import org.neo4j.graphdb.Traverser.Order;
 
-public class NodeImpl implements Node{
+public class NodeImpl extends NodeLikeImpl implements Node{
 	
 	final org.neo4j.graphdb.Node node;
 	
@@ -45,134 +43,76 @@ public class NodeImpl implements Node{
 	@Override
 	public Relationship createRelationshipToExt(RelationshipContainer rc,
 			RelationshipType rt) {
-		return new RelationshipImpl(getNode().createRelationshipTo(rc.getNode(), rt));
+		return new RelationshipImpl(node.createRelationshipTo(rc.getNode(), rt));
 	}
 
 	@Override
 	public void delete() {
-		getNode().delete();
+		node.delete();
 	}
 
 	@Override
 	public long getId() {
-		return getNode().getId();
+		return node.getId();
 	}
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt() {
-		return new RelationshipIterable(getNode().getRelationships());
+	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
+			ReturnableEvaluator returnableEvaluator, Object... relTypesAndDirections) {
+		return node.traverse(order, stopEvaluator, returnableEvaluator, relTypesAndDirections);
 	}
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt(RelationshipType... arg0) {
-		return new RelationshipIterable(getNode().getRelationships( arg0)) ;
+	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
+			ReturnableEvaluator returnableEvaluator, RelationshipType relType, Direction dir) {
+		return node.traverse(order, stopEvaluator,	returnableEvaluator, relType, dir);
 	}
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt(Direction arg0) {
-		return new RelationshipIterable(getNode().getRelationships(arg0));
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(Direction arg0,
-			RelationshipType... arg1) {
-		return new RelationshipIterable(getNode().getRelationships(arg0, arg1));
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(RelationshipType arg0,
-			Direction arg1) {
-		return new RelationshipIterable(getNode().getRelationships(arg0, arg1));
-	}
-
-	@Override
-	public Relationship getSingleRelationshipExt(RelationshipType arg0,
-			Direction arg1) {
-		return new RelationshipImpl(getNode().getSingleRelationship(arg0, arg1));
-	}
-
-	@Override
-	public boolean hasRelationship() {
-		return getNode().hasRelationship();
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType... arg0) {
-		return getNode().hasRelationship(arg0);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction arg0) {
-		return getNode().hasRelationship(arg0);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction arg0, RelationshipType... arg1) {
-		return getNode().hasRelationship(arg0, arg1);
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType arg0, Direction arg1) {
-		return getNode().hasRelationship(arg0, arg1);
-	}
-
-	@Override
-	public Traverser traverse(Order arg0, StopEvaluator arg1,
-			ReturnableEvaluator arg2, Object... arg3) {
-		return getNode().traverse(arg0, arg1, arg2, arg3);
-	}
-
-	@Override
-	public Traverser traverse(Order arg0, StopEvaluator arg1,
-			ReturnableEvaluator arg2, RelationshipType arg3, Direction arg4) {
-		return getNode().traverse(arg0, arg1,	arg2, arg3, arg4);
-	}
-
-	@Override
-	public Traverser traverse(Order arg0, StopEvaluator arg1,
-			ReturnableEvaluator arg2, RelationshipType arg3, Direction arg4,
-			RelationshipType arg5, Direction arg6) {
-		return getNode().traverse(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
+			ReturnableEvaluator returnableEvaluator, RelationshipType relType1, Direction dir1,
+			RelationshipType relType2, Direction dir2) {
+		return node.traverse(order, stopEvaluator, returnableEvaluator, relType1, dir1, relType2, dir2);
 	}
 
 	@Override
 	public GraphDatabaseService getGraphDatabaseExt() {
-		return new GraphDatabaseImpl(getNode().getGraphDatabase());
+		return new GraphDatabaseImpl(node.getGraphDatabase());
 	}
 
 	@Override
-	public Object getProperty(String arg0) {
-		return getNode().getProperty(arg0);
+	public Object getProperty(String key) {
+		return node.getProperty(key);
 	}
 
 	@Override
-	public Object getProperty(String arg0, Object arg1) {
-		return getNode().getProperty(arg0, arg1);
+	public Object getProperty(String key, Object defaultValue) {
+		return node.getProperty(key, defaultValue);
 	}
 
 	@Override
 	public Iterable<String> getPropertyKeys() {
-		return getNode().getPropertyKeys();
+		return node.getPropertyKeys();
 	}
 
 	@Deprecated
 	public Iterable<Object> getPropertyValues() {
-		return getNode().getPropertyValues();
+		return node.getPropertyValues();
 	}
 
 	@Override
-	public boolean hasProperty(String arg0) {
-		return getNode().hasProperty(arg0);
+	public boolean hasProperty(String key) {
+		return node.hasProperty(key);
 	}
 
 	@Override
-	public Object removeProperty(String arg0) {
-		return getNode().removeProperty(arg0);
+	public Object removeProperty(String key) {
+		return node.removeProperty(key);
 	}
 
 	@Override
-	public void setProperty(String arg0, Object arg1) {
-		getNode().setProperty(arg0, arg1);
+	public void setProperty(String key, Object value) {
+		node.setProperty(key, value);
 	}
 
 	@Override
@@ -184,34 +124,6 @@ public class NodeImpl implements Node{
 	public org.neo4j.graphdb.PropertyContainer getPropertyContainer() {
 		return node;
 	}
-	
-
-	@Override
-	public <T> Property<T> getProperty(PropertyType<T> pt) {
-		return new PropertyImpl<T>(new NodeImpl(node), pt);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T getPropertyValue(PropertyType<T> pt) {
-		return (T)node.getProperty(pt.getName());
-	}
-
-	@Override
-	public <T> boolean hasProperty(PropertyType<T> pt) {
-		return node.hasProperty(pt.getName());
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T removeProperty(PropertyType<T> pt) {
-		return (T)node.removeProperty(pt.getName());
-	}
-
-	@Override
-	public <T> void setProperty(PropertyType<T> pt, T value) {
-		node.setProperty(pt.getName(), value);
-	}
 
 	@Override
 	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabase() {
@@ -220,8 +132,8 @@ public class NodeImpl implements Node{
 
 	@Override
 	public org.neo4j.graphdb.Relationship createRelationshipTo(
-			org.neo4j.graphdb.Node arg0, RelationshipType arg1) {
-		return node.createRelationshipTo(arg0, arg1);
+			org.neo4j.graphdb.Node node, RelationshipType relType) {
+		return node.createRelationshipTo(node, relType);
 	}
 
 	@Override
@@ -231,37 +143,31 @@ public class NodeImpl implements Node{
 
 	@Override
 	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			RelationshipType... arg0) {
-		return node.getRelationships();
+			RelationshipType... relTypes) {
+		return node.getRelationships(relTypes);
 	}
 
 	@Override
 	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			Direction arg0) {
-		return node.getRelationships(arg0);
+			Direction dir) {
+		return node.getRelationships(dir);
 	}
 
 	@Override
 	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			Direction arg0, RelationshipType... arg1) {
-		return node.getRelationships(arg0, arg1);
+			Direction dir, RelationshipType... relTypes) {
+		return node.getRelationships(dir, relTypes);
 	}
 
 	@Override
 	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			RelationshipType arg0, Direction arg1) {
-		return node.getRelationships(arg0, arg1);
+			RelationshipType relType, Direction dir) {
+		return node.getRelationships(relType, dir);
 	}
 
 	@Override
 	public org.neo4j.graphdb.Relationship getSingleRelationship(
-			RelationshipType arg0, Direction arg1) {
-		return node.getSingleRelationship(arg0, arg1);
+			RelationshipType relType, Direction dir) {
+		return node.getSingleRelationship(relType, dir);
 	}
-
-	@Override
-	public Iterable<PropertyType<?>> getPropertyTypes() {
-		return PropertyType.getPropertyTypes(this, getGraphDatabaseExt());
-	}
-	
 }

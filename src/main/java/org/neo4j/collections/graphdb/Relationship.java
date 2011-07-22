@@ -21,7 +21,7 @@ package org.neo4j.collections.graphdb;
 
 import org.neo4j.graphdb.RelationshipType;
 
-public interface Relationship extends RelationshipContainer, org.neo4j.graphdb.Relationship{
+public interface Relationship extends NodeLike, org.neo4j.graphdb.Relationship{
 
 	public RelationshipContainer getEndRelationshipContainer();
 	

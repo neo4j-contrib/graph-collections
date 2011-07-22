@@ -22,20 +22,17 @@ package org.neo4j.collections.graphdb.impl;
 import org.neo4j.collections.graphdb.EnhancedRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
-import org.neo4j.collections.graphdb.Property;
-import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipContainer;
 
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
 
-public class RelationshipImpl implements Relationship{
+public class RelationshipImpl extends NodeLikeImpl implements Relationship{
 
 	public static String NODE_ID = "org.neo4j.collections.graphdb.node_id";
 	
 	final org.neo4j.graphdb.Relationship rel;
-	org.neo4j.graphdb.Node node = null;
+	Node node = null;
 	
 	RelationshipImpl(org.neo4j.graphdb.Relationship rel){
 		this.rel = rel;
@@ -48,7 +45,11 @@ public class RelationshipImpl implements Relationship{
 			node.delete();
 		}
 	}
-
+	@Override
+	public org.neo4j.graphdb.Relationship getRelationship() {
+		return rel;
+	}
+	
 	@Override
 	public RelationshipContainer getEndRelationshipContainer() {
 		return new NodeImpl(rel.getEndNode());
@@ -138,72 +139,6 @@ public class RelationshipImpl implements Relationship{
 	}
 
 	@Override
-	public Relationship createRelationshipToExt(RelationshipContainer relCont,
-			RelationshipType relType) {
-		return new RelationshipImpl(getNode().createRelationshipTo(relCont.getNode(), relType));
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt() {
-		return new RelationshipIterable(getNode().getRelationships());
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			RelationshipType... relTypes) {
-		return new RelationshipIterable(getNode().getRelationships(relTypes));
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			Direction dir) {
-		return new RelationshipIterable(getNode().getRelationships(dir));
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			Direction dir, RelationshipType... relType) {
-		return new RelationshipIterable(getNode().getRelationships(dir, relType));	
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			RelationshipType relType, Direction dir) {
-		return new RelationshipIterable(getNode().getRelationships(relType, dir));
-	}
-
-	@Override
-	public Relationship getSingleRelationshipExt(
-			RelationshipType relType, Direction dir) {
-		return new RelationshipImpl(getNode().getSingleRelationship(relType, dir));
-	}
-
-	@Override
-	public boolean hasRelationship() {
-		return getNode().hasRelationship();
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType... relType) {
-		return getNode().hasRelationship(relType);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction dir) {
-		return getNode().hasRelationship(dir);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction dir, RelationshipType... relTypes) {
-		return getNode().hasRelationship(dir, relTypes);
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType relType, Direction dir) {
-		return getNode().hasRelationship(relType, dir);
-	}
-	
-	@Override
 	public org.neo4j.graphdb.Node getNode() {
 		if(node == null){
 			Node n = getGraphDatabaseExt().createNodeExt();
@@ -219,49 +154,6 @@ public class RelationshipImpl implements Relationship{
 		return rel;
 	}
 	
-	@Override
-	public org.neo4j.graphdb.Relationship getRelationship() {
-		return rel;
-	}
-
-	@Override
-	public <T> Property<T> getProperty(PropertyType<T> pt) {
-		return new PropertyImpl<T>(new RelationshipImpl(rel), pt);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T getPropertyValue(PropertyType<T> pt) {
-		return (T)rel.getProperty(pt.getName());
-	}
-
-	@Override
-	public <T> boolean hasProperty(PropertyType<T> pt) {
-		return rel.hasProperty(pt.getName());
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T removeProperty(PropertyType<T> pt) {
-		if(pt.getName().equals(NODE_ID)){
-			throw new RuntimeException("Cannot remove node ID property of a relationship");
-		}
-		return (T)rel.removeProperty(pt.getName());
-	}
-
-	@Override
-	public <T> void setProperty(PropertyType<T> pt, T value) {
-		if(pt.getName().equals(NODE_ID)){
-			throw new RuntimeException("Cannot set node ID property of a relationship");
-		}
-		rel.setProperty(pt.getName(), value);
-	}
-
-	@Override
-	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabase() {
-		return rel.getGraphDatabase();
-	}
-
 	@Override
 	public org.neo4j.graphdb.Node getOtherNode(org.neo4j.graphdb.Node node) {
 		return rel.getOtherNode(node);
@@ -283,7 +175,7 @@ public class RelationshipImpl implements Relationship{
 	}
 
 	@Override
-	public Iterable<PropertyType<?>> getPropertyTypes() {
-		return PropertyType.getPropertyTypes(this, getGraphDatabaseExt());
+	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabase() {
+		return rel.getGraphDatabase();
 	}
 }

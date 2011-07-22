@@ -19,12 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Property<T> extends NodeLike{
+public interface NodeLike extends PropertyContainer, RelationshipContainer{
 
-	public T getValue();
-	
-	public PropertyType<T> getPropertyType();
-	
-	public PropertyContainer getPropertyContainerExt();
-	
 }

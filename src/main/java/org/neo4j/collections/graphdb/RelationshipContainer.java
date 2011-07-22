@@ -22,7 +22,7 @@ package org.neo4j.collections.graphdb;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
 
-public interface RelationshipContainer extends PropertyContainer{
+public interface RelationshipContainer{
 
 	public GraphDatabaseService getGraphDatabaseExt();
 	

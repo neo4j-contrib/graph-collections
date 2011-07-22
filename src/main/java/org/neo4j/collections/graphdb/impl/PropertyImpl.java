@@ -19,18 +19,22 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
 
-public class PropertyImpl<T> implements Property<T>{
+public class PropertyImpl<T> extends NodeLikeImpl implements Property<T>{
 
 	private final PropertyContainer pc;
 	private final PropertyType<T> propertyType;
+	private final GraphDatabaseService graphDb;
+	private org.neo4j.collections.graphdb.Node node;
 
-	PropertyImpl(PropertyContainer pc, PropertyType<T> propertyType){
+	PropertyImpl(GraphDatabaseService graphDb, PropertyContainer pc, PropertyType<T> propertyType){
 		this.pc = pc;
 		this.propertyType = propertyType;
+		this.graphDb = graphDb;
 	}
 	
 	@Override
@@ -44,8 +48,33 @@ public class PropertyImpl<T> implements Property<T>{
 	}
 
 	@Override
-	public PropertyContainer getPropertyContainer() {
-		return pc;
+	public org.neo4j.graphdb.PropertyContainer getPropertyContainer() {
+		return getNode();
 	}
 
+	@Override
+	public GraphDatabaseService getGraphDatabaseExt() {
+		return graphDb;
+	}
+
+	@Override
+	public Iterable<PropertyType<?>> getPropertyTypes() {
+		return null;
+	}
+
+	@Override
+	public org.neo4j.graphdb.Node getNode() {
+		if(node != null){
+			return node;
+		}else{
+			org.neo4j.graphdb.Node n = graphDb.createNode();
+			pc.getPropertyContainer().setProperty(propertyType.getName()+".node_id", n.getId());
+			return n;
+		}
+	}
+
+	@Override
+	public PropertyContainer getPropertyContainerExt() {
+		return new NodeImpl(getNode());
+	}
 }

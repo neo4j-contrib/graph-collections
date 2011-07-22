@@ -22,15 +22,12 @@ package org.neo4j.collections.graphdb.impl;
 import org.neo4j.collections.graphdb.EnhancedRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
-import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.RelationshipContainer;
-
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.PropertyContainer;
 
-public class RelationshipTypeImpl implements EnhancedRelationshipType{
+public class RelationshipTypeImpl extends NodeLikeImpl implements EnhancedRelationshipType{
 
 	private final org.neo4j.graphdb.RelationshipType relType;
 	private final GraphDatabaseService graphDb;
@@ -49,12 +46,20 @@ public class RelationshipTypeImpl implements EnhancedRelationshipType{
 		return relType.name();
 	}
 
-	@Override
-	public org.neo4j.graphdb.PropertyContainer getPropertyContainer() {
-		return getNode();
+	public org.neo4j.graphdb.RelationshipType getRelationshipType(){
+		return relType;
+	}
+	
+	public GraphDatabaseService getGraphDatabaseExt() {
+		return graphDb;
 	}
 
-	public Node getNode(){
+	public GraphDatabaseService getGraphDatabase() {
+		return graphDb;
+	}
+
+	
+	public org.neo4j.graphdb.Node getNode(){
 		if(node == null){
 			Relationship subRefRel = getGraphDatabaseExt().getReferenceNodeExt().getSingleRelationshipExt(RelTypes.RELTYPE_SUBREF, Direction.OUTGOING);
 			Node subRef = null;
@@ -74,118 +79,15 @@ public class RelationshipTypeImpl implements EnhancedRelationshipType{
 		}
 		return node;
 	}
-	
-	public org.neo4j.graphdb.RelationshipType getRelationshipType(){
-		return relType;
-	}
-	
-	public GraphDatabaseService getGraphDatabaseExt() {
-		return graphDb;
-	}
 
-	public GraphDatabaseService getGraphDatabase() {
-		return graphDb;
-	}
-	
-	@Override
-	public Relationship createRelationshipToExt(
-			RelationshipContainer n,
-			RelationshipType rt) {
-		return getNode().createRelationshipToExt(n, rt);
-	}
-
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt() {
-		return getNode().getRelationshipsExt();
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			RelationshipType... arg0) {
-		return getNode().getRelationshipsExt(arg0);
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			Direction arg0) {
-		return getNode().getRelationshipsExt(arg0);
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			Direction arg0, RelationshipType... arg1) {
-		return getNode().getRelationshipsExt(arg0, arg1);
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(
-			RelationshipType arg0, Direction arg1) {
-		return getNode().getRelationshipsExt(arg0, arg1);
-	}
-
-	@Override
-	public Relationship getSingleRelationshipExt(
-			RelationshipType arg0, Direction arg1) {
-		return getNode().getSingleRelationshipExt(arg0, arg1);
-	}
-
-	@Override
-	public boolean hasRelationship() {
-		return getNode().hasRelationship();
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType... arg0) {
-		return getNode().hasRelationship(arg0);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction arg0) {
-		return getNode().hasRelationship(arg0);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction arg0,
-			RelationshipType... arg1) {
-		return getNode().hasRelationship(arg0, arg1);
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType arg0,
-			Direction arg1) {
-		return getNode().hasRelationship(arg0, arg1);
-	}
-
-	@Override
-	public <T> Property<T> getProperty(PropertyType<T> pt) {
-		return new PropertyImpl<T>(getNode(), pt);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T getPropertyValue(PropertyType<T> pt) {
-		return (T)getNode().getProperty(pt.getName());
-	}
-
-	@Override
-	public <T> boolean hasProperty(PropertyType<T> pt) {
-		return getNode().hasProperty(pt.getName());
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T removeProperty(PropertyType<T> pt) {
-		return (T)getNode().removeProperty(pt.getName());
-	}
-
-	@Override
-	public <T> void setProperty(PropertyType<T> pt, T value) {
-		getNode().setProperty(pt.getName(), value);
-	}
 
 	@Override
 	public Iterable<PropertyType<?>> getPropertyTypes() {
 		return PropertyType.getPropertyTypes(this, getGraphDatabaseExt());
+	}
+
+	@Override
+	public PropertyContainer getPropertyContainer() {
+		return getNode();
 	}
 }

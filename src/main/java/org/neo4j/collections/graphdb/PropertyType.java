@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
 
-public abstract class PropertyType<T> implements RelationshipContainer{
+public abstract class PropertyType<T> implements NodeLike{
 
 	public static enum RelTypes implements org.neo4j.graphdb.RelationshipType{
 		PROPTYPE_SUBREF,
@@ -85,8 +85,6 @@ public abstract class PropertyType<T> implements RelationshipContainer{
 		getNode().setProperty(pt, value);
 	}
 
-	
-	
 	public static Iterable<PropertyType<?>> getPropertyTypes(PropertyContainer pc, GraphDatabaseService graphDb){
 		ArrayList<PropertyType<?>> propertyTypes = new ArrayList<PropertyType<?>>();
 		for(String key: pc.getPropertyContainer().getPropertyKeys()){
@@ -261,7 +259,6 @@ public abstract class PropertyType<T> implements RelationshipContainer{
 	public GraphDatabaseService getGraphDatabaseExt() {
 		return graphDb;
 	}
-	
 	
 	public static PropertyType<Boolean[]> getBooleanArrayPropertyType(String name, GraphDatabaseService graphDb) {
 		return new BooleanArrayProperty(name, graphDb);

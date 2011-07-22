@@ -19,7 +19,7 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface EnhancedRelationshipType extends RelationshipContainer, org.neo4j.graphdb.RelationshipType{
+public interface EnhancedRelationshipType extends NodeLike, org.neo4j.graphdb.RelationshipType{
 
 	public org.neo4j.graphdb.RelationshipType getRelationshipType();
 }

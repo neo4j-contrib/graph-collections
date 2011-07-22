@@ -19,7 +19,7 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Node extends RelationshipContainer, org.neo4j.graphdb.Node{
+public interface Node extends NodeLike, org.neo4j.graphdb.Node{
 
 	public org.neo4j.graphdb.Node getNode();
 	
