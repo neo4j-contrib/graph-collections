@@ -58,7 +58,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.collections.sortedtree.SortedTree;
 import org.neo4j.collections.sortedtree.PropertySortedTree;
 
-import org.neo4j.collections.propertytype.ComparablePropertyType;
+import org.neo4j.collections.graphdb.ComparablePropertyType;
 
 public class IndexedRelationship implements Iterable<Relationship>{
 
