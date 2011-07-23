@@ -19,26 +19,7 @@
  */
 package org.neo4j.collections.graphdb;
 
-import org.neo4j.graphdb.RelationshipType;
-
-public interface Relationship extends NodeLike{
-
-	public void delete();
-	
-	public long getId();
-	
-	public Node getEndNode();
-	
-	public Node[] getNodes();
-
-	public Node getOtherNode(Node node);
-
-	public Node getStartNode();
-	
-	public EnhancedRelationshipType getType();
-
-	public boolean isType(RelationshipType relType);
-
-	public org.neo4j.graphdb.Relationship getRelationship();
-	
+public interface RelationshipAutoIndexer extends AutoIndexer<Relationship>
+{
+    public ReadableRelationshipIndex getAutoIndex();
 }

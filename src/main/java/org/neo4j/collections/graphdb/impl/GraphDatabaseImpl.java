@@ -25,12 +25,13 @@ import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
+import org.neo4j.collections.graphdb.IndexManager;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.event.KernelEventHandler;
 import org.neo4j.graphdb.event.TransactionEventHandler;
-import org.neo4j.graphdb.index.IndexManager;
+
 
 public class GraphDatabaseImpl implements GraphDatabaseService{
 	
@@ -49,38 +50,38 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 	}
 
 	@Override
-	public Node createNodeExt() {
+	public Node createNode() {
 		return new NodeImpl(getGraphDatabaseService().createNode());
 	}
 
 	@Override
-	public Iterable<Node> getAllNodesExt() {
+	public Iterable<Node> getAllNodes() {
 		return new NodeIterable(getGraphDatabaseService().getAllNodes());
 	}
 
 	@Override
-	public Node getNodeByIdExt(long arg0) {
+	public Node getNodeById(long arg0) {
 		return new NodeImpl(getGraphDatabaseService().getNodeById(arg0));
 	}
 
 	@Override
-	public Node getReferenceNodeExt() {
+	public Node getReferenceNode() {
 		return new NodeImpl(getGraphDatabaseService().getReferenceNode());
 	}
 
 	@Override
-	public Relationship getRelationshipByIdExt(long arg0) {
+	public Relationship getRelationshipById(long arg0) {
 		return new RelationshipImpl(getGraphDatabaseService().getRelationshipById(arg0));
 	}
 
 	@Override
-	public Iterable<EnhancedRelationshipType> getRelationshipTypesExt() {
+	public Iterable<EnhancedRelationshipType> getRelationshipTypes() {
 		return new RelationshipTypeIterable(graphDb.getRelationshipTypes(), this);
 	}
 
 	@Override
 	public IndexManager index() {
-		return graphDb.index();
+		return new IndexManagerImpl(graphDb.index());
 	}
 
 	@Override
@@ -112,35 +113,6 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 		return graphDb.unregisterTransactionEventHandler(arg0);
 	}
 
-	@Override
-	public org.neo4j.graphdb.Node createNode() {
-		return graphDb.createNode();
-	}
-
-	@Override
-	public Iterable<org.neo4j.graphdb.Node> getAllNodes() {
-		return graphDb.getAllNodes();
-	}
-
-	@Override
-	public org.neo4j.graphdb.Node getNodeById(long arg0) {
-		return graphDb.getNodeById(arg0);
-	}
-
-	@Override
-	public org.neo4j.graphdb.Node getReferenceNode() {
-		return graphDb.getReferenceNode();
-	}
-
-	@Override
-	public org.neo4j.graphdb.Relationship getRelationshipById(long arg0) {
-		return graphDb.getRelationshipById(arg0);
-	}
-
-	@Override
-	public Iterable<RelationshipType> getRelationshipTypes() {
-		return graphDb.getRelationshipTypes();
-	}
 
 	@Override
 	public PropertyType<Boolean> getBooleanPropertyType(String name) {

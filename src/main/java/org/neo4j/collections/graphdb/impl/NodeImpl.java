@@ -19,31 +19,28 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
+import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.RelationshipContainer;
+import org.neo4j.collections.graphdb.Traverser;
 
 import org.neo4j.graphdb.Direction;
 
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
-import org.neo4j.graphdb.Traverser;
 import org.neo4j.graphdb.Traverser.Order;
 
 public class NodeImpl extends NodeLikeImpl implements Node{
 	
 	final org.neo4j.graphdb.Node node;
 	
-	NodeImpl(org.neo4j.graphdb.Node node){
+	public NodeImpl(org.neo4j.graphdb.Node node){
 		this.node = node;
-	}
-
-	@Override
-	public Relationship createRelationshipToExt(RelationshipContainer rc,
-			RelationshipType rt) {
-		return new RelationshipImpl(node.createRelationshipTo(rc.getNode(), rt));
 	}
 
 	@Override
@@ -59,61 +56,29 @@ public class NodeImpl extends NodeLikeImpl implements Node{
 	@Override
 	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
 			ReturnableEvaluator returnableEvaluator, Object... relTypesAndDirections) {
-		return node.traverse(order, stopEvaluator, returnableEvaluator, relTypesAndDirections);
+		return new TraverserImpl(node.traverse(order, stopEvaluator, returnableEvaluator, relTypesAndDirections));
 	}
 
 	@Override
 	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
 			ReturnableEvaluator returnableEvaluator, RelationshipType relType, Direction dir) {
-		return node.traverse(order, stopEvaluator,	returnableEvaluator, relType, dir);
+		return new TraverserImpl(node.traverse(order, stopEvaluator,	returnableEvaluator, relType, dir));
 	}
 
 	@Override
 	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
 			ReturnableEvaluator returnableEvaluator, RelationshipType relType1, Direction dir1,
 			RelationshipType relType2, Direction dir2) {
-		return node.traverse(order, stopEvaluator, returnableEvaluator, relType1, dir1, relType2, dir2);
+		return new TraverserImpl(node.traverse(order, stopEvaluator, returnableEvaluator, relType1, dir1, relType2, dir2));
 	}
 
+/*	
 	@Override
-	public GraphDatabaseService getGraphDatabaseExt() {
+	public GraphDatabaseService getGraphDatabase() {
 		return new GraphDatabaseImpl(node.getGraphDatabase());
 	}
+*/	
 
-	@Override
-	public Object getProperty(String key) {
-		return node.getProperty(key);
-	}
-
-	@Override
-	public Object getProperty(String key, Object defaultValue) {
-		return node.getProperty(key, defaultValue);
-	}
-
-	@Override
-	public Iterable<String> getPropertyKeys() {
-		return node.getPropertyKeys();
-	}
-
-	@Deprecated
-	public Iterable<Object> getPropertyValues() {
-		return node.getPropertyValues();
-	}
-
-	@Override
-	public boolean hasProperty(String key) {
-		return node.hasProperty(key);
-	}
-
-	@Override
-	public Object removeProperty(String key) {
-		return node.removeProperty(key);
-	}
-
-	@Override
-	public void setProperty(String key, Object value) {
-		node.setProperty(key, value);
-	}
 
 	@Override
 	public org.neo4j.graphdb.Node getNode() {
@@ -126,48 +91,47 @@ public class NodeImpl extends NodeLikeImpl implements Node{
 	}
 
 	@Override
-	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabase() {
-		return node.getGraphDatabase();
+	public GraphDatabaseService getGraphDatabase() {
+		return new GraphDatabaseImpl(node.getGraphDatabase());
 	}
 
 	@Override
-	public org.neo4j.graphdb.Relationship createRelationshipTo(
-			org.neo4j.graphdb.Node node, RelationshipType relType) {
-		return node.createRelationshipTo(node, relType);
+	public Node startNode() {
+		return this;
 	}
 
 	@Override
-	public Iterable<org.neo4j.graphdb.Relationship> getRelationships() {
-		return node.getRelationships();
+	public Node endNode() {
+		return this;
 	}
 
 	@Override
-	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			RelationshipType... relTypes) {
-		return node.getRelationships(relTypes);
+	public Relationship lastRelationship() {
+		return null;
 	}
 
 	@Override
-	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			Direction dir) {
-		return node.getRelationships(dir);
+	public Iterable<Relationship> relationships() {
+		return new ArrayList<Relationship>();
 	}
 
 	@Override
-	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			Direction dir, RelationshipType... relTypes) {
-		return node.getRelationships(dir, relTypes);
+	public Iterable<Node> nodes() {
+		ArrayList<Node> nodes = new ArrayList<Node>();
+		nodes.add(this);
+		return nodes;
 	}
 
 	@Override
-	public Iterable<org.neo4j.graphdb.Relationship> getRelationships(
-			RelationshipType relType, Direction dir) {
-		return node.getRelationships(relType, dir);
+	public int length() {
+		return 0;
 	}
 
 	@Override
-	public org.neo4j.graphdb.Relationship getSingleRelationship(
-			RelationshipType relType, Direction dir) {
-		return node.getSingleRelationship(relType, dir);
+	public Iterator<PropertyContainer> iterator() {
+		ArrayList<PropertyContainer> nodes = new ArrayList<PropertyContainer>();
+		nodes.add(this);
+		return nodes.iterator();
 	}
+
 }

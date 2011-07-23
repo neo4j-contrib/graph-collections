@@ -20,20 +20,23 @@
 package org.neo4j.collections.graphdb;
 
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.event.KernelEventHandler;
+import org.neo4j.graphdb.event.TransactionEventHandler;
 
-public interface GraphDatabaseService extends org.neo4j.graphdb.GraphDatabaseService{
+public interface GraphDatabaseService{
 
-	public Node createNodeExt();
+	public Node createNode();
 
-	public Iterable<Node> getAllNodesExt();
+	public Iterable<Node> getAllNodes();
 
-	public Node getNodeByIdExt(long arg0);
+	public Node getNodeById(long arg0);
 
-	public Node getReferenceNodeExt();
+	public Node getReferenceNode();
 
-	public Relationship getRelationshipByIdExt(long arg0);
+	public Relationship getRelationshipById(long arg0);
 
-	public Iterable<EnhancedRelationshipType> getRelationshipTypesExt();
+	public Iterable<EnhancedRelationshipType> getRelationshipTypes();
 
 	public PropertyType<Boolean> getBooleanPropertyType(String name);
 	
@@ -66,4 +69,21 @@ public interface GraphDatabaseService extends org.neo4j.graphdb.GraphDatabaseSer
 	public EnhancedRelationshipType getRelationshipType(String name);
 		
 	public RelationshipType getRelationshipType(RelationshipType relType);
+	
+	public Transaction beginTx();
+	
+	public IndexManager index();
+	
+	public KernelEventHandler registerKernelEventHandler(KernelEventHandler arg0);
+	
+	public <T> TransactionEventHandler<T> registerTransactionEventHandler(
+			TransactionEventHandler<T> arg0);
+	
+	public void shutdown();
+	
+	public KernelEventHandler unregisterKernelEventHandler(
+			KernelEventHandler arg0);
+	
+	public <T> TransactionEventHandler<T> unregisterTransactionEventHandler(
+			TransactionEventHandler<T> arg0);
 }

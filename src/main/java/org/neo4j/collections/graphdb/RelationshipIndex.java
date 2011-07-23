@@ -19,28 +19,12 @@
  */
 package org.neo4j.collections.graphdb;
 
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.ReturnableEvaluator;
-import org.neo4j.graphdb.StopEvaluator;
-import org.neo4j.graphdb.Traverser.Order;
+/**
+ * Extends the ReadableRelationshipIndex and the Index interfaces
+ * for completing the set of available types.
+ */
+public interface RelationshipIndex extends ReadableRelationshipIndex,
+        Index<Relationship>
+{
 
-public interface Node extends NodeLike, Path{
-
-	public org.neo4j.graphdb.Node getNode();
-	
-	public long getId();
-	
-	public void delete();
-	
-	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
-			ReturnableEvaluator returnableEvaluator, Object... relTypesAndDirections);
-	
-	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
-			ReturnableEvaluator returnableEvaluator, RelationshipType relType, Direction dir);
-
-	public Traverser traverse(Order order, StopEvaluator stopEvaluator,
-			ReturnableEvaluator returnableEvaluator, RelationshipType relType1, Direction dir1,
-			RelationshipType relType2, Direction dir2);	
-	
 }

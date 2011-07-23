@@ -24,23 +24,21 @@ import org.neo4j.graphdb.RelationshipType;
 
 public interface RelationshipContainer{
 
-	public GraphDatabaseService getGraphDatabaseExt();
+	public Relationship createRelationshipTo(RelationshipContainer n, RelationshipType rt);
 	
-	public Relationship createRelationshipToExt(RelationshipContainer n, RelationshipType rt);
-	
-	public Iterable<Relationship> getRelationshipsExt();
+	public Iterable<Relationship> getRelationships();
 
-	public Iterable<Relationship> getRelationshipsExt(RelationshipType... arg0);
+	public Iterable<Relationship> getRelationships(RelationshipType... arg0);
 
-	public Iterable<Relationship> getRelationshipsExt(Direction arg0);
+	public Iterable<Relationship> getRelationships(Direction arg0);
 
-	public Iterable<Relationship> getRelationshipsExt(Direction arg0,
+	public Iterable<Relationship> getRelationships(Direction arg0,
 			RelationshipType... arg1);
 
-	public Iterable<Relationship> getRelationshipsExt(RelationshipType arg0,
+	public Iterable<Relationship> getRelationships(RelationshipType arg0,
 			Direction arg1);
 
-	public Relationship getSingleRelationshipExt(RelationshipType arg0,
+	public Relationship getSingleRelationship(RelationshipType arg0,
 			Direction arg1);
 
 	public boolean hasRelationship();

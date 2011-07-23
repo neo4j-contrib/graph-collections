@@ -23,8 +23,9 @@ import java.util.ArrayList;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.collections.graphdb.impl.NodeLikeImpl;
 
-public abstract class PropertyType<T> implements NodeLike{
+public abstract class PropertyType<T> extends NodeLikeImpl{
 
 	public static enum RelTypes implements org.neo4j.graphdb.RelationshipType{
 		PROPTYPE_SUBREF,
@@ -58,31 +59,6 @@ public abstract class PropertyType<T> implements NodeLike{
 	PropertyType(String name, GraphDatabaseService graphDb){
 		this.nm = name;
 		this.graphDb = graphDb;
-	}
-
-	@Override
-	public <U> Property<U> getProperty(PropertyType<U> pt) {
-		return getNode().getProperty(pt);
-	}
-
-	@Override
-	public <U> U getPropertyValue(PropertyType<U> pt) {
-		return getNode().getPropertyValue(pt);
-	}
-
-	@Override
-	public <U> boolean hasProperty(PropertyType<U> pt) {
-		return getNode().hasProperty(pt);
-	}
-
-	@Override
-	public <U> U removeProperty(PropertyType<U> pt) {
-		return getNode().removeProperty(pt);
-	}
-
-	@Override
-	public <U> void setProperty(PropertyType<U> pt, U value) {
-		getNode().setProperty(pt, value);
 	}
 
 	public static Iterable<PropertyType<?>> getPropertyTypes(PropertyContainer pc, GraphDatabaseService graphDb){
@@ -131,75 +107,6 @@ public abstract class PropertyType<T> implements NodeLike{
 		return propertyTypes;
 	}
 	
-	@Override
-	public Iterable<PropertyType<?>> getPropertyTypes() {
-		return getPropertyTypes(this, getGraphDatabaseExt());
-	}
-
-	@Override
-	public Relationship createRelationshipToExt(RelationshipContainer n,
-			RelationshipType rt) {
-		return getNode().createRelationshipToExt(n, rt);
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt() {
-		return getNode().getRelationshipsExt();
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(RelationshipType... relTypes) {
-		return getNode().getRelationshipsExt(relTypes);
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(Direction dir) {
-		return getNode().getRelationshipsExt(dir);
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(Direction dir,
-			RelationshipType... relTypes) {
-		return getNode().getRelationshipsExt(dir, relTypes);
-	}
-
-	@Override
-	public Iterable<Relationship> getRelationshipsExt(RelationshipType relType,
-			Direction dir) {
-		return getNode().getRelationshipsExt(relType, dir);
-	}
-
-	@Override
-	public Relationship getSingleRelationshipExt(RelationshipType relType,
-			Direction dir) {
-		return getNode().getSingleRelationshipExt(relType, dir);
-	}
-
-	@Override
-	public boolean hasRelationship() {
-		return getNode().hasRelationship();
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType... relTypes) {
-		return getNode().hasRelationship(relTypes);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction dir) {
-		return getNode().hasRelationship(dir);
-	}
-
-	@Override
-	public boolean hasRelationship(Direction dir, RelationshipType... relTypes) {
-		return getNode().hasRelationship(dir, relTypes);
-	}
-
-	@Override
-	public boolean hasRelationship(RelationshipType relType, Direction dir) {
-		return getNode().hasRelationship(relType, dir);
-	}
-
 	protected abstract RelationshipType propertyNameSubRef();
 
 	@Override
@@ -208,55 +115,55 @@ public abstract class PropertyType<T> implements NodeLike{
 	}
 
 	private static Node getTypeSubRef(GraphDatabaseService graphDb, RelationshipType propertyNameSubRef){
-		Relationship subRefRel = graphDb.getReferenceNodeExt().getSingleRelationshipExt(RelTypes.PROPTYPE_SUBREF, Direction.OUTGOING);
+		Relationship subRefRel = graphDb.getReferenceNode().getSingleRelationship(RelTypes.PROPTYPE_SUBREF, Direction.OUTGOING);
 		Node subRef = null;
 		if(subRefRel == null){
-			Node n = graphDb.createNodeExt();
+			Node n = graphDb.createNode();
 			graphDb.getReferenceNode().createRelationshipTo(n, RelTypes.PROPTYPE_SUBREF);
 			subRef = n;
 		}else{
-			subRef = (Node)subRefRel.getEndRelationshipContainer();
+			subRef = (Node)subRefRel.getEndNode();
 		}
-		Relationship typeSubRefRel = graphDb.getReferenceNodeExt().getSingleRelationshipExt(propertyNameSubRef, Direction.OUTGOING);
+		Relationship typeSubRefRel = graphDb.getReferenceNode().getSingleRelationship(propertyNameSubRef, Direction.OUTGOING);
 		Node typeSubRef = null;
 		if(typeSubRefRel == null){
-			Node n = graphDb.createNodeExt();
+			Node n = graphDb.createNode();
 			subRef.createRelationshipTo(n, propertyNameSubRef);
 			typeSubRef = n;
 		}else{
-			typeSubRef = (Node)subRefRel.getEndRelationshipContainer();
+			typeSubRef = (Node)subRefRel.getEndNode();
 		}
 		return typeSubRef;
 	}
 	
 	
 	@Override
-	public Node getNode(){
+	public org.neo4j.graphdb.Node getNode(){
 		if(node == null){
 			for(org.neo4j.graphdb.RelationshipType relType: RelTypes.values()){
-				Node typeSubRef = getTypeSubRef(getGraphDatabaseExt(), relType);
+				Node typeSubRef = getTypeSubRef(getGraphDatabase(), relType);
 				if(typeSubRef.hasProperty(getName())){
 					if(relType.equals(propertyNameSubRef())){
-						node = getGraphDatabaseExt().getNodeByIdExt((Long)typeSubRef.getProperty(getName()));
+						node = getGraphDatabase().getNodeById((Long)typeSubRef.getProperty(getName()));
 						if(node == null){
 							typeSubRef.removeProperty(getName());
 						}else {
-							return node;
+							return node.getNode();
 						}
 					}else{
 						throw new RuntimeException("PropertyType already exists with different data type");
 					}
 				}
 			}
-			node = getGraphDatabaseExt().createNodeExt(); 
-			Node typeSubRef = getTypeSubRef(getGraphDatabaseExt(), propertyNameSubRef());
+			node = getGraphDatabase().createNode(); 
+			Node typeSubRef = getTypeSubRef(getGraphDatabase(), propertyNameSubRef());
 			typeSubRef.setProperty(getName(), node.getId());
 		}
-		return node;
+		return node.getNode();
 	}
 
 	@Override
-	public GraphDatabaseService getGraphDatabaseExt() {
+	public GraphDatabaseService getGraphDatabase() {
 		return graphDb;
 	}
 	

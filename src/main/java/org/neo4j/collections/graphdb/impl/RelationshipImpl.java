@@ -23,7 +23,6 @@ import org.neo4j.collections.graphdb.EnhancedRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.RelationshipContainer;
 
 import org.neo4j.graphdb.RelationshipType;
 
@@ -51,7 +50,7 @@ public class RelationshipImpl extends NodeLikeImpl implements Relationship{
 	}
 	
 	@Override
-	public RelationshipContainer getEndRelationshipContainer() {
+	public Node getEndNode() {
 		return new NodeImpl(rel.getEndNode());
 	}
 
@@ -61,7 +60,7 @@ public class RelationshipImpl extends NodeLikeImpl implements Relationship{
 	}
 
 	@Override
-	public RelationshipContainer[] getRelationshipContainers() {
+	public Node[] getNodes() {
 		org.neo4j.graphdb.Node[] nodes = rel.getNodes();
 		Node[] enodes = new Node[nodes.length];
 		int count = 0;
@@ -73,18 +72,18 @@ public class RelationshipImpl extends NodeLikeImpl implements Relationship{
 	}
 
 	@Override
-	public RelationshipContainer getOtherRelationshipContainer(RelationshipContainer relCont) {
-		return new NodeImpl(rel.getOtherNode(relCont.getNode()));
+	public Node getOtherNode(Node node) {
+		return new NodeImpl(rel.getOtherNode(node.getNode()));
 	}
 
 	@Override
-	public RelationshipContainer getStartRelationshipContainer() {
+	public Node getStartNode() {
 		return new NodeImpl(rel.getStartNode());
 	}
 
 	@Override
 	public EnhancedRelationshipType getType() {
-		return new RelationshipTypeImpl(rel.getType(), getGraphDatabaseExt());
+		return new RelationshipTypeImpl(rel.getType(), getGraphDatabase());
 	}
 
 	@Override
@@ -93,89 +92,23 @@ public class RelationshipImpl extends NodeLikeImpl implements Relationship{
 	}
 
 	@Override
-	public GraphDatabaseService getGraphDatabaseExt() {
+	public GraphDatabaseService getGraphDatabase() {
 		return new GraphDatabaseImpl(rel.getGraphDatabase());
-	}
-
-	@Override
-	public Object getProperty(String key) {
-		return rel.getProperty(key);
-	}
-
-	@Override
-	public Object getProperty(String key, Object value) {
-		return rel.getProperty(key, value);
-	}
-
-	@Override
-	public Iterable<String> getPropertyKeys() {
-		return rel.getPropertyKeys();
-	}
-
-	@Deprecated
-	public Iterable<Object> getPropertyValues() {
-		return rel.getPropertyValues();
-	}
-
-	@Override
-	public boolean hasProperty(String key) {
-		return rel.hasProperty(key);
-	}
-
-	@Override
-	public Object removeProperty(String key) {
-		if(key.equals(NODE_ID)){
-			throw new RuntimeException("Cannot remove node ID property of a relationship");
-		}
-		return rel.removeProperty(key);
-	}
-
-	@Override
-	public void setProperty(String key, Object value) {
-		if(key.equals(NODE_ID)){
-			throw new RuntimeException("Cannot set node ID property of a relationship");
-		}
-		rel.setProperty(key, value);
 	}
 
 	@Override
 	public org.neo4j.graphdb.Node getNode() {
 		if(node == null){
-			Node n = getGraphDatabaseExt().createNodeExt();
+			Node n = getGraphDatabase().createNode();
 			rel.setProperty(NODE_ID, n.getId());
 			return n.getNode();
 		}else{
-			return node;
+			return node.getNode();
 		}
 	}
 
 	@Override
 	public org.neo4j.graphdb.PropertyContainer getPropertyContainer() {
 		return rel;
-	}
-	
-	@Override
-	public org.neo4j.graphdb.Node getOtherNode(org.neo4j.graphdb.Node node) {
-		return rel.getOtherNode(node);
-	}
-
-	@Override
-	public org.neo4j.graphdb.Node getEndNode() {
-		return rel.getEndNode();
-	}
-
-	@Override
-	public org.neo4j.graphdb.Node[] getNodes() {
-		return rel.getNodes();
-	}
-
-	@Override
-	public org.neo4j.graphdb.Node getStartNode() {
-		return rel.getStartNode();
-	}
-
-	@Override
-	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabase() {
-		return rel.getGraphDatabase();
 	}
 }

@@ -20,6 +20,7 @@
 package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.GraphDatabaseService;
+import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
@@ -53,7 +54,7 @@ public class PropertyImpl<T> extends NodeLikeImpl implements Property<T>{
 	}
 
 	@Override
-	public GraphDatabaseService getGraphDatabaseExt() {
+	public GraphDatabaseService getGraphDatabase() {
 		return graphDb;
 	}
 
@@ -65,11 +66,11 @@ public class PropertyImpl<T> extends NodeLikeImpl implements Property<T>{
 	@Override
 	public org.neo4j.graphdb.Node getNode() {
 		if(node != null){
-			return node;
+			return node.getNode();
 		}else{
-			org.neo4j.graphdb.Node n = graphDb.createNode();
+			Node n = graphDb.createNode();
 			pc.getPropertyContainer().setProperty(propertyType.getName()+".node_id", n.getId());
-			return n;
+			return n.getNode();
 		}
 	}
 
@@ -77,4 +78,5 @@ public class PropertyImpl<T> extends NodeLikeImpl implements Property<T>{
 	public PropertyContainer getPropertyContainerExt() {
 		return new NodeImpl(getNode());
 	}
+
 }

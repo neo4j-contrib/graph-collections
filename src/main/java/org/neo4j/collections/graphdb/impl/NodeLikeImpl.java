@@ -30,7 +30,7 @@ import org.neo4j.graphdb.RelationshipType;
 public abstract class NodeLikeImpl implements NodeLike{
 	
 	@Override
-	public Relationship createRelationshipToExt(
+	public Relationship createRelationshipTo(
 			RelationshipContainer n,
 			RelationshipType rt) {
 		return new RelationshipImpl(getNode().createRelationshipTo(n.getNode(), rt));
@@ -38,36 +38,36 @@ public abstract class NodeLikeImpl implements NodeLike{
 
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt() {
+	public Iterable<Relationship> getRelationships() {
 		return new RelationshipIterable(getNode().getRelationships());
 	}
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt(
+	public Iterable<Relationship> getRelationships(
 			RelationshipType... relTypes) {
 		return new RelationshipIterable(getNode().getRelationships(relTypes));
 	}
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt(
+	public Iterable<Relationship> getRelationships(
 			Direction dir) {
 		return new RelationshipIterable(getNode().getRelationships(dir));
 	}
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt(
+	public Iterable<Relationship> getRelationships(
 			Direction dir, RelationshipType... relTypes) {
 		return new RelationshipIterable(getNode().getRelationships(dir, relTypes));
 	}
 
 	@Override
-	public Iterable<Relationship> getRelationshipsExt(
+	public Iterable<Relationship> getRelationships(
 			RelationshipType relType, Direction dir) {
 		return new RelationshipIterable(getNode().getRelationships(relType, dir));
 	}
 
 	@Override
-	public Relationship getSingleRelationshipExt(
+	public Relationship getSingleRelationship(
 			RelationshipType relType, Direction dir) {
 		return new RelationshipImpl(getNode().getSingleRelationship(relType, dir));
 	}
@@ -101,7 +101,7 @@ public abstract class NodeLikeImpl implements NodeLike{
 
 	@Override
 	public <T> Property<T> getProperty(PropertyType<T> pt) {
-		return new PropertyImpl<T>(getGraphDatabaseExt(), this, pt);
+		return new PropertyImpl<T>(getGraphDatabase(), this, pt);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -128,7 +128,41 @@ public abstract class NodeLikeImpl implements NodeLike{
 
 	@Override
 	public Iterable<PropertyType<?>> getPropertyTypes() {
-		return PropertyType.getPropertyTypes(this, getGraphDatabaseExt());
+		return PropertyType.getPropertyTypes(this, getGraphDatabase());
+	}
+	@Override
+	public Object getProperty(String key) {
+		return getPropertyContainer().getProperty(key);
+	}
+
+	@Override
+	public Object getProperty(String key, Object defaultValue) {
+		return getPropertyContainer().getProperty(key, defaultValue);
+	}
+
+	@Override
+	public Iterable<String> getPropertyKeys() {
+		return getPropertyContainer().getPropertyKeys();
+	}
+
+	@Deprecated
+	public Iterable<Object> getPropertyValues() {
+		return getPropertyContainer().getPropertyValues();
+	}
+
+	@Override
+	public boolean hasProperty(String key) {
+		return getPropertyContainer().hasProperty(key);
+	}
+
+	@Override
+	public Object removeProperty(String key) {
+		return getPropertyContainer().removeProperty(key);
+	}
+
+	@Override
+	public void setProperty(String key, Object value) {
+		getPropertyContainer().setProperty(key, value);
 	}
 
 }

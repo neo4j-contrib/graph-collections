@@ -61,23 +61,23 @@ public class RelationshipTypeImpl extends NodeLikeImpl implements EnhancedRelati
 	
 	public org.neo4j.graphdb.Node getNode(){
 		if(node == null){
-			Relationship subRefRel = getGraphDatabaseExt().getReferenceNodeExt().getSingleRelationshipExt(RelTypes.RELTYPE_SUBREF, Direction.OUTGOING);
+			Relationship subRefRel = getGraphDatabaseExt().getReferenceNode().getSingleRelationship(RelTypes.RELTYPE_SUBREF, Direction.OUTGOING);
 			Node subRef = null;
 			if(subRefRel == null){
-				Node n = getGraphDatabaseExt().createNodeExt();
+				Node n = getGraphDatabaseExt().createNode();
 				getGraphDatabaseExt().getReferenceNode().createRelationshipTo(n, RelTypes.RELTYPE_SUBREF);
 				subRef = n;
 			}else{
-				subRef = (Node)subRefRel.getEndRelationshipContainer();
+				subRef = (Node)subRefRel.getEndNode();
 			}
 			if(subRef.hasProperty(relType.name())){
-				node = getGraphDatabaseExt().getNodeByIdExt((Long)subRef.getProperty(relType.name()));
+				node = getGraphDatabaseExt().getNodeById((Long)subRef.getProperty(relType.name()));
 			}else{
-				Node n = getGraphDatabaseExt().createNodeExt();
+				Node n = getGraphDatabaseExt().createNode();
 				subRef.setProperty(relType.name(),n.getId());
 			}
 		}
-		return node;
+		return node.getNode();
 	}
 
 
