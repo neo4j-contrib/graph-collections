@@ -21,13 +21,13 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Map;
 
-import org.neo4j.collections.graphdb.AutoIndexer;
-import org.neo4j.collections.graphdb.Index;
-import org.neo4j.collections.graphdb.IndexManager;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyContainer;
-import org.neo4j.collections.graphdb.RelationshipAutoIndexer;
-import org.neo4j.collections.graphdb.RelationshipIndex;
+import org.neo4j.collections.graphdb.wrappers.AutoIndexer;
+import org.neo4j.collections.graphdb.wrappers.Index;
+import org.neo4j.collections.graphdb.wrappers.IndexManager;
+import org.neo4j.collections.graphdb.wrappers.RelationshipAutoIndexer;
+import org.neo4j.collections.graphdb.wrappers.RelationshipIndex;
 
 public class IndexManagerImpl implements IndexManager{
 	

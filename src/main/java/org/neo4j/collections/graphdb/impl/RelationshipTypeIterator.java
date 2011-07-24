@@ -21,10 +21,10 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.EnhancedRelationshipType;
+import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 
-class RelationshipTypeIterator implements Iterator<EnhancedRelationshipType>{
+class RelationshipTypeIterator implements Iterator<HyperRelationshipType>{
 
 	private final Iterator<org.neo4j.graphdb.RelationshipType> relTypes;
 	private final GraphDatabaseService graphDb;
@@ -40,7 +40,7 @@ class RelationshipTypeIterator implements Iterator<EnhancedRelationshipType>{
 	}
 
 	@Override
-	public EnhancedRelationshipType next() {
+	public HyperRelationshipType next() {
 		return new RelationshipTypeImpl(relTypes.next(), graphDb);
 	}
 

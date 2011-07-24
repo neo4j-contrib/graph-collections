@@ -21,7 +21,7 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.IndexHits;
+import org.neo4j.collections.graphdb.wrappers.IndexHits;
 
 public class IndexHitsImpl<T, U> implements IndexHits<T>{
 	

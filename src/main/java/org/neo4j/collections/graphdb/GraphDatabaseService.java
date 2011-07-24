@@ -19,6 +19,9 @@
  */
 package org.neo4j.collections.graphdb;
 
+import java.util.Set;
+
+import org.neo4j.collections.graphdb.wrappers.IndexManager;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.event.KernelEventHandler;
@@ -27,6 +30,8 @@ import org.neo4j.graphdb.event.TransactionEventHandler;
 public interface GraphDatabaseService{
 
 	public Node createNode();
+	
+	public HyperRelationship createRelationship(Set<RelationshipElement<? extends Element>> relationshipElements);
 
 	public Iterable<Node> getAllNodes();
 
@@ -36,37 +41,37 @@ public interface GraphDatabaseService{
 
 	public Relationship getRelationshipById(long arg0);
 
-	public Iterable<EnhancedRelationshipType> getRelationshipTypes();
+	public Iterable<HyperRelationshipType> getRelationshipTypes();
 
 	public PropertyType<Boolean> getBooleanPropertyType(String name);
 	
 	public PropertyType<Boolean[]> getBooleanArrayPropertyType(String name);
 
-	public ComparablePropertyType<Byte> getBytePropertyType(String name);
+	public PropertyType.ComparablePropertyType<Byte> getBytePropertyType(String name);
 	
 	public PropertyType<Byte[]> getByteArrayPropertyType(String name);
 	
-	public ComparablePropertyType<Double> getDoublePropertyType(String name);
+	public PropertyType.ComparablePropertyType<Double> getDoublePropertyType(String name);
 	
 	public PropertyType<Double[]> getDoubleArrayPropertyType(String name);
 
-	public ComparablePropertyType<Float> getFloatPropertyType(String name);
+	public PropertyType.ComparablePropertyType<Float> getFloatPropertyType(String name);
 	
 	public PropertyType<Float[]> getFloatArrayPropertyType(String name);
 
-	public ComparablePropertyType<Long> getLongPropertyType(String name);
+	public PropertyType.ComparablePropertyType<Long> getLongPropertyType(String name);
 	
 	public PropertyType<Long[]> getLongArrayPropertyType(String name);
 
-	public ComparablePropertyType<Short> getShortPropertyType(String name);
+	public PropertyType.ComparablePropertyType<Short> getShortPropertyType(String name);
 	
 	public PropertyType<Short[]> getShortArrayPropertyType(String name);
 
-	public ComparablePropertyType<String> getStringPropertyType(String name);
+	public PropertyType.ComparablePropertyType<String> getStringPropertyType(String name);
 	
 	public PropertyType<String[]> getStringArrayPropertyType(String name);
 
-	public EnhancedRelationshipType getRelationshipType(String name);
+	public HyperRelationshipType getRelationshipType(String name);
 		
 	public RelationshipType getRelationshipType(RelationshipType relType);
 	

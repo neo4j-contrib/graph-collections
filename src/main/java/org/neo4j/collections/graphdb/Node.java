@@ -19,13 +19,15 @@
  */
 package org.neo4j.collections.graphdb;
 
+import org.neo4j.collections.graphdb.wrappers.Path;
+import org.neo4j.collections.graphdb.wrappers.Traverser;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
 import org.neo4j.graphdb.Traverser.Order;
 
-public interface Node extends NodeLike, Path{
+public interface Node extends Element, Path{
 
 	public org.neo4j.graphdb.Node getNode();
 	

@@ -19,9 +19,9 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.IndexHits;
 import org.neo4j.collections.graphdb.PropertyContainer;
-import org.neo4j.collections.graphdb.ReadableIndex;
+import org.neo4j.collections.graphdb.wrappers.IndexHits;
+import org.neo4j.collections.graphdb.wrappers.ReadableIndex;
 
 public class ReadableIndexImpl<T extends PropertyContainer, U extends org.neo4j.graphdb.PropertyContainer> implements ReadableIndex<T>{
 

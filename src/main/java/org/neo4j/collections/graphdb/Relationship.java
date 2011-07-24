@@ -19,26 +19,21 @@
  */
 package org.neo4j.collections.graphdb;
 
-import org.neo4j.graphdb.RelationshipType;
+public interface Relationship extends HyperRelationship{
 
-public interface Relationship extends NodeLike{
-
-	public void delete();
-	
-	public long getId();
-	
 	public Node getEndNode();
 	
-	public Node[] getNodes();
-
+	public Element getEndElement();
+	
 	public Node getOtherNode(Node node);
+	
+	public Element getOtherElement(Element element);
 
 	public Node getStartNode();
 	
-	public EnhancedRelationshipType getType();
-
-	public boolean isType(RelationshipType relType);
-
+	public Element getStartElement();
+	
 	public org.neo4j.graphdb.Relationship getRelationship();
 	
+	public Node[] getNodes();
 }

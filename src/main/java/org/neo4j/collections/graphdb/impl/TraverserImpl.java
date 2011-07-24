@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.neo4j.collections.graphdb.Node;
-import org.neo4j.collections.graphdb.TraversalPosition;
-import org.neo4j.collections.graphdb.Traverser;
+import org.neo4j.collections.graphdb.wrappers.TraversalPosition;
+import org.neo4j.collections.graphdb.wrappers.Traverser;
 
 /**
  * @author Niels

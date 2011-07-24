@@ -20,12 +20,13 @@
 package org.neo4j.collections.graphdb;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.collections.graphdb.impl.NodeLikeImpl;
+import org.neo4j.collections.graphdb.impl.ElementImpl;
 
-public abstract class PropertyType<T> extends NodeLikeImpl{
+public abstract class PropertyType<T> extends ElementImpl{
 
 	public static enum RelTypes implements org.neo4j.graphdb.RelationshipType{
 		PROPTYPE_SUBREF,
@@ -56,7 +57,7 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 		return nm;
 	}
 
-	PropertyType(String name, GraphDatabaseService graphDb){
+	private PropertyType(String name, GraphDatabaseService graphDb){
 		this.nm = name;
 		this.graphDb = graphDb;
 	}
@@ -69,37 +70,37 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 					Node typeSubRef = getTypeSubRef(graphDb, relType);
 					if(typeSubRef.hasProperty(key)){
 						if(relType.equals(RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getBooleanArrayPropertyType(key, graphDb));
+							propertyTypes.add(new BooleanArrayPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.BOOLEAN_PROPTYPE_SUBREF))
-							propertyTypes.add(getBooleanPropertyType(key, graphDb));
+							propertyTypes.add(new BooleanPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getByteArrayPropertyType(key, graphDb));
+							propertyTypes.add(new ByteArrayPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.BYTE_PROPTYPE_SUBREF))
-							propertyTypes.add(getBytePropertyType(key, graphDb));
+							propertyTypes.add(new BytePropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.DOUBLE_PROPTYPE_SUBREF))
-							propertyTypes.add(getDoublePropertyType(key, graphDb));
+							propertyTypes.add(new DoublePropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getDoubleArrayPropertyType(key, graphDb));
+							propertyTypes.add(new DoubleArrayPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.FLOAT_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatPropertyType(key, graphDb));
+							propertyTypes.add(new FloatPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatArrayPropertyType(key, graphDb));
+							propertyTypes.add(new FloatArrayPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.INTEGER_PROPTYPE_SUBREF))
-							propertyTypes.add(getIntegerPropertyType(key, graphDb));
+							propertyTypes.add(new IntegerPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getIntegerArrayPropertyType(key, graphDb));
+							propertyTypes.add(new IntegerArrayPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.LONG_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatPropertyType(key, graphDb));
+							propertyTypes.add(new LongPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.LONG_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatArrayPropertyType(key, graphDb));
+							propertyTypes.add(new LongArrayPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.SHORT_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatPropertyType(key, graphDb));
+							propertyTypes.add(new ShortPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatArrayPropertyType(key, graphDb));
+							propertyTypes.add(new ShortArrayPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.STRING_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatPropertyType(key, graphDb));
+							propertyTypes.add(new StringPropertyType(key, graphDb));
 						else if(relType.equals(RelTypes.STRING_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(getFloatArrayPropertyType(key, graphDb));
+							propertyTypes.add(new StringArrayPropertyType(key, graphDb));
 					}
 				}
 			}
@@ -167,63 +168,58 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 		return graphDb;
 	}
 	
-	public static PropertyType<Boolean[]> getBooleanArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new BooleanArrayProperty(name, graphDb);
-	}
-	
-	private static class BooleanArrayProperty extends PropertyType<Boolean[]>{
+	public static abstract class ComparablePropertyType<T> extends PropertyType<T> implements Comparator<org.neo4j.graphdb.Node>, PropertyComparator<T>{
 
-		protected RelationshipType propertyNameSubRef(){
+		ComparablePropertyType(String name, GraphDatabaseService graphDb) {
+			super(name, graphDb);
+		}
+		
+		public abstract int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2);
+		
+		public abstract int compare(T value, org.neo4j.graphdb.Node node);
+	}
+
+	public static class BooleanArrayPropertyType extends PropertyType<Boolean[]>{
+
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF;	
 		}
 
-		BooleanArrayProperty(String name, GraphDatabaseService graphDb) {
+		public BooleanArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 	}
 	
-	public static PropertyType<Boolean> getBooleanPropertyType(String name, GraphDatabaseService graphDb) {
-		return new BooleanProperty(name, graphDb);
-	}
+	public static class BooleanPropertyType extends PropertyType<Boolean>{
 
-	private static class BooleanProperty extends PropertyType<Boolean>{
-
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.BOOLEAN_PROPTYPE_SUBREF;	
 		}
 		
-		BooleanProperty(String name, GraphDatabaseService graphDb) {
+		public BooleanPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 	}
 	
-	public static PropertyType<Byte[]> getByteArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new ByteArrayProperty(name, graphDb);
-	}
-	
-	private static class ByteArrayProperty extends PropertyType<Byte[]>{
+	public static class ByteArrayPropertyType extends PropertyType<Byte[]>{
 
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF;	
 		}
 
-		ByteArrayProperty(String name, GraphDatabaseService graphDb) {
+		public ByteArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 		
 	}
 
-	public static ComparablePropertyType<Byte> getBytePropertyType(String name, GraphDatabaseService graphDb) {
-		return new ByteProperty(name, graphDb);
-	}
+	public static class BytePropertyType extends ComparablePropertyType<Byte>{
 
-	private static class ByteProperty extends ComparablePropertyType<Byte>{
-
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.BYTE_PROPTYPE_SUBREF;	
 		}
 
-		ByteProperty(String name, GraphDatabaseService graphDb) {
+		public BytePropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
@@ -250,38 +246,27 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 			
 			return propertyValue1.compareTo(propertyValue2);
 		}
-		
-		
 	}
 
-	public static PropertyType<Double[]> getDoubleArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new DoubleArrayProperty(name, graphDb);
-	}
+	public static class DoubleArrayPropertyType extends PropertyType<Double[]>{
 
-	private static class DoubleArrayProperty extends PropertyType<Double[]>{
-
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF;	
 		}
 
-		DoubleArrayProperty(String name, GraphDatabaseService graphDb) {
+		public DoubleArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 		
 	}
 
-	public static ComparablePropertyType<Double> getDoublePropertyType(String name, GraphDatabaseService graphDb) {
-		return new DoubleProperty(name, graphDb);
-	}
+	public static class DoublePropertyType extends ComparablePropertyType<Double>{
 
-	
-	private static class DoubleProperty extends ComparablePropertyType<Double>{
-
-		DoubleProperty(String name, GraphDatabaseService graphDb) {
+		public DoublePropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.DOUBLE_PROPTYPE_SUBREF;	
 		}
 
@@ -310,34 +295,25 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 		}
 	}
 
-	public static PropertyType<Float[]> getFloatArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new FloatArrayProperty(name, graphDb);
-	}
+	public static class FloatArrayPropertyType extends PropertyType<Float[]>{
 
-	
-	private static class FloatArrayProperty extends PropertyType<Float[]>{
-
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF;	
 		}
 
-		FloatArrayProperty(String name, GraphDatabaseService graphDb) {
+		public FloatArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 		
 	}
 
-	public static ComparablePropertyType<Float> getFloatPropertyType(String name, GraphDatabaseService graphDb) {
-		return new FloatProperty(name, graphDb);
-	}
+	public static class FloatPropertyType extends ComparablePropertyType<Float>{
 
-	private static class FloatProperty extends ComparablePropertyType<Float>{
-
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.FLOAT_PROPTYPE_SUBREF;	
 		}
 		
-		public FloatProperty(String name, GraphDatabaseService graphDb) {
+		public FloatPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
@@ -367,32 +343,28 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 	}
 
 	public static PropertyType<Integer[]> getIntegerArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new IntegerArrayProperty(name, graphDb);
+		return new IntegerArrayPropertyType(name, graphDb);
 	}
 
-	private static class IntegerArrayProperty extends PropertyType<Integer[]>{
+	private static class IntegerArrayPropertyType extends PropertyType<Integer[]>{
 
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF;	
 		}
 		
-		IntegerArrayProperty(String name, GraphDatabaseService graphDb) {
+		public IntegerArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 		
 	}
 
-	public static ComparablePropertyType<Integer> getIntegerPropertyType(String name, GraphDatabaseService graphDb) {
-		return new IntegerProperty(name, graphDb);
-	}
+	public static class IntegerPropertyType extends ComparablePropertyType<Integer>{
 
-	private static class IntegerProperty extends ComparablePropertyType<Integer>{
-
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.INTEGER_PROPTYPE_SUBREF;	
 		}
 		
-		public IntegerProperty(String name, GraphDatabaseService graphDb) {
+		public IntegerPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
@@ -421,32 +393,24 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 		}
 	}
 
-	public static PropertyType<Long[]> getLongArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new LongArrayProperty(name, graphDb);
-	}
+	public static class LongArrayPropertyType extends PropertyType<Long[]>{
 
-	private static class LongArrayProperty extends PropertyType<Long[]>{
-
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.LONG_ARRAY_PROPTYPE_SUBREF;	
 		}
 
-		LongArrayProperty(String name, GraphDatabaseService graphDb) {
+		public LongArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 	}
 
-	public static ComparablePropertyType<Long> getLongPropertyType(String name, GraphDatabaseService graphDb) {
-		return new LongProperty(name, graphDb);
-	}
+	public static class LongPropertyType extends ComparablePropertyType<Long>{
 
-	private static class LongProperty extends ComparablePropertyType<Long>{
-
-		public LongProperty(String name, GraphDatabaseService graphDb) {
+		public LongPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.LONG_PROPTYPE_SUBREF;	
 		}
 
@@ -475,33 +439,25 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 		}
 	}
 
-	public static PropertyType<Short[]> getShortArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new ShortArrayProperty(name, graphDb);
-	}
-	
-	private static class ShortArrayProperty extends PropertyType<Short[]>{
+	public static class ShortArrayPropertyType extends PropertyType<Short[]>{
 
-		ShortArrayProperty(String name, GraphDatabaseService graphDb) {
+		public ShortArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF;	
 		}
 
 	}
 
-	public static ComparablePropertyType<Short> getShortPropertyType(String name, GraphDatabaseService graphDb) {
-		return new ShortProperty(name, graphDb);
-	}
-	
-	private static class ShortProperty extends ComparablePropertyType<Short>{
+	public static class ShortPropertyType extends ComparablePropertyType<Short>{
 
-		ShortProperty(String name, GraphDatabaseService graphDb) {
+		public ShortPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.SHORT_PROPTYPE_SUBREF;	
 		}
 
@@ -530,33 +486,25 @@ public abstract class PropertyType<T> extends NodeLikeImpl{
 		}
 	}
 
-	public static PropertyType<String[]> getStringArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new StringArrayProperty(name, graphDb);
-	}
+	public static class StringArrayPropertyType extends PropertyType<String[]>{
 
-	private static class StringArrayProperty extends PropertyType<String[]>{
-
-		StringArrayProperty(String name, GraphDatabaseService graphDb) {
+		public StringArrayPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 		
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.STRING_ARRAY_PROPTYPE_SUBREF;	
 		}
 		
 	}
 
-	public static ComparablePropertyType<String> getStringPropertyType(String name, GraphDatabaseService graphDb) {
-		return new StringProperty(name, graphDb);
-	}
+	public static class StringPropertyType extends ComparablePropertyType<String>{
 
-	private static class StringProperty extends ComparablePropertyType<String>{
-
-		public StringProperty(String name, GraphDatabaseService graphDb) {
+		public StringPropertyType(String name, GraphDatabaseService graphDb) {
 			super(name, graphDb);
 		}
 
-		protected RelationshipType propertyNameSubRef(){
+		protected final RelationshipType propertyNameSubRef(){
 			return RelTypes.STRING_PROPTYPE_SUBREF;	
 		}
 		

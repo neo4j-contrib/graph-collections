@@ -427,6 +427,7 @@ public class Timeline implements TimelineIndex
         {
             newIndexedNode = newIndexedNode.getSingleRelationship(
                     RelTypes.TIMELINE_NEXT_ENTRY, Direction.INCOMING ).getStartNode();
+            
             newCount++;
             assert !newIndexedNode.hasProperty( INDEX_COUNT );
         }

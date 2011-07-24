@@ -19,13 +19,18 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.ComparablePropertyType;
-import org.neo4j.collections.graphdb.EnhancedRelationshipType;
+import java.util.Set;
+
+import org.neo4j.collections.graphdb.Element;
+import org.neo4j.collections.graphdb.HyperRelationship;
+import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.IndexManager;
+import org.neo4j.collections.graphdb.RelationshipElement;
+import org.neo4j.collections.graphdb.wrappers.IndexManager;
+import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
@@ -75,7 +80,7 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 	}
 
 	@Override
-	public Iterable<EnhancedRelationshipType> getRelationshipTypes() {
+	public Iterable<HyperRelationshipType> getRelationshipTypes() {
 		return new RelationshipTypeIterable(graphDb.getRelationshipTypes(), this);
 	}
 
@@ -116,80 +121,87 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 
 	@Override
 	public PropertyType<Boolean> getBooleanPropertyType(String name) {
-		return PropertyType.getBooleanPropertyType(name, this);
+		return new PropertyType.BooleanPropertyType(name, this);
 	}
 
 	@Override
 	public PropertyType<Boolean[]> getBooleanArrayPropertyType(String name) {
-		return PropertyType.getBooleanArrayPropertyType(name, this);
+		return new PropertyType.BooleanArrayPropertyType(name, this);
 	}
 
 	@Override
 	public ComparablePropertyType<Byte> getBytePropertyType(String name) {
-		return PropertyType.getBytePropertyType(name, this);
+		return new PropertyType.BytePropertyType(name, this);
 	}
 
 	@Override
 	public PropertyType<Byte[]> getByteArrayPropertyType(String name) {
-		return PropertyType.getByteArrayPropertyType(name, this);
+		return new PropertyType.ByteArrayPropertyType(name, this);
 	}
 
 	@Override
 	public ComparablePropertyType<Double> getDoublePropertyType(String name) {
-		return PropertyType.getDoublePropertyType(name, this);
+		return new PropertyType.DoublePropertyType(name, this);
 	}
 
 	@Override
 	public PropertyType<Double[]> getDoubleArrayPropertyType(String name) {
-		return PropertyType.getDoubleArrayPropertyType(name, this);
+		return new PropertyType.DoubleArrayPropertyType(name, this);
 	}
 
 	@Override
 	public ComparablePropertyType<Float> getFloatPropertyType(String name) {
-		return PropertyType.getFloatPropertyType(name, this);	}
+		return new PropertyType.FloatPropertyType(name, this);	}
 
 	@Override
 	public PropertyType<Float[]> getFloatArrayPropertyType(String name) {
-		return PropertyType.getFloatArrayPropertyType(name, this);
+		return new PropertyType.FloatArrayPropertyType(name, this);
 	}
 
 	@Override
 	public ComparablePropertyType<Long> getLongPropertyType(String name) {
-		return PropertyType.getLongPropertyType(name, this);
+		return new PropertyType.LongPropertyType(name, this);
 	}
 
 	@Override
 	public PropertyType<Long[]> getLongArrayPropertyType(String name) {
-		return PropertyType.getLongArrayPropertyType(name, this);
+		return new PropertyType.LongArrayPropertyType(name, this);
 	}
 
 	@Override
 	public ComparablePropertyType<Short> getShortPropertyType(String name) {
-		return PropertyType.getShortPropertyType(name, this);
+		return new PropertyType.ShortPropertyType(name, this);
 	}
 
 	@Override
 	public PropertyType<Short[]> getShortArrayPropertyType(String name) {
-		return PropertyType.getShortArrayPropertyType(name, this);
+		return new PropertyType.ShortArrayPropertyType(name, this);
 	}
 
 	@Override
 	public ComparablePropertyType<String> getStringPropertyType(String name) {
-		return PropertyType.getStringPropertyType(name, this);
+		return new PropertyType.StringPropertyType(name, this);
 	}
 
 	@Override
 	public PropertyType<String[]> getStringArrayPropertyType(String name) {
-		return PropertyType.getStringArrayPropertyType(name, this);
+		return new PropertyType.StringArrayPropertyType(name, this);
 	}
 
 	@Override
-	public EnhancedRelationshipType getRelationshipType(String name) {
+	public HyperRelationshipType getRelationshipType(String name) {
 		return new RelationshipTypeImpl(DynamicRelationshipType.withName(name), this);
 	}
 
 	@Override
 	public RelationshipType getRelationshipType(RelationshipType relType) {
 		return new RelationshipTypeImpl(relType, this);	
+	}
+
+	@Override
+	public HyperRelationship createRelationship(
+			Set<RelationshipElement<? extends Element>> relationshipElements) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

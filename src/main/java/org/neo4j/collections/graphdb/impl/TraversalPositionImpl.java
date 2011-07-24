@@ -21,7 +21,7 @@ package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.TraversalPosition;
+import org.neo4j.collections.graphdb.wrappers.TraversalPosition;
 
 public class TraversalPositionImpl implements TraversalPosition {
 

@@ -19,13 +19,13 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.IndexHits;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Relationship;
+import org.neo4j.collections.graphdb.wrappers.IndexHits;
 import org.neo4j.graphdb.index.Index;
 
 public class RelationshipIndexImpl implements
-		org.neo4j.collections.graphdb.RelationshipIndex {
+		org.neo4j.collections.graphdb.wrappers.RelationshipIndex {
 
 	private final org.neo4j.graphdb.index.RelationshipIndex relationshipIndex;
 	

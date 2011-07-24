@@ -21,9 +21,9 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Set;
 
-import org.neo4j.collections.graphdb.AutoIndexer;
 import org.neo4j.collections.graphdb.PropertyContainer;
-import org.neo4j.collections.graphdb.ReadableIndex;
+import org.neo4j.collections.graphdb.wrappers.AutoIndexer;
+import org.neo4j.collections.graphdb.wrappers.ReadableIndex;
 
 public class AutoIndexerImpl<T extends PropertyContainer, U extends org.neo4j.graphdb.PropertyContainer> implements AutoIndexer<T>{
 

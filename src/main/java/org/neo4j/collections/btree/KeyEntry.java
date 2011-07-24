@@ -22,7 +22,7 @@ package org.neo4j.collections.btree;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.btree.BTree.RelTypes;
+import org.neo4j.collections.btree.AbstractBTree.RelTypes;
 import org.neo4j.collections.treemap.BTreeMap;
 
 /**
@@ -55,7 +55,7 @@ public class KeyEntry
 		return treeNode;
 	}
 	
-	private BTree getBTree()
+	private AbstractBTree getBTree()
 	{
 		return treeNode.getBTree();
 	}

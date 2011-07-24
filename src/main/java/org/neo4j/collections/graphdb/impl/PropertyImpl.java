@@ -25,7 +25,7 @@ import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
 
-public class PropertyImpl<T> extends NodeLikeImpl implements Property<T>{
+public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 
 	private final PropertyContainer pc;
 	private final PropertyType<T> propertyType;

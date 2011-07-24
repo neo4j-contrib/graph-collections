@@ -19,14 +19,17 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.EnhancedRelationshipType;
+import org.neo4j.collections.graphdb.Element;
+import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Relationship;
+import org.neo4j.collections.graphdb.RelationshipElement;
+import org.neo4j.collections.graphdb.RelationshipRole;
 
 import org.neo4j.graphdb.RelationshipType;
 
-public class RelationshipImpl extends NodeLikeImpl implements Relationship{
+public class RelationshipImpl extends ElementImpl implements Relationship{
 
 	public static String NODE_ID = "org.neo4j.collections.graphdb.node_id";
 	
@@ -82,7 +85,7 @@ public class RelationshipImpl extends NodeLikeImpl implements Relationship{
 	}
 
 	@Override
-	public EnhancedRelationshipType getType() {
+	public HyperRelationshipType getType() {
 		return new RelationshipTypeImpl(rel.getType(), getGraphDatabase());
 	}
 
@@ -110,5 +113,35 @@ public class RelationshipImpl extends NodeLikeImpl implements Relationship{
 	@Override
 	public org.neo4j.graphdb.PropertyContainer getPropertyContainer() {
 		return rel;
+	}
+
+	@Override
+	public RelationshipElement<? extends Element>[] getRelationshipElements(){
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <T extends Element> T getElement(RelationshipRole<T> role) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Element getEndElement() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Element getOtherElement(Element element) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Element getStartElement() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

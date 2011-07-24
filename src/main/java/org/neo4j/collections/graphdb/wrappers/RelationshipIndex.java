@@ -17,26 +17,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.graphdb.impl;
+package org.neo4j.collections.graphdb.wrappers;
 
-import java.util.Iterator;
+import org.neo4j.collections.graphdb.Relationship;
 
-import org.neo4j.collections.graphdb.HyperRelationshipType;
-import org.neo4j.collections.graphdb.GraphDatabaseService;
+/**
+ * Extends the ReadableRelationshipIndex and the Index interfaces
+ * for completing the set of available types.
+ */
+public interface RelationshipIndex extends ReadableRelationshipIndex,
+        Index<Relationship>
+{
 
-class RelationshipTypeIterable implements Iterable<HyperRelationshipType>{
-
-	private Iterable<org.neo4j.graphdb.RelationshipType> rels;
-	private final GraphDatabaseService graphDb;
-	
-	RelationshipTypeIterable(Iterable<org.neo4j.graphdb.RelationshipType> rels, GraphDatabaseService graphDb){
-		this.rels = rels;
-		this.graphDb = graphDb;
-	}
-	
-	@Override
-	public Iterator<HyperRelationshipType> iterator() {
-		return new RelationshipTypeIterator(rels.iterator(), graphDb);
-	}
-	
 }

@@ -19,10 +19,10 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.IndexHits;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.ReadableRelationshipIndex;
+import org.neo4j.collections.graphdb.wrappers.IndexHits;
+import org.neo4j.collections.graphdb.wrappers.ReadableRelationshipIndex;
 	
 public class ReadableRelationshipIndexImpl implements ReadableRelationshipIndex {
 

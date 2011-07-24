@@ -26,7 +26,7 @@ import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.Traverser;
+import org.neo4j.collections.graphdb.wrappers.Traverser;
 
 import org.neo4j.graphdb.Direction;
 
@@ -35,7 +35,7 @@ import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
 import org.neo4j.graphdb.Traverser.Order;
 
-public class NodeImpl extends NodeLikeImpl implements Node{
+public class NodeImpl extends ElementImpl implements Node{
 	
 	final org.neo4j.graphdb.Node node;
 	

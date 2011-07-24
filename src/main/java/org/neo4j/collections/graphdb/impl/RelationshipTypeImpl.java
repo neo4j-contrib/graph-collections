@@ -19,15 +19,17 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.EnhancedRelationshipType;
+import org.neo4j.collections.graphdb.Element;
+import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
+import org.neo4j.collections.graphdb.RelationshipRole;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.PropertyContainer;
 
-public class RelationshipTypeImpl extends NodeLikeImpl implements EnhancedRelationshipType{
+public class RelationshipTypeImpl extends ElementImpl implements HyperRelationshipType{
 
 	private final org.neo4j.graphdb.RelationshipType relType;
 	private final GraphDatabaseService graphDb;
@@ -89,5 +91,11 @@ public class RelationshipTypeImpl extends NodeLikeImpl implements EnhancedRelati
 	@Override
 	public PropertyContainer getPropertyContainer() {
 		return getNode();
+	}
+
+	@Override
+	public RelationshipRole<? extends Element>[] getRoles() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

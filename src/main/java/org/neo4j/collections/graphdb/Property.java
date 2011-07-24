@@ -19,7 +19,7 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Property<T> extends NodeLike{
+public interface Property<T> extends Element{
 
 	public T getValue();
 	
