@@ -29,6 +29,8 @@ import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipElement;
+import org.neo4j.collections.graphdb.RelationshipRole;
+import org.neo4j.collections.graphdb.BinaryRelationshipRole.*;
 import org.neo4j.collections.graphdb.wrappers.IndexManager;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -203,5 +205,21 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 			Set<RelationshipElement<? extends Element>> relationshipElements) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public <T extends Element> RelationshipRole<T> getRelationshipRole(
+			String name) {
+		return new RelationshipRoleImpl<T>(this, name);
+	}
+
+	@Override
+	public RelationshipRole<Element> getStartNodeRole() {
+		return new StartElement(this);
+	}
+
+	@Override
+	public RelationshipRole<Element> getEndNodeRole() {
+		return new EndElement(this);
 	}
 }

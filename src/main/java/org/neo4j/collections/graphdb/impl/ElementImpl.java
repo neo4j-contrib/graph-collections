@@ -273,12 +273,4 @@ public abstract class ElementImpl implements Element{
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-
-	@Override
-	public Node getNode() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }
