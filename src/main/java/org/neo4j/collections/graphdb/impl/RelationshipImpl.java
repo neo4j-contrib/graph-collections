@@ -20,6 +20,7 @@
 package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.Element;
+import org.neo4j.collections.graphdb.FunctionalRelationshipRole;
 import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
@@ -32,6 +33,7 @@ import org.neo4j.graphdb.RelationshipType;
 public class RelationshipImpl extends ElementImpl implements Relationship{
 
 	public static String NODE_ID = "org.neo4j.collections.graphdb.node_id";
+	public static String REL_ID = "org.neo4j.collections.graphdb.rel_id";
 	
 	final org.neo4j.graphdb.Relationship rel;
 	Node node = null;
@@ -103,6 +105,7 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 	public org.neo4j.graphdb.Node getNode() {
 		if(node == null){
 			Node n = getGraphDatabase().createNode();
+			n.setProperty(REL_ID, rel.getId());
 			rel.setProperty(NODE_ID, n.getId());
 			return n.getNode();
 		}else{
@@ -116,17 +119,24 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 	}
 
 	@Override
-	public RelationshipElement<? extends Element>[] getRelationshipElements(){
+	public Iterable<RelationshipElement<? extends Element>> getRelationshipElements(){
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public <T extends Element> T getElement(RelationshipRole<T> role) {
+	public <T extends Element> Iterable<T> getElements(RelationshipRole<T> role) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
+	public <T extends Element> T getElement(FunctionalRelationshipRole<T> role) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
 	@Override
 	public Element getEndElement() {
 		// TODO Auto-generated method stub

@@ -31,8 +31,10 @@ public interface HyperRelationship extends Element{
 
 	public boolean isType(RelationshipType relType);
 
-	public RelationshipElement<? extends Element>[] getRelationshipElements();
+	public Iterable<RelationshipElement<? extends Element>> getRelationshipElements();
 
-	public <T extends Element> T getElement(RelationshipRole<T> role);
+	public <T extends Element> Iterable<T> getElements(RelationshipRole<T> role);
+	
+	public <T extends Element> T getElement(FunctionalRelationshipRole<T> role);
 	
 }

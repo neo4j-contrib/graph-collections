@@ -19,13 +19,8 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
-import org.neo4j.collections.graphdb.PropertyContainer;
-import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.wrappers.Traverser;
 
 import org.neo4j.graphdb.Direction;
@@ -72,14 +67,6 @@ public class NodeImpl extends ElementImpl implements Node{
 		return new TraverserImpl(node.traverse(order, stopEvaluator, returnableEvaluator, relType1, dir1, relType2, dir2));
 	}
 
-/*	
-	@Override
-	public GraphDatabaseService getGraphDatabase() {
-		return new GraphDatabaseImpl(node.getGraphDatabase());
-	}
-*/	
-
-
 	@Override
 	public org.neo4j.graphdb.Node getNode() {
 		return node;
@@ -93,45 +80,6 @@ public class NodeImpl extends ElementImpl implements Node{
 	@Override
 	public GraphDatabaseService getGraphDatabase() {
 		return new GraphDatabaseImpl(node.getGraphDatabase());
-	}
-
-	@Override
-	public Node startNode() {
-		return this;
-	}
-
-	@Override
-	public Node endNode() {
-		return this;
-	}
-
-	@Override
-	public Relationship lastRelationship() {
-		return null;
-	}
-
-	@Override
-	public Iterable<Relationship> relationships() {
-		return new ArrayList<Relationship>();
-	}
-
-	@Override
-	public Iterable<Node> nodes() {
-		ArrayList<Node> nodes = new ArrayList<Node>();
-		nodes.add(this);
-		return nodes;
-	}
-
-	@Override
-	public int length() {
-		return 0;
-	}
-
-	@Override
-	public Iterator<PropertyContainer> iterator() {
-		ArrayList<PropertyContainer> nodes = new ArrayList<PropertyContainer>();
-		nodes.add(this);
-		return nodes.iterator();
 	}
 
 }

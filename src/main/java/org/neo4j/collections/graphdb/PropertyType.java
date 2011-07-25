@@ -23,11 +23,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.collections.graphdb.impl.ElementImpl;
 
 public abstract class PropertyType<T> extends ElementImpl{
 
+	public final static String PROP_TYPE = "org.neo4j.collections.graphdb.prop_type";
+	
 	public static enum RelTypes implements org.neo4j.graphdb.RelationshipType{
 		PROPTYPE_SUBREF,
 		BOOLEAN_PROPTYPE_SUBREF,
@@ -48,6 +51,10 @@ public abstract class PropertyType<T> extends ElementImpl{
 		STRING_ARRAY_PROPTYPE_SUBREF		
 	}
 	
+	public long getId(){
+		return getNode().getId();
+	}
+	
 	private Node node = null;
 	
 	private final String nm; 
@@ -62,48 +69,53 @@ public abstract class PropertyType<T> extends ElementImpl{
 		this.graphDb = graphDb;
 	}
 
+	public static PropertyType<?> getPropertyTypeByName(String key, GraphDatabaseService graphDb){
+		for(org.neo4j.graphdb.RelationshipType relType: RelTypes.values()){
+			if(!relType.equals(RelTypes.PROPTYPE_SUBREF)){
+				Node typeSubRef = getTypeSubRef(graphDb, relType);
+				if(typeSubRef.hasProperty(key)){
+					if(relType.equals(RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF))
+						return new BooleanArrayPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.BOOLEAN_PROPTYPE_SUBREF))
+						return new BooleanPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF))
+						return new ByteArrayPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.BYTE_PROPTYPE_SUBREF))
+						return new BytePropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.DOUBLE_PROPTYPE_SUBREF))
+						return new DoublePropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF))
+						return new DoubleArrayPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.FLOAT_PROPTYPE_SUBREF))
+						return new FloatPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF))
+						return new FloatArrayPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.INTEGER_PROPTYPE_SUBREF))
+						return new IntegerPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF))
+						return new IntegerArrayPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.LONG_PROPTYPE_SUBREF))
+						return new LongPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.LONG_ARRAY_PROPTYPE_SUBREF))
+						return new LongArrayPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.SHORT_PROPTYPE_SUBREF))
+						return new ShortPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF))
+						return new ShortArrayPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.STRING_PROPTYPE_SUBREF))
+						return new StringPropertyType(key, graphDb);
+					else if(relType.equals(RelTypes.STRING_ARRAY_PROPTYPE_SUBREF))
+						return new StringArrayPropertyType(key, graphDb);
+				}
+			}
+		}
+		return null;
+	}
+	
 	public static Iterable<PropertyType<?>> getPropertyTypes(PropertyContainer pc, GraphDatabaseService graphDb){
 		ArrayList<PropertyType<?>> propertyTypes = new ArrayList<PropertyType<?>>();
 		for(String key: pc.getPropertyContainer().getPropertyKeys()){
-			for(org.neo4j.graphdb.RelationshipType relType: RelTypes.values()){
-				if(!relType.equals(RelTypes.PROPTYPE_SUBREF)){
-					Node typeSubRef = getTypeSubRef(graphDb, relType);
-					if(typeSubRef.hasProperty(key)){
-						if(relType.equals(RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new BooleanArrayPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.BOOLEAN_PROPTYPE_SUBREF))
-							propertyTypes.add(new BooleanPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new ByteArrayPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.BYTE_PROPTYPE_SUBREF))
-							propertyTypes.add(new BytePropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.DOUBLE_PROPTYPE_SUBREF))
-							propertyTypes.add(new DoublePropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new DoubleArrayPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.FLOAT_PROPTYPE_SUBREF))
-							propertyTypes.add(new FloatPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new FloatArrayPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.INTEGER_PROPTYPE_SUBREF))
-							propertyTypes.add(new IntegerPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new IntegerArrayPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.LONG_PROPTYPE_SUBREF))
-							propertyTypes.add(new LongPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.LONG_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new LongArrayPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.SHORT_PROPTYPE_SUBREF))
-							propertyTypes.add(new ShortPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new ShortArrayPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.STRING_PROPTYPE_SUBREF))
-							propertyTypes.add(new StringPropertyType(key, graphDb));
-						else if(relType.equals(RelTypes.STRING_ARRAY_PROPTYPE_SUBREF))
-							propertyTypes.add(new StringArrayPropertyType(key, graphDb));
-					}
-				}
-			}
+			propertyTypes.add(getPropertyTypeByName(key, graphDb));
 		}
 		return propertyTypes;
 	}
@@ -156,9 +168,10 @@ public abstract class PropertyType<T> extends ElementImpl{
 					}
 				}
 			}
-			node = getGraphDatabase().createNode(); 
-			Node typeSubRef = getTypeSubRef(getGraphDatabase(), propertyNameSubRef());
-			typeSubRef.setProperty(getName(), node.getId());
+			Node typeSubRef = getTypeSubRef(getGraphDatabase(), propertyNameSubRef());			
+			node = getGraphDatabase().createNode();
+			node.setProperty(PROP_TYPE, getName());
+			typeSubRef.createRelationshipTo(node, DynamicRelationshipType.withName(getName()));
 		}
 		return node.getNode();
 	}

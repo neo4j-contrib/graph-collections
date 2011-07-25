@@ -19,23 +19,30 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Element;
 import org.neo4j.collections.graphdb.HyperRelationship;
 import org.neo4j.collections.graphdb.HyperRelationshipType;
+import org.neo4j.collections.graphdb.Path;
 import org.neo4j.collections.graphdb.Property;
+import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipContainer;
-import org.neo4j.collections.graphdb.RelationshipElement;
 import org.neo4j.collections.graphdb.RelationshipRole;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 
 public abstract class ElementImpl implements Element{
+
+	public static final String hyperRelSeparator = "/#/";
 	
 	@Override
 	public Relationship createRelationshipTo(
@@ -46,31 +53,60 @@ public abstract class ElementImpl implements Element{
 
 	private class HyperRelationshipIterator implements Iterator<HyperRelationship>{
 
+		private Set<Node> visitedHyperRelationships = new HashSet<Node>();
+		
 		HyperRelationship currentRelationship = null;
+		Boolean hasNextAfterMove = null;
 		
 		private final Iterator<org.neo4j.graphdb.Relationship> relIterator;
+		
 		
 		HyperRelationshipIterator(){
 			this.relIterator = getNode().getRelationships().iterator();
 		}
 		
 		HyperRelationshipIterator(RelationshipType... relTypes){
-			this.relIterator = getNode().getRelationships().iterator();
+			this.relIterator = getNode().getRelationships(getGraphDatabase().expandRelationshipTypes(relTypes)).iterator();
 		}
 		
 		@Override
 		public boolean hasNext() {
-			if(relIterator.hasNext()){
-				currentRelationship = new RelationshipImpl(relIterator.next());
-				return true;
+			if(hasNextAfterMove == null){
+				if(relIterator.hasNext()){
+					Relationship rel = new RelationshipImpl(relIterator.next());
+					RelationshipType relType = rel.getType();
+					int separatorPosition = relType.name().indexOf(hyperRelSeparator); 
+					if( separatorPosition > -1){
+						if(rel.getEndNode().getId() != getNode().getId()){
+							return hasNext();
+						}
+						Node hyperRel = rel.getStartNode();
+						if(visitedHyperRelationships.contains(hyperRel)){
+							return hasNext();
+						}else{
+							HyperRelationshipType hrelType =  new RelationshipTypeImpl(DynamicRelationshipType.withName(relType.name().substring(separatorPosition)), getGraphDatabase());
+							this.currentRelationship = new HyperRelationshipImpl(hyperRel, hrelType);
+							hasNextAfterMove = true;
+							return true;
+						}
+					}else{
+						this.currentRelationship = rel;
+						hasNextAfterMove = true;
+						return true;
+					}
+				}else{
+					hasNextAfterMove = false;
+					return false;
+				}
 			}else{
-				return false;
+				return hasNextAfterMove;
 			}
 		}
 
 		@Override
 		public HyperRelationship next() {
 			if(hasNext()){
+				hasNextAfterMove = null;
 				return currentRelationship;
 			}else{
 				return null;
@@ -83,7 +119,6 @@ public abstract class ElementImpl implements Element{
 				currentRelationship.delete();
 			}
 		}
-		
 	}
 	
 	private class HyperRelationshipIterable implements Iterable<HyperRelationship>{
@@ -98,6 +133,15 @@ public abstract class ElementImpl implements Element{
 			super();
 			this.relTypes = relTypes;
 		}
+
+		HyperRelationshipIterable(RelationshipRole<?> role, RelationshipType... relTypes){
+			super();
+			this.relTypes = new RelationshipType[relTypes.length];
+			for(int i=0;i<relTypes.length;i++){
+				this.relTypes[i] = DynamicRelationshipType.withName(relTypes[i].name()+hyperRelSeparator+role.getName());
+			}
+		}
+		
 		
 		@Override
 		public Iterator<HyperRelationship> iterator() {
@@ -241,36 +285,128 @@ public abstract class ElementImpl implements Element{
 		getPropertyContainer().setProperty(key, value);
 	}
 
-
-	@Override
-	public HyperRelationship createRelationshipWith(RelationshipRole<? extends Element> role,
-			RelationshipType relType,
-			Set<RelationshipElement<? extends Element>> relationshipElements) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
 	@Override
 	public Iterable<HyperRelationship> getRelationships(RelationshipRole<? extends Element> role,
 			RelationshipType... relTypes) {
-		// TODO Auto-generated method stub
-		return null;
+		return new HyperRelationshipIterable(role, relTypes);
 	}
 
 
 	@Override
 	public HyperRelationship getSingleRelationship(RelationshipRole<? extends Element> role,
 			RelationshipType relType) {
-		// TODO Auto-generated method stub
-		return null;
+		Iterator<Relationship> rels = new RelationshipIterable(getNode().getRelationships(DynamicRelationshipType.withName(relType.name()+hyperRelSeparator+role.getName()), Direction.INCOMING)).iterator();
+		if(rels.hasNext()){
+			Relationship rel = rels.next();
+			if(rels.hasNext()){
+				throw new RuntimeException("More than one relationship found");
+			}else{
+				return new HyperRelationshipImpl(rel.getStartNode(), new RelationshipTypeImpl(relType, getGraphDatabase()));
+			}
+		}else{
+			return null;
+		}
 	}
 
 
 	@Override
 	public boolean hasRelationship(RelationshipRole<? extends Element> role,
 			RelationshipType... relTypes) {
-		// TODO Auto-generated method stub
-		return false;
+		RelationshipType[] hRelTypes = new RelationshipType[relTypes.length];
+		for(int i=0;i<relTypes.length;i++){
+			hRelTypes[i] = DynamicRelationshipType.withName(relTypes[i].name()+hyperRelSeparator+role.getName());
+		}
+		return getNode().hasRelationship(Direction.INCOMING, relTypes);
+	}
+
+	class ElementPath implements Path{
+
+		@Override
+		public Node startNode() {
+			return new NodeImpl(getNode());
+		}
+
+		@Override
+		public Element startElement() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Node endNode() {
+			return new NodeImpl(getNode());
+		}
+
+		@Override
+		public Element endElement() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Relationship lastRelationship() {
+			return null;
+		}
+
+		
+		@Override
+		public Iterable<Relationship> relationships() {
+			return new ArrayList<Relationship>();
+		}
+
+		@Override
+		public Iterable<Node> nodes() {
+			ArrayList<Node> nodes = new ArrayList<Node>();
+			nodes.add(new NodeImpl(getNode()));
+			return nodes;
+		}
+
+		@Override
+		public Iterable<Element> elements() {
+			return null;
+		}
+
+		@Override
+		public int length() {
+			return 0;
+		}
+
+		@Override
+		public Iterator<PropertyContainer> iterator() {
+			ArrayList<PropertyContainer> nodes = new ArrayList<PropertyContainer>();
+			nodes.add(new NodeImpl(getNode()));
+			return nodes.iterator();
+		}
+		
+	}
+	
+	class PathIterator implements Iterator<Path>{
+
+		boolean first = true;
+		
+		@Override
+		public boolean hasNext() {
+			return first;
+		}
+
+		@Override
+		public Path next() {
+			if(hasNext()){
+				first = false;
+				return new ElementPath();
+			}else{
+				throw new NoSuchElementException();
+			}
+		}
+
+		@Override
+		public void remove() {
+		}
+		
+	}
+	
+	@Override
+	public Iterator<Path> iterator() {
+		return new PathIterator();
 	}
 }

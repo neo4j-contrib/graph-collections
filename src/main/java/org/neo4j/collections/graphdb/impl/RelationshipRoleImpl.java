@@ -24,12 +24,18 @@ import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipRole;
-import org.neo4j.collections.graphdb.BinaryRelationshipRole.RelTypes;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.RelationshipType;
 
 public class RelationshipRoleImpl<T extends Element> extends ElementImpl implements RelationshipRole<T>{
 	
+	public final static String ROLE_NAME = "org.neo4j.collections.graphdb.role_name";
+	
+	public enum RelTypes implements RelationshipType{
+		ROLETYPES_SUBREF
+	}
+
 	private final String name;
 	private final GraphDatabaseService graphDb;
 	private org.neo4j.graphdb.Node node;
@@ -37,6 +43,10 @@ public class RelationshipRoleImpl<T extends Element> extends ElementImpl impleme
 	public RelationshipRoleImpl(GraphDatabaseService graphDb, String name){
 		this.name = name;
 		this.graphDb = graphDb;
+	}
+
+	public long getId(){
+		return getNode().getId();
 	}
 
 	
@@ -69,6 +79,7 @@ public class RelationshipRoleImpl<T extends Element> extends ElementImpl impleme
 			Relationship roleRel = refNode.getSingleRelationship(DynamicRelationshipType.withName(getName()), Direction.OUTGOING);
 			if(roleRel == null){
 				Node associatedNode = graphDb.createNode();
+				associatedNode.setProperty(ROLE_NAME, getName());
 				roleRel = refNode.createRelationshipTo(associatedNode, DynamicRelationshipType.withName(getName()));
 				return associatedNode.getNode();
 			}else{

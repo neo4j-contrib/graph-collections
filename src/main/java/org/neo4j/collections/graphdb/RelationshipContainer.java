@@ -19,8 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-import java.util.Set;
-
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
 
@@ -28,9 +26,8 @@ public interface RelationshipContainer{
 
 	public Relationship createRelationshipTo(RelationshipContainer n, RelationshipType rt);
 	
-	public HyperRelationship createRelationshipWith(RelationshipRole<? extends Element> role, RelationshipType relType, Set<RelationshipElement<? extends Element>> relationshipElements);
-	
 	public Iterable<HyperRelationship> getRelationships();
+	
 	public Iterable<HyperRelationship> getRelationships(RelationshipType... relTypes);
 
 	public Iterable<Relationship> getRelationships(Direction dir);
@@ -54,11 +51,11 @@ public interface RelationshipContainer{
 	
 	public boolean hasRelationship(RelationshipRole<? extends Element> role, RelationshipType... relTypes);
 	
-	public boolean hasRelationship(Direction arg0);
+	public boolean hasRelationship(Direction dir);
 
-	public boolean hasRelationship(Direction arg0, RelationshipType... arg1);
+	public boolean hasRelationship(Direction dir, RelationshipType... relTypes);
 
-	public boolean hasRelationship(RelationshipType arg0, Direction arg1);
+	public boolean hasRelationship(RelationshipType relTypes, Direction dir);
 
 	abstract org.neo4j.graphdb.Node getNode();
 }

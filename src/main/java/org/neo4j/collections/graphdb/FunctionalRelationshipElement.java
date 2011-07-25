@@ -19,28 +19,25 @@
  */
 package org.neo4j.collections.graphdb;
 
-import org.neo4j.collections.graphdb.impl.RelationshipRoleImpl;
-import org.neo4j.graphdb.RelationshipType;
+import java.util.ArrayList;
 
-public class BinaryRelationshipRole<T extends Element> extends RelationshipRoleImpl<T>{
+public class FunctionalRelationshipElement<T extends Element> extends RelationshipElement<T>{
 
-	private static final String startElementName = "StartElement";
-	private static final String endElementName = "EndElement";
+	private final T element;
 	
-	private BinaryRelationshipRole(GraphDatabaseService graphDb, String name){
-		super(graphDb, name);
+	private static <T extends Element> Iterable<T> packElement(T element){
+		ArrayList<T> elements = new ArrayList<T>();
+		elements.add(element);
+		return elements;
 	}
 	
-	public static class StartElement extends BinaryRelationshipRole<Element>{
-		public StartElement(GraphDatabaseService graphDb){
-			super(graphDb, startElementName);
-		}
+	FunctionalRelationshipElement(RelationshipRole<T> role, T element) {
+		super(role, packElement(element));
+		this.element = element;
 	}
 
-	public static class EndElement extends BinaryRelationshipRole<Element>{
-		public EndElement(GraphDatabaseService graphDb){
-			super(graphDb, endElementName);
-		}
+	public T getElement(){
+		return element;
 	}
-
+	
 }

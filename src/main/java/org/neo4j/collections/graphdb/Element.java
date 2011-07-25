@@ -19,6 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Element extends PropertyContainer, RelationshipContainer{
+public interface Element extends PropertyContainer, RelationshipContainer, Iterable<Path>{
 
 }

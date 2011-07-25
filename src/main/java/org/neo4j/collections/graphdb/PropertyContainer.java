@@ -21,6 +21,8 @@ package org.neo4j.collections.graphdb;
 
 public interface PropertyContainer {
 
+	public long getId();
+	
 	public <T> Property<T> getProperty(PropertyType<T> pt);
 
 	public <T> T getPropertyValue(PropertyType<T> pt);

@@ -19,6 +19,7 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+
 import org.neo4j.collections.graphdb.Element;
 import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
@@ -31,6 +32,8 @@ import org.neo4j.graphdb.PropertyContainer;
 
 public class RelationshipTypeImpl extends ElementImpl implements HyperRelationshipType{
 
+	public final static String REL_TYPE = "org.neo4j.collections.graphdb.rel_type";
+	
 	private final org.neo4j.graphdb.RelationshipType relType;
 	private final GraphDatabaseService graphDb;
 	private Node node = null;
@@ -48,6 +51,10 @@ public class RelationshipTypeImpl extends ElementImpl implements HyperRelationsh
 		return relType.name();
 	}
 
+	public long getId(){
+		return getNode().getId();
+	}
+
 	public org.neo4j.graphdb.RelationshipType getRelationshipType(){
 		return relType;
 	}
@@ -60,7 +67,6 @@ public class RelationshipTypeImpl extends ElementImpl implements HyperRelationsh
 		return graphDb;
 	}
 
-	
 	public org.neo4j.graphdb.Node getNode(){
 		if(node == null){
 			Relationship subRefRel = getGraphDatabaseExt().getReferenceNode().getSingleRelationship(RelTypes.RELTYPE_SUBREF, Direction.OUTGOING);
@@ -76,6 +82,7 @@ public class RelationshipTypeImpl extends ElementImpl implements HyperRelationsh
 				node = getGraphDatabaseExt().getNodeById((Long)subRef.getProperty(relType.name()));
 			}else{
 				Node n = getGraphDatabaseExt().createNode();
+				n.setProperty(REL_TYPE, relType.name());
 				subRef.setProperty(relType.name(),n.getId());
 			}
 		}

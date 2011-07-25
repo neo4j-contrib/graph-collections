@@ -44,6 +44,8 @@ public interface GraphDatabaseService{
 	public RelationshipRole<Element> getEndNodeRole();
 
 	public Node getReferenceNode();
+	
+	public Element getElement(org.neo4j.graphdb.Node node);
 
 	public Relationship getRelationshipById(long arg0);
 
@@ -97,4 +99,14 @@ public interface GraphDatabaseService{
 	
 	public <T> TransactionEventHandler<T> unregisterTransactionEventHandler(
 			TransactionEventHandler<T> arg0);
+	
+	/**
+	 * @param ({@link RelationshipType})relTypes
+	 * @return ({@link RelationshipType[]})
+	 * 
+	 * The methods expands all HyperRelationshipTypes to their BinaryRelationshipTypes stored in the database.   
+	 */
+	public RelationshipType[] expandRelationshipTypes(
+			RelationshipType... relTypes);
+	
 }

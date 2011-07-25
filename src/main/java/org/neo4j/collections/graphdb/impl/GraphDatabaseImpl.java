@@ -19,6 +19,7 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.collections.graphdb.Element;
@@ -39,18 +40,18 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.event.KernelEventHandler;
 import org.neo4j.graphdb.event.TransactionEventHandler;
 
+public class GraphDatabaseImpl implements GraphDatabaseService {
 
-public class GraphDatabaseImpl implements GraphDatabaseService{
-	
 	private final org.neo4j.graphdb.GraphDatabaseService graphDb;
-	
-	GraphDatabaseImpl(org.neo4j.graphdb.GraphDatabaseService graphDb){
+
+	GraphDatabaseImpl(org.neo4j.graphdb.GraphDatabaseService graphDb) {
 		this.graphDb = graphDb;
 	}
-	
-	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabaseService(){
+
+	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabaseService() {
 		return graphDb;
 	}
+
 	@Override
 	public Transaction beginTx() {
 		return getGraphDatabaseService().beginTx();
@@ -78,12 +79,14 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 
 	@Override
 	public Relationship getRelationshipById(long arg0) {
-		return new RelationshipImpl(getGraphDatabaseService().getRelationshipById(arg0));
+		return new RelationshipImpl(getGraphDatabaseService()
+				.getRelationshipById(arg0));
 	}
 
 	@Override
 	public Iterable<HyperRelationshipType> getRelationshipTypes() {
-		return new RelationshipTypeIterable(graphDb.getRelationshipTypes(), this);
+		return new RelationshipTypeIterable(graphDb.getRelationshipTypes(),
+				this);
 	}
 
 	@Override
@@ -105,7 +108,7 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 	@Override
 	public void shutdown() {
 		graphDb.shutdown();
-		
+
 	}
 
 	@Override
@@ -119,7 +122,6 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 			TransactionEventHandler<T> arg0) {
 		return graphDb.unregisterTransactionEventHandler(arg0);
 	}
-
 
 	@Override
 	public PropertyType<Boolean> getBooleanPropertyType(String name) {
@@ -153,7 +155,8 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 
 	@Override
 	public ComparablePropertyType<Float> getFloatPropertyType(String name) {
-		return new PropertyType.FloatPropertyType(name, this);	}
+		return new PropertyType.FloatPropertyType(name, this);
+	}
 
 	@Override
 	public PropertyType<Float[]> getFloatArrayPropertyType(String name) {
@@ -192,12 +195,13 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 
 	@Override
 	public HyperRelationshipType getRelationshipType(String name) {
-		return new RelationshipTypeImpl(DynamicRelationshipType.withName(name), this);
+		return new RelationshipTypeImpl(DynamicRelationshipType.withName(name),
+				this);
 	}
 
 	@Override
 	public RelationshipType getRelationshipType(RelationshipType relType) {
-		return new RelationshipTypeImpl(relType, this);	
+		return new RelationshipTypeImpl(relType, this);
 	}
 
 	@Override
@@ -205,6 +209,27 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 			Set<RelationshipElement<? extends Element>> relationshipElements) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public RelationshipType[] expandRelationshipTypes(
+			RelationshipType... relTypes) {
+		Set<RelationshipType> relTypesToReturn = new HashSet<RelationshipType>();
+		for (RelationshipType relType : relTypes) {
+			HyperRelationshipType hreltype = new RelationshipTypeImpl(relType,
+					this);
+			RelationshipRole<?>[] roles = hreltype.getRoles();
+			if (roles.length == 2) {
+				relTypesToReturn.add(DynamicRelationshipType.withName(hreltype
+						.name()));
+			} else {
+				for (RelationshipRole<?> role : roles) {
+					relTypesToReturn
+							.add(DynamicRelationshipType.withName(hreltype
+									.name() + "/#/" + role.getName()));
+				}
+			}
+		}
+		return (RelationshipType[]) relTypesToReturn.toArray();
 	}
 
 	@Override
@@ -221,5 +246,31 @@ public class GraphDatabaseImpl implements GraphDatabaseService{
 	@Override
 	public RelationshipRole<Element> getEndNodeRole() {
 		return new EndElement(this);
+	}
+
+	@Override
+	public Element getElement(org.neo4j.graphdb.Node node) {
+		if(node.hasProperty(RelationshipImpl.REL_ID)){
+			return getRelationshipById((Long)node.getProperty(RelationshipImpl.REL_ID));
+		}else if(node.hasProperty(RelationshipTypeImpl.REL_TYPE)){
+			return new RelationshipTypeImpl(DynamicRelationshipType.withName((String)node.getProperty(RelationshipTypeImpl.REL_TYPE)), this);
+		}else if(node.hasProperty(PropertyType.PROP_TYPE)){
+			String propType = (String)node.getProperty(PropertyType.PROP_TYPE);
+			return PropertyType.getPropertyTypeByName(propType, this);
+		}else if(node.hasProperty(RelationshipRoleImpl.ROLE_NAME)){
+			return new RelationshipRoleImpl<Element>(this, (String)node.getProperty(RelationshipRoleImpl.ROLE_NAME));
+		}else if(node.hasProperty(PropertyImpl.PROPERTYCONTAINER_ID) && node.hasProperty(PropertyImpl.PROPERTYCONTAINER_TYPE) && node.hasProperty(PropertyImpl.PROPERTY_NAME)){
+			if(node.getProperty(PropertyImpl.PROPERTYCONTAINER_TYPE).equals(PropertyImpl.PropertyContainerType.RELATIONSHIP.name())){
+				Relationship rel = getRelationshipById((Long)node.getProperty(PropertyImpl.PROPERTYCONTAINER_ID));
+				PropertyType<?> pt = PropertyType.getPropertyTypeByName((String)node.getProperty(PropertyImpl.PROPERTY_NAME), this);
+				return new PropertyImpl(this, rel, pt);
+			}else{
+				Node n = getNodeById((Long)node.getProperty(PropertyImpl.PROPERTYCONTAINER_ID));
+				PropertyType<?> pt = PropertyType.getPropertyTypeByName((String)node.getProperty(PropertyImpl.PROPERTY_NAME), this);
+				return new PropertyImpl(this, n, pt);
+			}
+		}else{
+			return new NodeImpl(node);
+		}
 	}
 }

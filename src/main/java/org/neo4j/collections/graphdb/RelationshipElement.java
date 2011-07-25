@@ -22,15 +22,15 @@ package org.neo4j.collections.graphdb;
 public class RelationshipElement<T extends Element>{
 
 	private final RelationshipRole<T> role;
-	private final T element;
+	private final Iterable<T> elements;
 	
-	RelationshipElement(RelationshipRole<T> role, T element) {
+	RelationshipElement(RelationshipRole<T> role, Iterable<T> elements) {
 		this.role = role;
-		this.element = element;
+		this.elements = elements;
 	}
 
-	public T getElement(){
-		return element;
+	public Iterable<T> getElements(){
+		return elements;
 	}
 	
 	public RelationshipRole<T> getRole(){

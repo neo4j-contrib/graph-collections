@@ -24,9 +24,19 @@ import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
+import org.neo4j.collections.graphdb.Relationship;
 
 public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 
+	public final static String PROPERTYCONTAINER_ID = "org.neo4j.collections.graphdb.propertycontainer_id";
+	public final static String PROPERTYCONTAINER_TYPE = "org.neo4j.collections.graphdb.propertycontainer_type";
+	public final static String PROPERTY_NAME = "org.neo4j.collections.graphdb.property_name";
+
+	
+	public enum PropertyContainerType{
+		NODE, RELATIONSHIP
+	}
+	
 	private final PropertyContainer pc;
 	private final PropertyType<T> propertyType;
 	private final GraphDatabaseService graphDb;
@@ -36,6 +46,10 @@ public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 		this.pc = pc;
 		this.propertyType = propertyType;
 		this.graphDb = graphDb;
+	}
+	
+	public long getId(){
+		return getNode().getId();
 	}
 	
 	@Override
@@ -69,6 +83,13 @@ public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 			return node.getNode();
 		}else{
 			Node n = graphDb.createNode();
+			n.setProperty(PROPERTYCONTAINER_ID, pc.getId());
+			n.setProperty(PROPERTY_NAME, propertyType.getName());
+			if(pc instanceof Relationship){
+				n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.RELATIONSHIP.name());
+			}else{
+				n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.NODE.name());
+			}
 			pc.getPropertyContainer().setProperty(propertyType.getName()+".node_id", n.getId());
 			return n.getNode();
 		}
