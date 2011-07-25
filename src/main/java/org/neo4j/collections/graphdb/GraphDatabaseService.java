@@ -36,6 +36,12 @@ public interface GraphDatabaseService{
 	public Iterable<Node> getAllNodes();
 
 	public Node getNodeById(long arg0);
+	
+	public <T extends Element> RelationshipRole<T> getRelationshipRole(String name);
+	
+	public RelationshipRole<Element> getStartNodeRole();
+	
+	public RelationshipRole<Element> getEndNodeRole();
 
 	public Node getReferenceNode();
 
