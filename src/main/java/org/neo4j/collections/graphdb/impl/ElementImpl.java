@@ -189,7 +189,12 @@ public abstract class ElementImpl implements Element{
 	@Override
 	public Relationship getSingleRelationship(
 			RelationshipType relType, Direction dir) {
-		return new RelationshipImpl(getNode().getSingleRelationship(relType, dir));
+		org.neo4j.graphdb.Relationship rel  = getNode().getSingleRelationship(relType, dir);
+		if(rel == null){
+			return null;
+		}else{
+			return new RelationshipImpl(rel);
+		}
 	}
 
 	@Override

@@ -42,6 +42,9 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 	Node node = null;
 	
 	RelationshipImpl(org.neo4j.graphdb.Relationship rel){
+		if(rel == null){
+			throw new RuntimeException("Cannot instantiate RelationshipImpl with null");
+		}
 		this.rel = rel;
 	}
 	

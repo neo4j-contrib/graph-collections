@@ -71,10 +71,14 @@ public class IndexHitsImpl<T, U> implements IndexHits<T>{
 	@Override
 	public T getSingle() {
 		U indexHit = indexHits.getSingle();
-		if(indexHit instanceof org.neo4j.graphdb.Node){
+		if(indexHit == null) {
+			return null;
+		}else if(indexHit instanceof org.neo4j.graphdb.Node){
 			return (T)new NodeImpl((org.neo4j.graphdb.Node)indexHit);
-		}else{
+		}else if(indexHit instanceof org.neo4j.graphdb.Relationship){
 			return (T)new RelationshipImpl((org.neo4j.graphdb.Relationship)indexHit);
+		}else{
+			throw new RuntimeException("indexhit can only be an instance of Relationship or Node, not an instance of "+indexHit.getClass().getName());
 		}
 	}
 
