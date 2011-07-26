@@ -19,7 +19,10 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import java.util.ArrayList;
+
 import org.neo4j.collections.graphdb.Element;
+import org.neo4j.collections.graphdb.FunctionalRelationshipElement;
 import org.neo4j.collections.graphdb.FunctionalRelationshipRole;
 import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
@@ -88,7 +91,7 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 
 	@Override
 	public HyperRelationshipType getType() {
-		return new RelationshipTypeImpl(rel.getType(), getGraphDatabase());
+		return getGraphDatabase().getRelationshipType(rel.getType());
 	}
 
 	@Override
@@ -120,38 +123,76 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 
 	@Override
 	public Iterable<RelationshipElement<? extends Element>> getRelationshipElements(){
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<RelationshipElement<? extends Element>> relements = new ArrayList<RelationshipElement<? extends Element>>();
+		relements.add(new FunctionalRelationshipElement<Element>(getGraphDatabase().getStartElementRole(), getGraphDatabase().getElement(rel.getStartNode())));
+		relements.add(new FunctionalRelationshipElement<Element>(getGraphDatabase().getEndElementRole(), getGraphDatabase().getElement(rel.getStartNode())));
+		return relements;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends Element> Iterable<T> getElements(RelationshipRole<T> role) {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<Element> elements = new ArrayList<Element>();
+		if(role.getName().equals(getGraphDatabase().getStartElementRole())){
+			elements.add(getGraphDatabase().getElement(rel.getStartNode()));
+			return (ArrayList<T>)elements;
+		}else if(role.getName().equals(getGraphDatabase().getEndElementRole())){
+			elements.add(getGraphDatabase().getElement(rel.getEndNode()));
+			return (ArrayList<T>)elements;
+		}else{
+			throw new RuntimeException("Supplied role is not supported");
+		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends Element> T getElement(FunctionalRelationshipRole<T> role) {
-		// TODO Auto-generated method stub
-		return null;
+		if(role.getName().equals(getGraphDatabase().getStartElementRole())){
+			return (T) getGraphDatabase().getElement(rel.getStartNode());
+		}else if(role.getName().equals(getGraphDatabase().getEndElementRole())){
+			return (T) getGraphDatabase().getElement(rel.getEndNode());
+		}else{
+			throw new RuntimeException("Supplied role is not supported");
+		}
 	}
 	
 	
 	@Override
 	public Element getEndElement() {
-		// TODO Auto-generated method stub
-		return null;
+		return getGraphDatabase().getElement(rel.getEndNode());
 	}
 
 	@Override
 	public Element getOtherElement(Element element) {
-		// TODO Auto-generated method stub
-		return null;
+		return getGraphDatabase().getElement(rel.getOtherNode(element.getNode()));
 	}
 
 	@Override
 	public Element getStartElement() {
-		// TODO Auto-generated method stub
-		return null;
+		return getGraphDatabase().getElement(rel.getStartNode());
+	}
+
+	@Override
+	public Iterable<RelationshipElement<? extends Element>> getRelationshipElements(
+			RelationshipRole<?>... roles) {
+		boolean includeStart = false;
+		boolean includeEnd = false;
+		for(RelationshipRole<?> role: roles){
+			if(role.getName().equals(getGraphDatabase().getStartElementRole())){
+				includeStart = true;
+			}else if(role.getName().equals(getGraphDatabase().getEndElementRole())){
+				includeEnd = true;
+			}else{
+				throw new RuntimeException("Supplied role is not part of this RelationshipType");
+			}
+		}
+		ArrayList<RelationshipElement<? extends Element>> relements = new ArrayList<RelationshipElement<? extends Element>>();
+		if(includeStart){
+			relements.add(new FunctionalRelationshipElement<Element>(getGraphDatabase().getStartElementRole(), getGraphDatabase().getElement(rel.getStartNode())));
+		}
+		if(includeEnd){
+			relements.add(new FunctionalRelationshipElement<Element>(getGraphDatabase().getEndElementRole(), getGraphDatabase().getElement(rel.getStartNode())));
+		}
+		return relements;
 	}
 }

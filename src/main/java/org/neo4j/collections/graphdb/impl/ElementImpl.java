@@ -84,7 +84,7 @@ public abstract class ElementImpl implements Element{
 						if(visitedHyperRelationships.contains(hyperRel)){
 							return hasNext();
 						}else{
-							HyperRelationshipType hrelType =  new RelationshipTypeImpl(DynamicRelationshipType.withName(relType.name().substring(separatorPosition)), getGraphDatabase());
+							HyperRelationshipType hrelType =  getGraphDatabase().getRelationshipType(DynamicRelationshipType.withName(relType.name().substring(separatorPosition)));
 							this.currentRelationship = new HyperRelationshipImpl(hyperRel, hrelType);
 							hasNextAfterMove = true;
 							return true;
@@ -163,7 +163,7 @@ public abstract class ElementImpl implements Element{
 			RelationshipType... relTypes) {
 		HyperRelationshipType[] hyperRelTypes = new HyperRelationshipType[relTypes.length];
 		for(int i=0;i < relTypes.length;i++){
-			hyperRelTypes[i] = new RelationshipTypeImpl(relTypes[i], getGraphDatabase());
+			hyperRelTypes[i] = getGraphDatabase().getRelationshipType(relTypes[i]);
 		}
 		return new HyperRelationshipIterable(hyperRelTypes);
 	}
@@ -301,7 +301,7 @@ public abstract class ElementImpl implements Element{
 			if(rels.hasNext()){
 				throw new RuntimeException("More than one relationship found");
 			}else{
-				return new HyperRelationshipImpl(rel.getStartNode(), new RelationshipTypeImpl(relType, getGraphDatabase()));
+				return new HyperRelationshipImpl(rel.getStartNode(), getGraphDatabase().getRelationshipType(relType));
 			}
 		}else{
 			return null;
@@ -328,8 +328,7 @@ public abstract class ElementImpl implements Element{
 
 		@Override
 		public Element startElement() {
-			// TODO Auto-generated method stub
-			return null;
+			return getGraphDatabase().getElement(getNode());
 		}
 
 		@Override
@@ -339,8 +338,7 @@ public abstract class ElementImpl implements Element{
 
 		@Override
 		public Element endElement() {
-			// TODO Auto-generated method stub
-			return null;
+			return getGraphDatabase().getElement(getNode());
 		}
 
 		@Override

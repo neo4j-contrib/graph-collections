@@ -41,7 +41,7 @@ class RelationshipTypeIterator implements Iterator<HyperRelationshipType>{
 
 	@Override
 	public HyperRelationshipType next() {
-		return new RelationshipTypeImpl(relTypes.next(), graphDb);
+		return graphDb.getRelationshipType(relTypes.next());
 	}
 
 	@Override

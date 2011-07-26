@@ -24,7 +24,7 @@ public class RelationshipElement<T extends Element>{
 	private final RelationshipRole<T> role;
 	private final Iterable<T> elements;
 	
-	RelationshipElement(RelationshipRole<T> role, Iterable<T> elements) {
+	public RelationshipElement(RelationshipRole<T> role, Iterable<T> elements) {
 		this.role = role;
 		this.elements = elements;
 	}

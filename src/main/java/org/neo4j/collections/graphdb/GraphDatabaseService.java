@@ -31,7 +31,7 @@ public interface GraphDatabaseService{
 
 	public Node createNode();
 	
-	public HyperRelationship createRelationship(Set<RelationshipElement<? extends Element>> relationshipElements);
+	public HyperRelationship createRelationship(HyperRelationshipType relType, Set<RelationshipElement<? extends Element>> relationshipElements);
 
 	public Iterable<Node> getAllNodes();
 
@@ -39,9 +39,9 @@ public interface GraphDatabaseService{
 	
 	public <T extends Element> RelationshipRole<T> getRelationshipRole(String name);
 	
-	public RelationshipRole<Element> getStartNodeRole();
+	public RelationshipRole<Element> getStartElementRole();
 	
-	public RelationshipRole<Element> getEndNodeRole();
+	public RelationshipRole<Element> getEndElementRole();
 
 	public Node getReferenceNode();
 	
@@ -81,7 +81,9 @@ public interface GraphDatabaseService{
 
 	public HyperRelationshipType getRelationshipType(String name);
 		
-	public RelationshipType getRelationshipType(RelationshipType relType);
+	public HyperRelationshipType getRelationshipType(RelationshipType relType);
+	
+	public HyperRelationshipType getOrCreateRelationshipType(RelationshipType relType, Set<RelationshipRole<? extends Element>>roles);
 	
 	public Transaction beginTx();
 	

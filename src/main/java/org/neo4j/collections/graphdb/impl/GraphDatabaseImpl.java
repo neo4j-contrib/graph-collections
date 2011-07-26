@@ -34,6 +34,7 @@ import org.neo4j.collections.graphdb.RelationshipRole;
 import org.neo4j.collections.graphdb.BinaryRelationshipRole.*;
 import org.neo4j.collections.graphdb.wrappers.IndexManager;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
@@ -42,6 +43,8 @@ import org.neo4j.graphdb.event.TransactionEventHandler;
 
 public class GraphDatabaseImpl implements GraphDatabaseService {
 
+	private static String HYPERRELATIONSHIP_TYPE = "org.neo4j.collections.graphdb.hyperrelationship_type";
+	
 	private final org.neo4j.graphdb.GraphDatabaseService graphDb;
 
 	GraphDatabaseImpl(org.neo4j.graphdb.GraphDatabaseService graphDb) {
@@ -72,6 +75,7 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 		return new NodeImpl(getGraphDatabaseService().getNodeById(arg0));
 	}
 
+	
 	@Override
 	public Node getReferenceNode() {
 		return new NodeImpl(getGraphDatabaseService().getReferenceNode());
@@ -195,28 +199,78 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 
 	@Override
 	public HyperRelationshipType getRelationshipType(String name) {
-		return new RelationshipTypeImpl(DynamicRelationshipType.withName(name),
-				this);
+		return getRelationshipType(DynamicRelationshipType.withName(name));
+	}
+
+	private Node getRelationshipTypeNode(RelationshipType relType){
+		Node subRef = RelationshipTypeImpl.getOrCreateRoleSubRef(this);
+		Relationship rel = subRef.getSingleRelationship(relType, Direction.OUTGOING);
+		if(rel != null){
+			return rel.getEndNode();
+		}else{
+			Node n = this.createNode();
+			subRef.createRelationshipTo(n, relType);
+			n.setProperty(RelationshipTypeImpl.REL_TYPE, relType.name());
+			return n;
+		}
+	}
+	
+	@Override
+	public HyperRelationshipType getRelationshipType(RelationshipType relType) {
+		Node n = getRelationshipTypeNode(relType);
+		if(n == null){
+			return null;
+		}else{
+			if(n.hasProperty(RelationshipTypeImpl.REL_TYPE_ROLES)){
+				String[] names = (String[])n.getProperty(RelationshipTypeImpl.REL_TYPE_ROLES);
+				Set<RelationshipRole<?>> roles = new HashSet<RelationshipRole<?>>();
+				for(String name: names){
+					roles.add(getRelationshipRole(name));
+				}
+				return new RelationshipTypeImpl(this, relType, roles);
+			}else{
+				return null;
+			}
+		}
+		
 	}
 
 	@Override
-	public RelationshipType getRelationshipType(RelationshipType relType) {
-		return new RelationshipTypeImpl(relType, this);
+	public HyperRelationshipType getOrCreateRelationshipType(RelationshipType relType, Set<RelationshipRole<? extends Element>>roles) {
+		return new RelationshipTypeImpl(this, relType, roles);
 	}
 
+	
 	@Override
-	public HyperRelationship createRelationship(
+	public HyperRelationship createRelationship(HyperRelationshipType relType,
 			Set<RelationshipElement<? extends Element>> relationshipElements) {
-		// TODO Auto-generated method stub
-		return null;
+		RelationshipRole<? extends Element>[] roles = relType.getRoles();
+		for(RelationshipRole<? extends Element> role: roles){
+			boolean found = false;
+			for(RelationshipElement<? extends Element> relement: relationshipElements){
+				if(relement.getRole().getName().equals(role.getName())){
+					found = true;
+				}
+			}
+			if(found == false){
+				throw new RuntimeException("To create relationship an element with role "+role.getName()+" should be provide");
+			}
+		}
+		Node n = createNode();
+		n.setProperty(HYPERRELATIONSHIP_TYPE, relType.name());
+		for(RelationshipElement<? extends Element> relement: relationshipElements){
+			for(Element elem: relement.getElements()){
+				n.createRelationshipTo(elem, DynamicRelationshipType.withName(relType.name()+"/#/"+relement.getRole().getName()));
+			}
+		}
+		return new HyperRelationshipImpl(n, relType);
 	}
 
 	public RelationshipType[] expandRelationshipTypes(
 			RelationshipType... relTypes) {
 		Set<RelationshipType> relTypesToReturn = new HashSet<RelationshipType>();
 		for (RelationshipType relType : relTypes) {
-			HyperRelationshipType hreltype = new RelationshipTypeImpl(relType,
-					this);
+			HyperRelationshipType hreltype = getRelationshipType(relType);
 			RelationshipRole<?>[] roles = hreltype.getRoles();
 			if (roles.length == 2) {
 				relTypesToReturn.add(DynamicRelationshipType.withName(hreltype
@@ -239,26 +293,33 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 	}
 
 	@Override
-	public RelationshipRole<Element> getStartNodeRole() {
+	public RelationshipRole<Element> getStartElementRole() {
 		return new StartElement(this);
 	}
 
 	@Override
-	public RelationshipRole<Element> getEndNodeRole() {
+	public RelationshipRole<Element> getEndElementRole() {
 		return new EndElement(this);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Element getElement(org.neo4j.graphdb.Node node) {
 		if(node.hasProperty(RelationshipImpl.REL_ID)){
 			return getRelationshipById((Long)node.getProperty(RelationshipImpl.REL_ID));
+		}else if(node.hasProperty(HYPERRELATIONSHIP_TYPE)){
+			return new HyperRelationshipImpl(new NodeImpl(node), getRelationshipType((String)node.getProperty(HYPERRELATIONSHIP_TYPE)));
 		}else if(node.hasProperty(RelationshipTypeImpl.REL_TYPE)){
-			return new RelationshipTypeImpl(DynamicRelationshipType.withName((String)node.getProperty(RelationshipTypeImpl.REL_TYPE)), this);
+			return getRelationshipType(DynamicRelationshipType.withName((String)node.getProperty(RelationshipTypeImpl.REL_TYPE)));
 		}else if(node.hasProperty(PropertyType.PROP_TYPE)){
 			String propType = (String)node.getProperty(PropertyType.PROP_TYPE);
 			return PropertyType.getPropertyTypeByName(propType, this);
 		}else if(node.hasProperty(RelationshipRoleImpl.ROLE_NAME)){
-			return new RelationshipRoleImpl<Element>(this, (String)node.getProperty(RelationshipRoleImpl.ROLE_NAME));
+			if(node.hasProperty(FunctionalRelationshipRoleImpl.IS_FUNCTIONAL_ROLE)){
+				return new FunctionalRelationshipRoleImpl<Element>(this, (String)node.getProperty(RelationshipRoleImpl.ROLE_NAME));
+			}else{
+				return new RelationshipRoleImpl<Element>(this, (String)node.getProperty(RelationshipRoleImpl.ROLE_NAME));
+			}
 		}else if(node.hasProperty(PropertyImpl.PROPERTYCONTAINER_ID) && node.hasProperty(PropertyImpl.PROPERTYCONTAINER_TYPE) && node.hasProperty(PropertyImpl.PROPERTY_NAME)){
 			if(node.getProperty(PropertyImpl.PROPERTYCONTAINER_TYPE).equals(PropertyImpl.PropertyContainerType.RELATIONSHIP.name())){
 				Relationship rel = getRelationshipById((Long)node.getProperty(PropertyImpl.PROPERTYCONTAINER_ID));

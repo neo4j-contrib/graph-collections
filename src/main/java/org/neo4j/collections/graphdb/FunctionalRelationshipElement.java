@@ -31,7 +31,7 @@ public class FunctionalRelationshipElement<T extends Element> extends Relationsh
 		return elements;
 	}
 	
-	FunctionalRelationshipElement(RelationshipRole<T> role, T element) {
+	public FunctionalRelationshipElement(RelationshipRole<T> role, T element) {
 		super(role, packElement(element));
 		this.element = element;
 	}

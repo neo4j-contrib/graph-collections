@@ -17,29 +17,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.graphdb;
+package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.impl.FunctionalRelationshipRoleImpl;
+import org.neo4j.collections.graphdb.Element;
+import org.neo4j.collections.graphdb.FunctionalRelationshipRole;
+import org.neo4j.collections.graphdb.GraphDatabaseService;
 
-public class BinaryRelationshipRole<T extends Element> extends FunctionalRelationshipRoleImpl<T>{
+public class FunctionalRelationshipRoleImpl<T extends Element> extends RelationshipRoleImpl<T> implements FunctionalRelationshipRole<T>{
 
-	private static final String startElementName = "StartElement";
-	private static final String endElementName = "EndElement";
+	public final static String IS_FUNCTIONAL_ROLE = "org.neo4j.collections.graphdb.is_functional_role";
 	
-	private BinaryRelationshipRole(GraphDatabaseService graphDb, String name){
+	public FunctionalRelationshipRoleImpl(GraphDatabaseService graphDb, String name) {
 		super(graphDb, name);
 	}
+
+	@Override
+	public org.neo4j.graphdb.Node getNode() {
+		org.neo4j.graphdb.Node node = super.getNode();
+		if(!node.hasProperty(IS_FUNCTIONAL_ROLE)){
+			node.setProperty(IS_FUNCTIONAL_ROLE, true);
+		}
+		return node;
+	}
 	
-	public static class StartElement extends BinaryRelationshipRole<Element>{
-		public StartElement(GraphDatabaseService graphDb){
-			super(graphDb, startElementName);
-		}
-	}
-
-	public static class EndElement extends BinaryRelationshipRole<Element>{
-		public EndElement(GraphDatabaseService graphDb){
-			super(graphDb, endElementName);
-		}
-	}
-
 }

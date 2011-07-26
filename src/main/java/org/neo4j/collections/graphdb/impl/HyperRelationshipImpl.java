@@ -1,3 +1,4 @@
+
 /**
  * Copyright (c) 2002-2011 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
@@ -19,6 +20,9 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.Element;
 import org.neo4j.collections.graphdb.FunctionalRelationshipRole;
@@ -28,6 +32,8 @@ import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.RelationshipElement;
 import org.neo4j.collections.graphdb.RelationshipRole;
 
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.RelationshipType;
 
@@ -76,22 +82,119 @@ public class HyperRelationshipImpl extends ElementImpl implements HyperRelations
 		return (this.relType.name().equals(relType.name()));
 	}
 
+	private class RelationshipElementIterator implements Iterator<RelationshipElement<? extends Element>>{
+
+		private final RelationshipRole<? extends Element>[] roles;
+		private int index = 0;
+		
+		
+		RelationshipElementIterator(
+				RelationshipRole<? extends Element>[] roles) {
+			this.roles = roles;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return index < roles.length;
+		}
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@Override
+		public RelationshipElement<? extends Element> next() {
+			if(hasNext()){
+				String roleName = relType.name().substring(relType.name().indexOf("/#/")+3);
+				RelationshipRole<? extends Element> role = getGraphDatabase().getRelationshipRole(roleName);
+				Iterable<? extends Element> elems = new ElementIterable(role);
+				return new RelationshipElement(role, elems);
+			}else{
+				throw new NoSuchElementException();
+			}
+		}
+
+		@Override
+		public void remove() {
+		}
+	}
+
+	private class ElementIterator<T extends Element> implements Iterator<T>{
+
+		private final Iterator<org.neo4j.graphdb.Relationship> rels;
+		
+		public ElementIterator(RelationshipRole<T> role) {
+			this.rels = getNode().getRelationships(DynamicRelationshipType.withName(relType.name()+"/#/"+role.getName()), Direction.OUTGOING).iterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return rels.hasNext();
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public T next() {
+			return (T)getGraphDatabase().getElement(rels.next().getEndNode());
+		}
+
+		@Override
+		public void remove() {
+		}
+	}
+
+	private class ElementIterable<T extends Element> implements Iterable<T>{
+
+		private final RelationshipRole<T> role;
+		
+		
+		public ElementIterable(RelationshipRole<T> role) {
+			this.role = role;
+		}
+
+		@Override
+		public Iterator<T> iterator() {
+			return new ElementIterator<T>(role);
+		}
+	}
+	
+	private class RelationshipElementIterable implements Iterable<RelationshipElement<? extends Element>>{
+
+		private final RelationshipRole<? extends Element>[] roles;
+		
+		public RelationshipElementIterable(
+				RelationshipRole<? extends Element>[] roles) {
+			this.roles = roles;
+		}
+
+		public RelationshipElementIterable() {
+			this.roles = relType.getRoles();
+		}
+		
+		@Override
+		public Iterator<RelationshipElement<? extends Element>> iterator() {
+			return new RelationshipElementIterator(roles);
+		}
+		
+	}
+	
 	@Override
 	public Iterable<RelationshipElement<? extends Element>> getRelationshipElements() {
-		// TODO Auto-generated method stub
-		return null;
+		return new RelationshipElementIterable();
 	}
 
+	@Override
+	public Iterable<RelationshipElement<? extends Element>> getRelationshipElements(RelationshipRole<?>... roles) {
+		return new RelationshipElementIterable(roles);
+	}
+
+	
 	@Override
 	public <T extends Element> Iterable<T> getElements(RelationshipRole<T> role) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ElementIterable<T>(role);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends Element> T getElement(FunctionalRelationshipRole<T> role) {
-		// TODO Auto-generated method stub
-		return null;
+		return (T)getGraphDatabase().getElement(getNode().getSingleRelationship(DynamicRelationshipType.withName(relType.name()+"/#/"+role.getName()), Direction.OUTGOING).getEndNode());
 	}
 
 }

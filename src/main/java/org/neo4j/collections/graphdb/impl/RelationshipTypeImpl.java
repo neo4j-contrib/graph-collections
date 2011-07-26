@@ -20,6 +20,8 @@
 package org.neo4j.collections.graphdb.impl;
 
 
+import java.util.Set;
+
 import org.neo4j.collections.graphdb.Element;
 import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
@@ -29,22 +31,26 @@ import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipRole;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.RelationshipType;
 
 public class RelationshipTypeImpl extends ElementImpl implements HyperRelationshipType{
 
 	public final static String REL_TYPE = "org.neo4j.collections.graphdb.rel_type";
+	public final static String REL_TYPE_ROLES = "org.neo4j.collections.graphdb.rel_type_roles";
 	
 	private final org.neo4j.graphdb.RelationshipType relType;
 	private final GraphDatabaseService graphDb;
+	private final Set<RelationshipRole<?>> roles;
 	private Node node = null;
 
 	enum RelTypes implements org.neo4j.graphdb.RelationshipType{
 		RELTYPE_SUBREF
 	}
 	
-	RelationshipTypeImpl(org.neo4j.graphdb.RelationshipType relType, GraphDatabaseService graphDb){
+	RelationshipTypeImpl(GraphDatabaseService graphDb, RelationshipType relType, Set<RelationshipRole<?>> roles){
 		this.relType = relType;
 		this.graphDb = graphDb;
+		this.roles = roles;
 	}
 	
 	public String name() {
@@ -59,31 +65,47 @@ public class RelationshipTypeImpl extends ElementImpl implements HyperRelationsh
 		return relType;
 	}
 	
-	public GraphDatabaseService getGraphDatabaseExt() {
-		return graphDb;
-	}
-
 	public GraphDatabaseService getGraphDatabase() {
 		return graphDb;
 	}
+	
+	
+	public static Node getOrCreateRoleSubRef(GraphDatabaseService graphDb){
+		Relationship subRefRel = graphDb.getReferenceNode().getSingleRelationship(RelTypes.RELTYPE_SUBREF, Direction.OUTGOING);
+		if(subRefRel == null){
+			Node n = graphDb.createNode();
+			graphDb.getReferenceNode().createRelationshipTo(n, RelTypes.RELTYPE_SUBREF);
+			return n;
+		}else{
+			return subRefRel.getEndNode();
+		}
+		
+	}
 
+	private Node getOrCreateAssociatedNode(RelationshipType relType){
+		Node subRef = getOrCreateRoleSubRef(getGraphDatabase()); 
+		Relationship rel = subRef.getSingleRelationship(relType, Direction.OUTGOING);
+		if(rel != null){
+			return rel.getEndNode();
+		}else{
+			Node n = graphDb.createNode();
+			subRef.createRelationshipTo(n, relType);
+			n.setProperty(REL_TYPE, relType.name());
+			return n;
+		}
+	}
+	
 	public org.neo4j.graphdb.Node getNode(){
 		if(node == null){
-			Relationship subRefRel = getGraphDatabaseExt().getReferenceNode().getSingleRelationship(RelTypes.RELTYPE_SUBREF, Direction.OUTGOING);
-			Node subRef = null;
-			if(subRefRel == null){
-				Node n = getGraphDatabaseExt().createNode();
-				getGraphDatabaseExt().getReferenceNode().createRelationshipTo(n, RelTypes.RELTYPE_SUBREF);
-				subRef = n;
-			}else{
-				subRef = (Node)subRefRel.getEndNode();
-			}
-			if(subRef.hasProperty(relType.name())){
-				node = getGraphDatabaseExt().getNodeById((Long)subRef.getProperty(relType.name()));
-			}else{
-				Node n = getGraphDatabaseExt().createNode();
-				n.setProperty(REL_TYPE, relType.name());
-				subRef.setProperty(relType.name(),n.getId());
+			node = getOrCreateAssociatedNode(relType);
+			if(!node.hasProperty(REL_TYPE_ROLES)){
+				String[] names = new String[roles.size()];
+				int i=0;
+				for(RelationshipRole<?> role: roles){
+					names[i] = role.getName();
+					i++;
+				}
+				node.setProperty(REL_TYPE_ROLES, names);
 			}
 		}
 		return node.getNode();
@@ -92,7 +114,7 @@ public class RelationshipTypeImpl extends ElementImpl implements HyperRelationsh
 
 	@Override
 	public Iterable<PropertyType<?>> getPropertyTypes() {
-		return PropertyType.getPropertyTypes(this, getGraphDatabaseExt());
+		return PropertyType.getPropertyTypes(this, getGraphDatabase());
 	}
 
 	@Override
@@ -100,9 +122,9 @@ public class RelationshipTypeImpl extends ElementImpl implements HyperRelationsh
 		return getNode();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public RelationshipRole<? extends Element>[] getRoles() {
-		// TODO Auto-generated method stub
-		return null;
+		return (RelationshipRole<? extends Element>[]) roles.toArray();
 	}
 }
