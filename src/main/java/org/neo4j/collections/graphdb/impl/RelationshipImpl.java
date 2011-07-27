@@ -110,10 +110,14 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 	@Override
 	public org.neo4j.graphdb.Node getNode() {
 		if(node == null){
-			Node n = getGraphDatabase().createNode();
-			n.setProperty(REL_ID, rel.getId());
-			rel.setProperty(NODE_ID, n.getId());
-			return n.getNode();
+			if(rel.hasProperty(NODE_ID)){
+				return getGraphDatabase().getNodeById((Long)rel.getProperty(NODE_ID)).getNode();
+			}else{
+				Node n = getGraphDatabase().createNode();
+				n.setProperty(REL_ID, rel.getId());
+				rel.setProperty(NODE_ID, n.getId());
+				return n.getNode();
+			}
 		}else{
 			return node.getNode();
 		}
@@ -150,9 +154,9 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends Element> T getElement(FunctionalRelationshipRole<T> role) {
-		if(role.getName().equals(getGraphDatabase().getStartElementRole())){
+		if(role.getName().equals(getGraphDatabase().getStartElementRole().getName())){
 			return (T) getGraphDatabase().getElement(rel.getStartNode());
-		}else if(role.getName().equals(getGraphDatabase().getEndElementRole())){
+		}else if(role.getName().equals(getGraphDatabase().getEndElementRole().getName())){
 			return (T) getGraphDatabase().getElement(rel.getEndNode());
 		}else{
 			throw new RuntimeException("Supplied role is not supported");

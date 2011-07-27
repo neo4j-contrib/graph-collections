@@ -26,6 +26,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.collections.graphdb.impl.ElementImpl;
+import org.neo4j.collections.graphdb.impl.NodeImpl;
 
 public abstract class PropertyType<T> extends ElementImpl{
 
@@ -55,7 +56,7 @@ public abstract class PropertyType<T> extends ElementImpl{
 		return getNode().getId();
 	}
 	
-	private Node node = null;
+	private Node node;
 	
 	private final String nm; 
 	protected final GraphDatabaseService graphDb;
@@ -73,39 +74,40 @@ public abstract class PropertyType<T> extends ElementImpl{
 		for(org.neo4j.graphdb.RelationshipType relType: RelTypes.values()){
 			if(!relType.equals(RelTypes.PROPTYPE_SUBREF)){
 				Node typeSubRef = getTypeSubRef(graphDb, relType);
-				if(typeSubRef.hasProperty(key)){
-					if(relType.equals(RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF))
+				if(typeSubRef.hasRelationship(DynamicRelationshipType.withName(key), Direction.OUTGOING)){
+					if(relType.equals(RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF)){
 						return new BooleanArrayPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.BOOLEAN_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.BOOLEAN_PROPTYPE_SUBREF)){
 						return new BooleanPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF)){
 						return new ByteArrayPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.BYTE_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.BYTE_PROPTYPE_SUBREF)){
 						return new BytePropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.DOUBLE_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.DOUBLE_PROPTYPE_SUBREF)){
 						return new DoublePropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF)){
 						return new DoubleArrayPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.FLOAT_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.FLOAT_PROPTYPE_SUBREF)){
 						return new FloatPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF)){
 						return new FloatArrayPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.INTEGER_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.INTEGER_PROPTYPE_SUBREF)){
 						return new IntegerPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF)){
 						return new IntegerArrayPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.LONG_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.LONG_PROPTYPE_SUBREF)){
 						return new LongPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.LONG_ARRAY_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.LONG_ARRAY_PROPTYPE_SUBREF)){
 						return new LongArrayPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.SHORT_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.SHORT_PROPTYPE_SUBREF)){
 						return new ShortPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF)){
 						return new ShortArrayPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.STRING_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.STRING_PROPTYPE_SUBREF)){
 						return new StringPropertyType(key, graphDb);
-					else if(relType.equals(RelTypes.STRING_ARRAY_PROPTYPE_SUBREF))
+					}else if(relType.equals(RelTypes.STRING_ARRAY_PROPTYPE_SUBREF)){
 						return new StringArrayPropertyType(key, graphDb);
+					}
 				}
 			}
 		}
@@ -137,14 +139,14 @@ public abstract class PropertyType<T> extends ElementImpl{
 		}else{
 			subRef = (Node)subRefRel.getEndNode();
 		}
-		Relationship typeSubRefRel = graphDb.getReferenceNode().getSingleRelationship(propertyNameSubRef, Direction.OUTGOING);
+		Relationship typeSubRefRel = subRef.getSingleRelationship(propertyNameSubRef, Direction.OUTGOING);
 		Node typeSubRef = null;
 		if(typeSubRefRel == null){
 			Node n = graphDb.createNode();
 			subRef.createRelationshipTo(n, propertyNameSubRef);
 			typeSubRef = n;
 		}else{
-			typeSubRef = (Node)subRefRel.getEndNode();
+			typeSubRef = (Node)typeSubRefRel.getEndNode();
 		}
 		return typeSubRef;
 	}
@@ -155,14 +157,10 @@ public abstract class PropertyType<T> extends ElementImpl{
 		if(node == null){
 			for(org.neo4j.graphdb.RelationshipType relType: RelTypes.values()){
 				Node typeSubRef = getTypeSubRef(getGraphDatabase(), relType);
-				if(typeSubRef.hasProperty(getName())){
+				if(typeSubRef.hasRelationship(DynamicRelationshipType.withName(getName()), Direction.OUTGOING)){
 					if(relType.equals(propertyNameSubRef())){
-						node = getGraphDatabase().getNodeById((Long)typeSubRef.getProperty(getName()));
-						if(node == null){
-							typeSubRef.removeProperty(getName());
-						}else {
-							return node.getNode();
-						}
+						Node node = typeSubRef.getSingleRelationship(DynamicRelationshipType.withName(getName()), Direction.OUTGOING).getEndNode();
+						return node.getNode();
 					}else{
 						throw new RuntimeException("PropertyType already exists with different data type");
 					}
@@ -172,8 +170,10 @@ public abstract class PropertyType<T> extends ElementImpl{
 			node = getGraphDatabase().createNode();
 			node.setProperty(PROP_TYPE, getName());
 			typeSubRef.createRelationshipTo(node, DynamicRelationshipType.withName(getName()));
+			return node.getNode();
+		}else{
+			return node.getNode();
 		}
-		return node.getNode();
 	}
 
 	@Override

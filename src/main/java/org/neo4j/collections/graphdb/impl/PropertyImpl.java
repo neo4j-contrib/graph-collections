@@ -82,16 +82,20 @@ public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 		if(node != null){
 			return node.getNode();
 		}else{
-			Node n = graphDb.createNode();
-			n.setProperty(PROPERTYCONTAINER_ID, pc.getId());
-			n.setProperty(PROPERTY_NAME, propertyType.getName());
-			if(pc instanceof Relationship){
-				n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.RELATIONSHIP.name());
+			if(pc.getPropertyContainer().hasProperty(propertyType.getName()+".node_id")){
+				return getGraphDatabase().getNodeById((Long)pc.getPropertyContainer().getProperty(propertyType.getName()+".node_id")).getNode();
 			}else{
-				n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.NODE.name());
+				Node n = graphDb.createNode();
+				n.setProperty(PROPERTYCONTAINER_ID, pc.getId());
+				n.setProperty(PROPERTY_NAME, propertyType.getName());
+				if(pc instanceof Relationship){
+					n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.RELATIONSHIP.name());
+				}else{
+					n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.NODE.name());
+				}
+				pc.getPropertyContainer().setProperty(propertyType.getName()+".node_id", n.getId());
+				return n.getNode();
 			}
-			pc.getPropertyContainer().setProperty(propertyType.getName()+".node_id", n.getId());
-			return n.getNode();
 		}
 	}
 

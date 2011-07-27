@@ -125,6 +125,12 @@ public class RelationshipTypeImpl extends ElementImpl implements HyperRelationsh
 	@SuppressWarnings("unchecked")
 	@Override
 	public RelationshipRole<? extends Element>[] getRoles() {
-		return (RelationshipRole<? extends Element>[]) roles.toArray();
+		RelationshipRole<? extends Element>[] rls = new RelationshipRole<?>[roles.size()];
+		int i=0;
+		for(RelationshipRole<? extends Element> role: roles){
+			rls[i] = role;
+			i++;
+		}
+		return rls;
 	}
 }

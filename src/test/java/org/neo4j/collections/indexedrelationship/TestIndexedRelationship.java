@@ -52,7 +52,6 @@ public class TestIndexedRelationship extends Neo4jTestCase
 		INDEXED_RELATIONSHIP,
 	};
 
-	
 	@Test
 	public void testIndexRelationshipBasic()
 	{

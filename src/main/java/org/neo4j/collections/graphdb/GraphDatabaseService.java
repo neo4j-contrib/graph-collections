@@ -39,9 +39,9 @@ public interface GraphDatabaseService{
 	
 	public <T extends Element> RelationshipRole<T> getRelationshipRole(String name);
 	
-	public RelationshipRole<Element> getStartElementRole();
+	public FunctionalRelationshipRole<Element> getStartElementRole();
 	
-	public RelationshipRole<Element> getEndElementRole();
+	public FunctionalRelationshipRole<Element> getEndElementRole();
 
 	public Node getReferenceNode();
 	
@@ -110,5 +110,7 @@ public interface GraphDatabaseService{
 	 */
 	public RelationshipType[] expandRelationshipTypes(
 			RelationshipType... relTypes);
+
+	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabaseService();
 	
 }

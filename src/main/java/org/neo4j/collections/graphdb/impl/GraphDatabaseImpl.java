@@ -19,10 +19,12 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.collections.graphdb.Element;
+import org.neo4j.collections.graphdb.FunctionalRelationshipElement;
 import org.neo4j.collections.graphdb.HyperRelationship;
 import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
@@ -30,6 +32,7 @@ import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipElement;
+import org.neo4j.collections.graphdb.FunctionalRelationshipRole;
 import org.neo4j.collections.graphdb.RelationshipRole;
 import org.neo4j.collections.graphdb.BinaryRelationshipRole.*;
 import org.neo4j.collections.graphdb.wrappers.IndexManager;
@@ -218,21 +221,19 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 	@Override
 	public HyperRelationshipType getRelationshipType(RelationshipType relType) {
 		Node n = getRelationshipTypeNode(relType);
-		if(n == null){
-			return null;
-		}else{
-			if(n.hasProperty(RelationshipTypeImpl.REL_TYPE_ROLES)){
-				String[] names = (String[])n.getProperty(RelationshipTypeImpl.REL_TYPE_ROLES);
-				Set<RelationshipRole<?>> roles = new HashSet<RelationshipRole<?>>();
-				for(String name: names){
-					roles.add(getRelationshipRole(name));
-				}
-				return new RelationshipTypeImpl(this, relType, roles);
-			}else{
-				return null;
+		if(n.hasProperty(RelationshipTypeImpl.REL_TYPE_ROLES)){
+			String[] names = (String[])n.getProperty(RelationshipTypeImpl.REL_TYPE_ROLES);
+			Set<RelationshipRole<?>> roles = new HashSet<RelationshipRole<?>>();
+			for(String name: names){
+				roles.add(getRelationshipRole(name));
 			}
+			return new RelationshipTypeImpl(this, relType, roles);
+		}else{
+			Set<RelationshipRole<? extends Element>> roles = new HashSet<RelationshipRole<? extends Element>>();
+			roles.add(getStartElementRole());
+			roles.add(getEndElementRole());
+			return new RelationshipTypeImpl(this, relType, roles);
 		}
-		
 	}
 
 	@Override
@@ -293,12 +294,12 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 	}
 
 	@Override
-	public RelationshipRole<Element> getStartElementRole() {
+	public FunctionalRelationshipRole<Element> getStartElementRole() {
 		return new StartElement(this);
 	}
 
 	@Override
-	public RelationshipRole<Element> getEndElementRole() {
+	public FunctionalRelationshipRole<Element> getEndElementRole() {
 		return new EndElement(this);
 	}
 

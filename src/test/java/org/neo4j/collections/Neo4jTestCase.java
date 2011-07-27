@@ -32,9 +32,9 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.collections.graphdb.impl.EmbeddedGraphDatabase;
 
 public abstract class Neo4jTestCase
 {
@@ -148,7 +148,11 @@ public abstract class Neo4jTestCase
         tx = graphDb.beginTx();
     }
     
-    protected static GraphDatabaseService graphDb()
+    protected static org.neo4j.graphdb.GraphDatabaseService graphDb()
+    {
+        return graphDb.getGraphDatabaseService();
+    }
+    protected static GraphDatabaseService graphDbExt()
     {
         return graphDb;
     }
