@@ -132,7 +132,8 @@ public class HyperRelationshipImpl extends ElementImpl implements HyperRelations
 		@SuppressWarnings("unchecked")
 		@Override
 		public T next() {
-			return (T)getGraphDatabase().getElement(rels.next().getEndNode());
+			Element elem = getGraphDatabase().getElement(rels.next().getEndNode());
+			return (T)elem;
 		}
 
 		@Override

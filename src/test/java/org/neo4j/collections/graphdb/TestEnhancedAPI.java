@@ -22,7 +22,10 @@ package org.neo4j.collections.graphdb;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -113,5 +116,65 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		assertTrue(relType.getRoles()[1].getId() == graphDbExt().getStartElementRole().getId() || relType.getRoles()[1].getId() == graphDbExt().getEndElementRole().getId());
 		assertTrue(rel1.getElement(graphDbExt().getStartElementRole()).getId() == n1.getId());
 		assertTrue(rel1.getElement(graphDbExt().getEndElementRole()).getId() == n2.getId());
+		
+		RelationshipRole<Element> giver = graphDbExt().getRelationshipRole("giver");
+		RelationshipRole<Element> recipient = graphDbExt().getRelationshipRole("recipient");
+		RelationshipRole<Element> gift = graphDbExt().getRelationshipRole("gift");
+
+		Set<RelationshipRole<? extends Element>> roles = new HashSet<RelationshipRole<? extends Element>>();
+		roles.add(giver);
+		roles.add(recipient);
+		roles.add(gift);
+
+		HyperRelationshipType hrelType = graphDbExt().getOrCreateRelationshipType(DynamicRelationshipType.withName("GIVES"), roles);
+		
+		Node flo = graphDbExt().createNode();
+		Node eddie = graphDbExt().createNode();
+		Node tom = graphDbExt().createNode();
+		Node dick = graphDbExt().createNode();
+		Node harry = graphDbExt().createNode();
+		Node book = graphDbExt().createNode();
+		Node spatula = graphDbExt().createNode();
+
+		ArrayList<Element> gv = new ArrayList<Element>();
+		gv.add(flo);
+		gv.add(eddie);
+		ArrayList<Element> rp = new ArrayList<Element>();
+		rp.add(tom);
+		rp.add(dick);
+		rp.add(harry);
+		ArrayList<Element> gf = new ArrayList<Element>();
+		gf.add(book);
+		gf.add(spatula);
+
+		RelationshipElement<Element> givers = new RelationshipElement<Element>(giver, gv);
+		RelationshipElement<Element> recipients = new RelationshipElement<Element>(recipient, rp);
+		RelationshipElement<Element> gifts = new RelationshipElement<Element>(gift, gf);
+
+		Set<RelationshipElement<? extends Element>> relationshipElements = new HashSet<RelationshipElement<? extends Element>>();
+		relationshipElements.add(givers);
+		relationshipElements.add(recipients);
+		relationshipElements.add(gifts);
+		
+		HyperRelationship hrel = graphDbExt().createRelationship(hrelType, relationshipElements);
+		int count = 0;
+		for(Element element: hrel.getElements(giver)){
+			assertTrue(element.getId() == flo.getId() || element.getId() == eddie.getId());
+			count++;
+		}
+		assertTrue(count == 2);
+		count = 0;
+		for(Element element: hrel.getElements(recipient)){
+			assertTrue(element.getId() == tom.getId() || element.getId() == dick.getId()  || element.getId() == harry.getId());
+			count++;
+		}
+		assertTrue(count == 3);
+		count = 0;
+		for(Element element: hrel.getElements(gift)){
+			assertTrue(element.getId() == book.getId() || element.getId() == spatula.getId());
+			count++;
+		}
+		assertTrue(count == 2);
+		
 	}
 }
