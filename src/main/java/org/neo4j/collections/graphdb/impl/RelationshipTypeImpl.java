@@ -19,7 +19,6 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-
 import java.util.Set;
 
 import org.neo4j.collections.graphdb.Element;
