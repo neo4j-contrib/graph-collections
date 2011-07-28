@@ -19,8 +19,19 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Relationship extends BinaryRelationship{
+public interface BinaryRelationship extends HyperRelationship{
 
-	public org.neo4j.graphdb.Relationship getRelationship();
+	public Node getEndNode();
 	
+	public Element getEndElement();
+	
+	public Node getOtherNode(Node node);
+	
+	public Element getOtherElement(Element element);
+
+	public Node getStartNode();
+	
+	public Element getStartElement();
+	
+	public Node[] getNodes();
 }

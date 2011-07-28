@@ -26,7 +26,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.collections.graphdb.impl.ElementImpl;
-import org.neo4j.collections.graphdb.impl.NodeImpl;
 
 public abstract class PropertyType<T> extends ElementImpl{
 

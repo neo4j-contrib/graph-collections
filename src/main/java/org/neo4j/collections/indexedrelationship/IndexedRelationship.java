@@ -62,7 +62,8 @@ import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 
 public class IndexedRelationship implements Iterable<Relationship>{
 
-	public static final String directionPropertyName = "relationship_direction"; 
+	public static final String directionPropertyName = "relationship_direction";
+	public static final String PROPERTY_TYPE = "org.neo4j.collections.indexedrelationship.property_name";
 	
 	private final GraphDatabaseService graphDb; 
 	private final SortedTree bTree;
@@ -231,6 +232,7 @@ public class IndexedRelationship implements Iterable<Relationship>{
 		this.graphDb = graphDb;
 		this.direction = direction;
 		Relationship rel = node.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
+		rel.setProperty(PROPERTY_TYPE, propertyType.getName());
 		Node treeNode = ( rel == null ) ? createTreeRoot(node) : rel.getEndNode();
 		bTree = new PropertySortedTree<T>(graphDb, treeNode, propertyType, isUniqueIndex, relType.name());
 	}
@@ -288,6 +290,14 @@ public class IndexedRelationship implements Iterable<Relationship>{
 		return indexedNode;
 	}
 
+	/**
+	 * @return the {@link Relationship} pointing to the root of the index tree.  
+	 */
+	public Relationship getIndexedRootRelationship(){
+		return indexedNode.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
+	}
+
+	
 	/**
 	 * @return the {@link RelationshipType} of the indexed relationships.  
 	 */

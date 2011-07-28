@@ -19,24 +19,23 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.collections.graphdb.Element;
-import org.neo4j.collections.graphdb.FunctionalRelationshipElement;
 import org.neo4j.collections.graphdb.HyperRelationship;
 import org.neo4j.collections.graphdb.HyperRelationshipType;
 import org.neo4j.collections.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
+import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipElement;
 import org.neo4j.collections.graphdb.FunctionalRelationshipRole;
 import org.neo4j.collections.graphdb.RelationshipRole;
+import org.neo4j.collections.graphdb.SortableRelationshipType;
 import org.neo4j.collections.graphdb.BinaryRelationshipRole.*;
 import org.neo4j.collections.graphdb.wrappers.IndexManager;
-import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
@@ -334,5 +333,10 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 		}else{
 			return new NodeImpl(node);
 		}
+	}
+
+	@Override
+	public <T> SortableRelationshipType<T> getSortableRelationshipType(String name, ComparablePropertyType<T> propertyType) {
+		return new SortableRelationshipTypeImpl<T>(this, DynamicRelationshipType.withName(name), propertyType);
 	}
 }

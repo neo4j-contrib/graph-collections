@@ -19,8 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Relationship extends BinaryRelationship{
+public interface SortableRelationship<T> extends BinaryRelationship{
 
-	public org.neo4j.graphdb.Relationship getRelationship();
-	
 }

@@ -19,8 +19,8 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Relationship extends BinaryRelationship{
-
-	public org.neo4j.graphdb.Relationship getRelationship();
+public interface SortableRelationshipType<T> extends HyperRelationshipType{
 	
+	PropertyType.ComparablePropertyType<T> getPropertyType();
+
 }

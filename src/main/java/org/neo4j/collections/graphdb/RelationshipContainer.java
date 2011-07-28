@@ -26,6 +26,8 @@ public interface RelationshipContainer{
 
 	public Relationship createRelationshipTo(RelationshipContainer n, RelationshipType rt);
 	
+	public <T> SortableRelationship<T> createRelationshipTo(RelationshipContainer n, SortableRelationshipType<T> rt);
+	
 	public Iterable<HyperRelationship> getRelationships();
 	
 	public Iterable<HyperRelationship> getRelationships(RelationshipType... relTypes);
@@ -34,7 +36,7 @@ public interface RelationshipContainer{
 
 	public Iterable<Relationship> getRelationships(Direction dir,
 			RelationshipType... relTypes);
-
+	
 	public Iterable<Relationship> getRelationships(RelationshipType relType,
 			Direction dir);
 

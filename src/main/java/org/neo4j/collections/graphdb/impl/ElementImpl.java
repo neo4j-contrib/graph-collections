@@ -33,9 +33,14 @@ import org.neo4j.collections.graphdb.Path;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
+import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.collections.graphdb.Relationship;
 import org.neo4j.collections.graphdb.RelationshipContainer;
 import org.neo4j.collections.graphdb.RelationshipRole;
+import org.neo4j.collections.graphdb.SortableRelationship;
+import org.neo4j.collections.graphdb.SortableRelationshipType;
+import org.neo4j.collections.indexedrelationship.IndexedRelationship;
+import org.neo4j.collections.sortedtree.SortedTree;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
@@ -51,6 +56,78 @@ public abstract class ElementImpl implements Element{
 		return new RelationshipImpl(getNode().createRelationshipTo(n.getNode(), rt));
 	}
 
+	@Override
+	public <T> SortableRelationship<T> createRelationshipTo(
+			RelationshipContainer n,
+			SortableRelationshipType<T> rt) {
+		IndexedRelationship idxRel = new IndexedRelationship(DynamicRelationshipType.withName(rt.name()), Direction.OUTGOING,  rt.getPropertyType(), true, this.getNode(), getGraphDatabase().getGraphDatabaseService());
+		idxRel.createRelationshipTo(n.getNode());
+		return null;
+	}
+	
+
+	private class SortableRelationshipIterator implements Iterator<SortableRelationship<?>>{
+
+		private final Node node;
+		private final Iterator<Relationship> trees;
+		private IndexedRelationship idx = null;
+		private Iterator<org.neo4j.graphdb.Relationship> rels = null;
+		private SortableRelationship<?> currentRelationship = null;
+		
+		private Boolean hasNext = null;
+		
+		SortableRelationshipIterator(Node node){
+			trees = node.getRelationships(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING).iterator();
+			this.node = node;
+		}
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public boolean hasNext() {
+			if(hasNext != null){
+				return hasNext;
+			}else{
+				if(idx == null){
+					if(trees.hasNext()){
+						Relationship rel = trees.next();
+						String propertyTypeName = (String)rel.getProperty(IndexedRelationship.PROPERTY_TYPE); 
+						ComparablePropertyType<?> propertyType = (ComparablePropertyType<?>) PropertyType.getPropertyTypeByName(propertyTypeName, getGraphDatabase());
+						RelationshipType relType = DynamicRelationshipType.withName((String)rel.getProperty(SortedTree.TREE_NAME));
+						idx = new IndexedRelationship(relType,Direction.OUTGOING, propertyType, true, node.getNode(), getGraphDatabase().getGraphDatabaseService());
+						return hasNext();
+					}else{
+						hasNext = false;
+						return false;
+					}
+				}else{
+					if(rels.hasNext()){
+						currentRelationship = new SortableRelationshipImpl(new RelationshipImpl(rels.next()), idx);
+						hasNext = true;
+						return true;
+					}else{
+						idx = null;
+						return hasNext();
+					}
+				}
+			}
+		}
+
+		@Override
+		public SortableRelationship<?> next() {
+			if(hasNext()){
+				hasNext = null;
+				return currentRelationship;
+			}else{
+				throw new NoSuchElementException();
+			}
+		}
+
+		@Override
+		public void remove() {
+			currentRelationship.delete();
+		}
+	}
+	
 	private class HyperRelationshipIterator implements Iterator<HyperRelationship>{
 
 		private Set<Node> visitedHyperRelationships = new HashSet<Node>();
@@ -59,14 +136,16 @@ public abstract class ElementImpl implements Element{
 		Boolean hasNextAfterMove = null;
 		
 		private final Iterator<org.neo4j.graphdb.Relationship> relIterator;
-		
-		
+		private final Iterator<SortableRelationship<?>> sortableRelIterator;
+
 		HyperRelationshipIterator(){
 			this.relIterator = getNode().getRelationships().iterator();
+			this.sortableRelIterator = new SortableRelationshipIterator(new NodeImpl(getNode()));
 		}
 		
 		HyperRelationshipIterator(RelationshipType... relTypes){
 			this.relIterator = getNode().getRelationships(getGraphDatabase().expandRelationshipTypes(relTypes)).iterator();
+			this.sortableRelIterator = new SortableRelationshipIterator(new NodeImpl(getNode()));			
 		}
 		
 		@Override
@@ -75,6 +154,9 @@ public abstract class ElementImpl implements Element{
 				if(relIterator.hasNext()){
 					Relationship rel = new RelationshipImpl(relIterator.next());
 					RelationshipType relType = rel.getType();
+					if(rel.getType().getRelationshipType().equals(SortedTree.RelTypes.TREE_ROOT)){
+						return hasNext();
+					}
 					int separatorPosition = relType.name().indexOf(hyperRelSeparator); 
 					if( separatorPosition > -1){
 						if(rel.getEndNode().getId() != getNode().getId()){
@@ -95,8 +177,14 @@ public abstract class ElementImpl implements Element{
 						return true;
 					}
 				}else{
-					hasNextAfterMove = false;
-					return false;
+					if(sortableRelIterator.hasNext()){
+						currentRelationship = sortableRelIterator.next();
+						hasNextAfterMove = true;
+						return true;
+					}else{
+						hasNextAfterMove = false;
+						return false;
+					}
 				}
 			}else{
 				return hasNextAfterMove;

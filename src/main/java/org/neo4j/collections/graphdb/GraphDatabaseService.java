@@ -21,6 +21,7 @@ package org.neo4j.collections.graphdb;
 
 import java.util.Set;
 
+import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.collections.graphdb.wrappers.IndexManager;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
@@ -84,6 +85,8 @@ public interface GraphDatabaseService{
 	public HyperRelationshipType getRelationshipType(RelationshipType relType);
 	
 	public HyperRelationshipType getOrCreateRelationshipType(RelationshipType relType, Set<RelationshipRole<? extends Element>>roles);
+	
+	public <T> SortableRelationshipType<T> getSortableRelationshipType(String name, ComparablePropertyType<T> propertyType);
 	
 	public Transaction beginTx();
 	

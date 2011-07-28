@@ -132,7 +132,7 @@ public class RelationshipImpl extends ElementImpl implements Relationship{
 	public Iterable<RelationshipElement<? extends Element>> getRelationshipElements(){
 		ArrayList<RelationshipElement<? extends Element>> relements = new ArrayList<RelationshipElement<? extends Element>>();
 		relements.add(new FunctionalRelationshipElement<Element>(getGraphDatabase().getStartElementRole(), getGraphDatabase().getElement(rel.getStartNode())));
-		relements.add(new FunctionalRelationshipElement<Element>(getGraphDatabase().getEndElementRole(), getGraphDatabase().getElement(rel.getStartNode())));
+		relements.add(new FunctionalRelationshipElement<Element>(getGraphDatabase().getEndElementRole(), getGraphDatabase().getElement(rel.getEndNode())));
 		return relements;
 	}
 
