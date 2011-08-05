@@ -19,33 +19,35 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import java.util.HashSet;
 import java.util.Set;
 
-import org.neo4j.collections.graphdb.Element;
-import org.neo4j.collections.graphdb.HyperRelationship;
-import org.neo4j.collections.graphdb.HyperRelationshipType;
-import org.neo4j.collections.graphdb.GraphDatabaseService;
-import org.neo4j.collections.graphdb.Node;
+import org.neo4j.collections.graphdb.BinaryEdge;
+import org.neo4j.collections.graphdb.BinaryEdgeRoleType;
+import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.EdgeRole;
+import org.neo4j.collections.graphdb.NAryEdge;
+import org.neo4j.collections.graphdb.NAryEdgeRoleType;
+import org.neo4j.collections.graphdb.NAryEdgeType;
+import org.neo4j.collections.graphdb.PropertyRoleType;
+import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.DatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
-import org.neo4j.collections.graphdb.Relationship;
-import org.neo4j.collections.graphdb.RelationshipElement;
-import org.neo4j.collections.graphdb.FunctionalRelationshipRole;
-import org.neo4j.collections.graphdb.RelationshipRole;
-import org.neo4j.collections.graphdb.SortableRelationshipType;
-import org.neo4j.collections.graphdb.BinaryRelationshipRole.*;
-import org.neo4j.collections.graphdb.wrappers.IndexManager;
-import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.collections.graphdb.EdgeElement;
+import org.neo4j.collections.graphdb.SortableBinaryEdgeType;
+import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.event.KernelEventHandler;
 import org.neo4j.graphdb.event.TransactionEventHandler;
 
-public class GraphDatabaseImpl implements GraphDatabaseService {
+public class GraphDatabaseImpl implements DatabaseService {
 
-	private static String HYPERRELATIONSHIP_TYPE = "org.neo4j.collections.graphdb.hyperrelationship_type";
+	public static String HYPERRELATIONSHIP_TYPE = "org.neo4j.collections.graphdb.hyperrelationship_type";
 	
 	private final org.neo4j.graphdb.GraphDatabaseService graphDb;
 
@@ -63,41 +65,41 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 	}
 
 	@Override
-	public Node createNode() {
-		return new NodeImpl(getGraphDatabaseService().createNode());
+	public Vertex createVertex() {
+		return new VertexImpl(getGraphDatabaseService().createNode());
 	}
 
 	@Override
-	public Iterable<Node> getAllNodes() {
+	public Iterable<Vertex> getAllVertices() {
 		return new NodeIterable(getGraphDatabaseService().getAllNodes());
 	}
 
 	@Override
-	public Node getNodeById(long arg0) {
-		return new NodeImpl(getGraphDatabaseService().getNodeById(arg0));
+	public Vertex getVertexById(long id) {
+		return getVertex(getGraphDatabaseService().getNodeById(id));
 	}
 
 	
 	@Override
-	public Node getReferenceNode() {
-		return new NodeImpl(getGraphDatabaseService().getReferenceNode());
+	public Vertex getReferenceVertex() {
+		return new VertexImpl(getGraphDatabaseService().getReferenceNode());
 	}
 
 	@Override
-	public Relationship getRelationshipById(long arg0) {
-		return new RelationshipImpl(getGraphDatabaseService()
+	public BinaryEdge getBinaryEdgeById(long arg0) {
+		return new BinaryEdgeImpl(getGraphDatabaseService()
 				.getRelationshipById(arg0));
 	}
 
 	@Override
-	public Iterable<HyperRelationshipType> getRelationshipTypes() {
+	public Iterable<EdgeType<?>> getEdgeTypes() {
 		return new RelationshipTypeIterable(graphDb.getRelationshipTypes(),
 				this);
 	}
 
 	@Override
 	public IndexManager index() {
-		return new IndexManagerImpl(graphDb.index());
+		return graphDb.index();
 	}
 
 	@Override
@@ -131,123 +133,80 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 
 	@Override
 	public PropertyType<Boolean> getBooleanPropertyType(String name) {
-		return new PropertyType.BooleanPropertyType(name, this);
+		return PropertyType.BooleanPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public PropertyType<Boolean[]> getBooleanArrayPropertyType(String name) {
-		return new PropertyType.BooleanArrayPropertyType(name, this);
+		return PropertyType.BooleanArrayPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public ComparablePropertyType<Byte> getBytePropertyType(String name) {
-		return new PropertyType.BytePropertyType(name, this);
+		return PropertyType.BytePropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public PropertyType<Byte[]> getByteArrayPropertyType(String name) {
-		return new PropertyType.ByteArrayPropertyType(name, this);
+		return PropertyType.ByteArrayPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public ComparablePropertyType<Double> getDoublePropertyType(String name) {
-		return new PropertyType.DoublePropertyType(name, this);
+		return PropertyType.DoublePropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public PropertyType<Double[]> getDoubleArrayPropertyType(String name) {
-		return new PropertyType.DoubleArrayPropertyType(name, this);
+		return PropertyType.DoubleArrayPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public ComparablePropertyType<Float> getFloatPropertyType(String name) {
-		return new PropertyType.FloatPropertyType(name, this);
+		return PropertyType.FloatPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public PropertyType<Float[]> getFloatArrayPropertyType(String name) {
-		return new PropertyType.FloatArrayPropertyType(name, this);
+		return PropertyType.FloatArrayPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public ComparablePropertyType<Long> getLongPropertyType(String name) {
-		return new PropertyType.LongPropertyType(name, this);
+		return PropertyType.LongPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public PropertyType<Long[]> getLongArrayPropertyType(String name) {
-		return new PropertyType.LongArrayPropertyType(name, this);
+		return PropertyType.LongArrayPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public ComparablePropertyType<Short> getShortPropertyType(String name) {
-		return new PropertyType.ShortPropertyType(name, this);
+		return PropertyType.ShortPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public PropertyType<Short[]> getShortArrayPropertyType(String name) {
-		return new PropertyType.ShortArrayPropertyType(name, this);
+		return PropertyType.ShortArrayPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public ComparablePropertyType<String> getStringPropertyType(String name) {
-		return new PropertyType.StringPropertyType(name, this);
+		return PropertyType.StringPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public PropertyType<String[]> getStringArrayPropertyType(String name) {
-		return new PropertyType.StringArrayPropertyType(name, this);
+		return PropertyType.StringArrayPropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
-	public HyperRelationshipType getRelationshipType(String name) {
-		return getRelationshipType(DynamicRelationshipType.withName(name));
-	}
-
-	private Node getRelationshipTypeNode(RelationshipType relType){
-		Node subRef = RelationshipTypeImpl.getOrCreateRoleSubRef(this);
-		Relationship rel = subRef.getSingleRelationship(relType, Direction.OUTGOING);
-		if(rel != null){
-			return rel.getEndNode();
-		}else{
-			Node n = this.createNode();
-			subRef.createRelationshipTo(n, relType);
-			n.setProperty(RelationshipTypeImpl.REL_TYPE, relType.name());
-			return n;
-		}
-	}
-	
-	@Override
-	public HyperRelationshipType getRelationshipType(RelationshipType relType) {
-		Node n = getRelationshipTypeNode(relType);
-		if(n.hasProperty(RelationshipTypeImpl.REL_TYPE_ROLES)){
-			String[] names = (String[])n.getProperty(RelationshipTypeImpl.REL_TYPE_ROLES);
-			Set<RelationshipRole<?>> roles = new HashSet<RelationshipRole<?>>();
-			for(String name: names){
-				roles.add(getRelationshipRole(name));
-			}
-			return new RelationshipTypeImpl(this, relType, roles);
-		}else{
-			Set<RelationshipRole<? extends Element>> roles = new HashSet<RelationshipRole<? extends Element>>();
-			roles.add(getStartElementRole());
-			roles.add(getEndElementRole());
-			return new RelationshipTypeImpl(this, relType, roles);
-		}
-	}
-
-	@Override
-	public HyperRelationshipType getOrCreateRelationshipType(RelationshipType relType, Set<RelationshipRole<? extends Element>>roles) {
-		return new RelationshipTypeImpl(this, relType, roles);
-	}
-
-	
-	@Override
-	public HyperRelationship createRelationship(HyperRelationshipType relType,
-			Set<RelationshipElement<? extends Element>> relationshipElements) {
-		RelationshipRole<? extends Element>[] roles = relType.getRoles();
-		for(RelationshipRole<? extends Element> role: roles){
+	public NAryEdge createEdge(NAryEdgeType edgeType,
+			Set<EdgeElement> relationshipElements) {
+		for(EdgeRole<?,?> role: edgeType.getRoles()){
 			boolean found = false;
-			for(RelationshipElement<? extends Element> relement: relationshipElements){
+			for(EdgeElement relement: relationshipElements){
 				if(relement.getRole().getName().equals(role.getName())){
 					found = true;
 				}
@@ -256,87 +215,98 @@ public class GraphDatabaseImpl implements GraphDatabaseService {
 				throw new RuntimeException("To create relationship an element with role "+role.getName()+" should be provide");
 			}
 		}
-		Node n = createNode();
-		n.setProperty(HYPERRELATIONSHIP_TYPE, relType.name());
-		for(RelationshipElement<? extends Element> relement: relationshipElements){
-			for(Element elem: relement.getElements()){
-				n.createRelationshipTo(elem, DynamicRelationshipType.withName(relType.name()+"/#/"+relement.getRole().getName()));
+		Node n = graphDb.createNode();
+		n.setProperty(HYPERRELATIONSHIP_TYPE, edgeType.getId());
+		for(EdgeElement relement: relationshipElements){
+			for(Vertex elem: relement.getElements()){
+				n.createRelationshipTo(elem.getNode(), DynamicRelationshipType.withName(edgeType.getName()+"/#/"+relement.getRole().getName()));
 			}
 		}
-		return new HyperRelationshipImpl(n, relType);
+		return new NAryEdgeImpl(n);
 	}
 
-	public RelationshipType[] expandRelationshipTypes(
-			RelationshipType... relTypes) {
-		Set<RelationshipType> relTypesToReturn = new HashSet<RelationshipType>();
-		for (RelationshipType relType : relTypes) {
-			HyperRelationshipType hreltype = getRelationshipType(relType);
-			RelationshipRole<?>[] roles = hreltype.getRoles();
-			if (roles.length == 2) {
-				relTypesToReturn.add(DynamicRelationshipType.withName(hreltype
-						.name()));
-			} else {
-				for (RelationshipRole<?> role : roles) {
-					relTypesToReturn
-							.add(DynamicRelationshipType.withName(hreltype
-									.name() + "/#/" + role.getName()));
-				}
+
+	@Override
+	public Vertex getVertex(Node node) {
+		if(node.hasProperty(VertexTypeImpl.CLASS_NAME)){
+			try{
+				@SuppressWarnings("unchecked")
+				Class<Vertex> claz = (Class<Vertex>)Class.forName((String)node.getProperty(VertexTypeImpl.CLASS_NAME));
+				@SuppressWarnings("unchecked")
+				Class<Node> nclaz = (Class<Node>)Class.forName("org.neo4j.graphdb.Node");
+				return claz.getConstructor(nclaz).newInstance(node);
+			}catch (Exception e){
+				throw new RuntimeException(e);
 			}
-		}
-		return (RelationshipType[]) relTypesToReturn.toArray();
-	}
-
-	@Override
-	public <T extends Element> RelationshipRole<T> getRelationshipRole(
-			String name) {
-		return new RelationshipRoleImpl<T>(this, name);
-	}
-
-	@Override
-	public FunctionalRelationshipRole<Element> getStartElementRole() {
-		return new StartElement(this);
-	}
-
-	@Override
-	public FunctionalRelationshipRole<Element> getEndElementRole() {
-		return new EndElement(this);
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public Element getElement(org.neo4j.graphdb.Node node) {
-		if(node.hasProperty(RelationshipImpl.REL_ID)){
-			return getRelationshipById((Long)node.getProperty(RelationshipImpl.REL_ID));
-		}else if(node.hasProperty(HYPERRELATIONSHIP_TYPE)){
-			return new HyperRelationshipImpl(new NodeImpl(node), getRelationshipType((String)node.getProperty(HYPERRELATIONSHIP_TYPE)));
-		}else if(node.hasProperty(RelationshipTypeImpl.REL_TYPE)){
-			return getRelationshipType(DynamicRelationshipType.withName((String)node.getProperty(RelationshipTypeImpl.REL_TYPE)));
-		}else if(node.hasProperty(PropertyType.PROP_TYPE)){
-			String propType = (String)node.getProperty(PropertyType.PROP_TYPE);
-			return PropertyType.getPropertyTypeByName(propType, this);
-		}else if(node.hasProperty(RelationshipRoleImpl.ROLE_NAME)){
-			if(node.hasProperty(FunctionalRelationshipRoleImpl.IS_FUNCTIONAL_ROLE)){
-				return new FunctionalRelationshipRoleImpl<Element>(this, (String)node.getProperty(RelationshipRoleImpl.ROLE_NAME));
-			}else{
-				return new RelationshipRoleImpl<Element>(this, (String)node.getProperty(RelationshipRoleImpl.ROLE_NAME));
-			}
-		}else if(node.hasProperty(PropertyImpl.PROPERTYCONTAINER_ID) && node.hasProperty(PropertyImpl.PROPERTYCONTAINER_TYPE) && node.hasProperty(PropertyImpl.PROPERTY_NAME)){
-			if(node.getProperty(PropertyImpl.PROPERTYCONTAINER_TYPE).equals(PropertyImpl.PropertyContainerType.RELATIONSHIP.name())){
-				Relationship rel = getRelationshipById((Long)node.getProperty(PropertyImpl.PROPERTYCONTAINER_ID));
-				PropertyType<?> pt = PropertyType.getPropertyTypeByName((String)node.getProperty(PropertyImpl.PROPERTY_NAME), this);
-				return new PropertyImpl(this, rel, pt);
-			}else{
-				Node n = getNodeById((Long)node.getProperty(PropertyImpl.PROPERTYCONTAINER_ID));
-				PropertyType<?> pt = PropertyType.getPropertyTypeByName((String)node.getProperty(PropertyImpl.PROPERTY_NAME), this);
-				return new PropertyImpl(this, n, pt);
-			}
+		}else if(node.hasProperty(BinaryEdgeImpl.REL_ID)){
+			return new BinaryEdgeImpl(graphDb.getRelationshipById((Long)node.getProperty(BinaryEdgeImpl.REL_ID)));
 		}else{
-			return new NodeImpl(node);
+			return new VertexImpl(node);
 		}
 	}
 
 	@Override
-	public <T> SortableRelationshipType<T> getSortableRelationshipType(String name, ComparablePropertyType<T> propertyType) {
-		return new SortableRelationshipTypeImpl<T>(this, DynamicRelationshipType.withName(name), propertyType);
+	public <T> SortableBinaryEdgeType<T> getSortableRelationshipType(String name, ComparablePropertyType<T> propertyType) {
+		return SortableBinaryEdgeTypeImpl.getOrCreateInstance(this, DynamicRelationshipType.withName(name), propertyType);
+	}
+
+	@Override
+	public Node createNode() {
+		return graphDb.createNode();
+	}
+
+	@Override
+	public Node getNodeById(long id) {
+		return graphDb.getNodeById(id);
+	}
+
+	@Override
+	public Relationship getRelationshipById(long id) {
+		return graphDb.getRelationshipById(id);
+	}
+
+	@Override
+	public Node getReferenceNode() {
+		return graphDb.getReferenceNode();
+	}
+
+	@Override
+	public Iterable<Node> getAllNodes() {
+		return graphDb.getAllNodes();
+	}
+
+	@Override
+	public Iterable<RelationshipType> getRelationshipTypes() {
+		return graphDb.getRelationshipTypes();
+	}
+
+	@Override
+	public BinaryEdgeType getBinaryEdgeType(RelationshipType relType) {
+		return BinaryEdgeTypeImpl.getOrCreateInstance(this, relType);
+	}
+
+	@Override
+	public BinaryEdgeRoleType getStartElementRoleType() {
+		return BinaryEdgeRoleType.StartElement.getOrCreateInstance(this);
+	}
+
+	@Override
+	public BinaryEdgeRoleType getEndElementRoleType() {
+		return BinaryEdgeRoleType.EndElement.getOrCreateInstance(this);
+	}
+
+	@Override
+	public NAryEdgeRoleType getEdgeRoleType(String name) {
+		return NAryEdgeRoleTypeImpl.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public NAryEdgeType getEdgeType(String name, Set<NAryEdgeRoleType> roles) {
+		return NAryEdgeTypeImpl.getOrCreateInstance(this, name, roles);
+	}
+
+	@Override
+	public PropertyRoleType getPropertyRoleType() {
+		return PropertyRoleType.getOrCreateInstance(this);
 	}
 }

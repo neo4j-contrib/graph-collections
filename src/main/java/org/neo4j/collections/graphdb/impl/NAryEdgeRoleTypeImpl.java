@@ -19,32 +19,31 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import java.util.Iterator;
+import org.neo4j.collections.graphdb.DatabaseService;
+import org.neo4j.collections.graphdb.EdgeRole;
+import org.neo4j.collections.graphdb.NAryEdgeRoleType;
+import org.neo4j.collections.graphdb.NAryEdgeType;
+import org.neo4j.graphdb.Node;
 
-import org.neo4j.collections.graphdb.BinaryEdge;
-import org.neo4j.graphdb.Relationship;
+public class NAryEdgeRoleTypeImpl extends EdgeRoleTypeImpl implements NAryEdgeRoleType{
 
-class RelationshipIterator implements Iterator<BinaryEdge>{
 
-	private final Iterator<Relationship> rels;
-	
-	RelationshipIterator(Iterator<Relationship> rels){
-		this.rels = rels;
+	public NAryEdgeRoleTypeImpl(Node node) {
+		super(node);
+	}
+
+	public static NAryEdgeRoleType getOrCreateInstance(DatabaseService db, String name) {
+		return new NAryEdgeRoleTypeImpl(EdgeRoleTypeImpl.getOrCreateInstanceNode(db, name));
 	}
 	
 	@Override
-	public boolean hasNext() {
-		return rels.hasNext();
+	public EdgeRole<NAryEdgeType, NAryEdgeRoleType> getRole(NAryEdgeType edgeType) {
+		return new EdgeRole<NAryEdgeType, NAryEdgeRoleType>(this, edgeType);
 	}
 
 	@Override
-	public BinaryEdge next() {
-		return new BinaryEdgeImpl(rels.next());
+	public String getName() {
+		return (String)getNode().getProperty(EDGEROLE_NAME);
 	}
 
-	@Override
-	public void remove() {
-		rels.remove();
-	}
-	
 }

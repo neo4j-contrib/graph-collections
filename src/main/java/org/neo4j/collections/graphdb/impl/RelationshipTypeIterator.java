@@ -21,15 +21,15 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.HyperRelationshipType;
-import org.neo4j.collections.graphdb.GraphDatabaseService;
+import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.DatabaseService;
 
-class RelationshipTypeIterator implements Iterator<HyperRelationshipType>{
+class RelationshipTypeIterator implements Iterator<EdgeType<?>>{
 
 	private final Iterator<org.neo4j.graphdb.RelationshipType> relTypes;
-	private final GraphDatabaseService graphDb;
+	private final DatabaseService graphDb;
 	
-	RelationshipTypeIterator(Iterator<org.neo4j.graphdb.RelationshipType> relTypes, GraphDatabaseService graphDb){
+	RelationshipTypeIterator(Iterator<org.neo4j.graphdb.RelationshipType> relTypes, DatabaseService graphDb){
 		this.relTypes = relTypes;
 		this.graphDb = graphDb;
 	}
@@ -40,8 +40,8 @@ class RelationshipTypeIterator implements Iterator<HyperRelationshipType>{
 	}
 
 	@Override
-	public HyperRelationshipType next() {
-		return graphDb.getRelationshipType(relTypes.next());
+	public EdgeType<?> next() {
+		return BinaryEdgeTypeImpl.getOrCreateInstance(graphDb, relTypes.next());
 	}
 
 	@Override

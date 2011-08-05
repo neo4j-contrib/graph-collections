@@ -21,18 +21,19 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.Relationship;
+import org.neo4j.collections.graphdb.BinaryEdge;
+import org.neo4j.graphdb.Relationship;
 
-class RelationshipIterable implements Iterable<Relationship>{
+class RelationshipIterable implements Iterable<BinaryEdge>{
 
 	private Iterable<org.neo4j.graphdb.Relationship> rels;
 	
-	RelationshipIterable(Iterable<org.neo4j.graphdb.Relationship> rels){
+	RelationshipIterable(Iterable<Relationship> rels){
 		this.rels = rels;
 	}
 	
 	@Override
-	public Iterator<Relationship> iterator() {
+	public Iterator<BinaryEdge> iterator() {
 		return new RelationshipIterator(rels.iterator());
 	}
 	

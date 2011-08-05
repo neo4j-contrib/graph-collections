@@ -21,21 +21,21 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.HyperRelationshipType;
-import org.neo4j.collections.graphdb.GraphDatabaseService;
+import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.DatabaseService;
 
-class RelationshipTypeIterable implements Iterable<HyperRelationshipType>{
+class RelationshipTypeIterable implements Iterable<EdgeType<?>>{
 
 	private Iterable<org.neo4j.graphdb.RelationshipType> rels;
-	private final GraphDatabaseService graphDb;
+	private final DatabaseService graphDb;
 	
-	RelationshipTypeIterable(Iterable<org.neo4j.graphdb.RelationshipType> rels, GraphDatabaseService graphDb){
+	RelationshipTypeIterable(Iterable<org.neo4j.graphdb.RelationshipType> rels, DatabaseService graphDb){
 		this.rels = rels;
 		this.graphDb = graphDb;
 	}
 	
 	@Override
-	public Iterator<HyperRelationshipType> iterator() {
+	public Iterator<EdgeType<?>> iterator() {
 		return new RelationshipTypeIterator(rels.iterator(), graphDb);
 	}
 	

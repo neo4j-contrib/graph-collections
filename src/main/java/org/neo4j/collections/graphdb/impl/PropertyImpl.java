@@ -19,31 +19,36 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.GraphDatabaseService;
-import org.neo4j.collections.graphdb.Node;
-import org.neo4j.collections.graphdb.Property;
-import org.neo4j.collections.graphdb.PropertyContainer;
-import org.neo4j.collections.graphdb.PropertyType;
-import org.neo4j.collections.graphdb.Relationship;
+import java.util.ArrayList;
 
-public class PropertyImpl<T> extends ElementImpl implements Property<T>{
+import org.neo4j.collections.graphdb.BinaryEdge;
+import org.neo4j.collections.graphdb.DatabaseService;
+import org.neo4j.collections.graphdb.EdgeElement;
+import org.neo4j.collections.graphdb.FunctionalEdgeRoleType;
+import org.neo4j.collections.graphdb.PropertyRoleType;
+import org.neo4j.graphdb.Node;
+import org.neo4j.collections.graphdb.Property;
+import org.neo4j.collections.graphdb.PropertyType;
+import org.neo4j.collections.graphdb.Vertex;
+
+public class PropertyImpl<T> extends VertexImpl implements Property<T>{
 
 	public final static String PROPERTYCONTAINER_ID = "org.neo4j.collections.graphdb.propertycontainer_id";
 	public final static String PROPERTYCONTAINER_TYPE = "org.neo4j.collections.graphdb.propertycontainer_type";
 	public final static String PROPERTY_NAME = "org.neo4j.collections.graphdb.property_name";
 
-	
 	public enum PropertyContainerType{
 		NODE, RELATIONSHIP
 	}
 	
-	private final PropertyContainer pc;
+	private final Vertex vertex;
 	private final PropertyType<T> propertyType;
-	private final GraphDatabaseService graphDb;
-	private org.neo4j.collections.graphdb.Node node;
+	private final DatabaseService graphDb;
+	private Node node;
 
-	PropertyImpl(GraphDatabaseService graphDb, PropertyContainer pc, PropertyType<T> propertyType){
-		this.pc = pc;
+	PropertyImpl(DatabaseService graphDb, Vertex vertex, PropertyType<T> propertyType){
+		super(null);
+		this.vertex = vertex;
 		this.propertyType = propertyType;
 		this.graphDb = graphDb;
 	}
@@ -54,7 +59,7 @@ public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 	
 	@Override
 	public T getValue() {
-		return pc.getPropertyValue(propertyType);
+		return vertex.getPropertyValue(propertyType);
 	}
 
 	@Override
@@ -68,7 +73,7 @@ public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 	}
 
 	@Override
-	public GraphDatabaseService getGraphDatabase() {
+	public DatabaseService getDb() {
 		return graphDb;
 	}
 
@@ -78,30 +83,72 @@ public class PropertyImpl<T> extends ElementImpl implements Property<T>{
 	}
 
 	@Override
-	public org.neo4j.graphdb.Node getNode() {
+	public Node getNode() {
 		if(node != null){
-			return node.getNode();
+			return node;
 		}else{
-			if(pc.getPropertyContainer().hasProperty(propertyType.getName()+".node_id")){
-				return getGraphDatabase().getNodeById((Long)pc.getPropertyContainer().getProperty(propertyType.getName()+".node_id")).getNode();
+			if(vertex.getPropertyContainer().hasProperty(propertyType.getName()+".node_id")){
+				return getDb().getGraphDatabaseService().getNodeById((Long)vertex.getPropertyContainer().getProperty(propertyType.getName()+".node_id"));
 			}else{
 				Node n = graphDb.createNode();
-				n.setProperty(PROPERTYCONTAINER_ID, pc.getId());
+				n.setProperty(PROPERTYCONTAINER_ID, vertex.getId());
 				n.setProperty(PROPERTY_NAME, propertyType.getName());
-				if(pc instanceof Relationship){
+				if(vertex instanceof BinaryEdge){
 					n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.RELATIONSHIP.name());
 				}else{
 					n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.NODE.name());
 				}
-				pc.getPropertyContainer().setProperty(propertyType.getName()+".node_id", n.getId());
-				return n.getNode();
+				vertex.getPropertyContainer().setProperty(propertyType.getName()+".node_id", n.getId());
+				return n;
 			}
 		}
 	}
 
 	@Override
-	public PropertyContainer getPropertyContainerExt() {
-		return new NodeImpl(getNode());
+	public Vertex getVertex() {
+		return new VertexImpl(getNode());
 	}
+
+	@Override
+	public void delete() {
+		node.removeProperty(getType().getName());
+	}
+
+	@Override
+	public PropertyType<T> getType() {
+		return this.propertyType;
+	}
+
+	@Override
+	public boolean isType(PropertyType<T> relType) {
+		return this.propertyType.getId() == relType.getId();
+	}
+
+	@Override
+	public Iterable<EdgeElement> getEdgeElements() {
+		ArrayList<Vertex> elems = new ArrayList<Vertex>();
+		elems.add(getVertex());
+		//TODO
+		return null;
+	}
+
+	@Override
+	public Vertex getElement(FunctionalEdgeRoleType role) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Iterable<EdgeElement> getEdgeElements(PropertyRoleType... role) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Iterable<Vertex> getElements(PropertyRoleType role) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 }

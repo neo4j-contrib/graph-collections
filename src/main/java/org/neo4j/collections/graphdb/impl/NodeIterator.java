@@ -21,29 +21,30 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.Node;
+import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.graphdb.Node;
 
-class NodeIterator implements Iterator<Node>{
+class NodeIterator implements Iterator<Vertex>{
 
-	private final Iterator<org.neo4j.graphdb.Node> rels;
+	private final Iterator<Node> nodes;
 	
-	NodeIterator(Iterator<org.neo4j.graphdb.Node> rels){
-		this.rels = rels;
+	NodeIterator(Iterator<Node> nodes){
+		this.nodes = nodes;
 	}
 	
 	@Override
 	public boolean hasNext() {
-		return rels.hasNext();
+		return nodes.hasNext();
 	}
 
 	@Override
-	public Node next() {
-		return new NodeImpl(rels.next());
+	public Vertex next() {
+		return new VertexImpl(nodes.next());
 	}
 
 	@Override
 	public void remove() {
-		rels.remove();
+		nodes.remove();
 	}
 	
 }

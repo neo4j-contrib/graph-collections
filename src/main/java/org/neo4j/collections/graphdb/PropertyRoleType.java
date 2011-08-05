@@ -17,34 +17,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.graphdb.impl;
+package org.neo4j.collections.graphdb;
 
-import java.util.Iterator;
+import org.neo4j.collections.graphdb.impl.EdgeRoleTypeImpl;
+import org.neo4j.graphdb.Node;
 
-import org.neo4j.collections.graphdb.BinaryEdge;
-import org.neo4j.graphdb.Relationship;
-
-class RelationshipIterator implements Iterator<BinaryEdge>{
-
-	private final Iterator<Relationship> rels;
+public class PropertyRoleType extends EdgeRoleTypeImpl implements UnaryEdgeRoleType{
 	
-	RelationshipIterator(Iterator<Relationship> rels){
-		this.rels = rels;
+	private static final String propertyRoleTypeName = "PropertyRoleType";
+	
+	public PropertyRoleType(Node node) {
+		super(node);
 	}
-	
-	@Override
-	public boolean hasNext() {
-		return rels.hasNext();
+
+	public static PropertyRoleType getOrCreateInstance(DatabaseService db) {
+		return new PropertyRoleType(EdgeRoleTypeImpl.getOrCreateInstanceNode(db, propertyRoleTypeName));
+		
 	}
 
 	@Override
-	public BinaryEdge next() {
-		return new BinaryEdgeImpl(rels.next());
+	public String getName() {
+		return propertyRoleTypeName;
 	}
-
-	@Override
-	public void remove() {
-		rels.remove();
-	}
-	
 }

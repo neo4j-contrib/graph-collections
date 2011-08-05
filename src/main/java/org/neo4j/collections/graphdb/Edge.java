@@ -17,34 +17,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.graphdb.impl;
+package org.neo4j.collections.graphdb;
 
-import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.BinaryEdge;
-import org.neo4j.graphdb.Relationship;
+public interface Edge<T extends EdgeType<U>, U extends EdgeRoleType> extends Vertex{
 
-class RelationshipIterator implements Iterator<BinaryEdge>{
-
-	private final Iterator<Relationship> rels;
+	public long getId();
 	
-	RelationshipIterator(Iterator<Relationship> rels){
-		this.rels = rels;
-	}
+	public void delete();
+
+	public T getType();
+
+	public boolean isType(T relType);
+
+	public Iterable<EdgeElement> getEdgeElements();
+
+	public Iterable<EdgeElement> getEdgeElements(U... role);
 	
-	@Override
-	public boolean hasNext() {
-		return rels.hasNext();
-	}
-
-	@Override
-	public BinaryEdge next() {
-		return new BinaryEdgeImpl(rels.next());
-	}
-
-	@Override
-	public void remove() {
-		rels.remove();
-	}
+	public Iterable<Vertex> getElements(U role);
+	
+	public Vertex getElement(FunctionalEdgeRoleType role);
 	
 }

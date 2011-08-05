@@ -19,171 +19,58 @@
  */
 package org.neo4j.collections.graphdb;
 
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.collections.graphdb.impl.ElementImpl;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.collections.graphdb.impl.EdgeTypeImpl;
+import org.neo4j.collections.graphdb.impl.VertexTypeImpl;
 
-public abstract class PropertyType<T> extends ElementImpl{
+public abstract class PropertyType<T> extends EdgeTypeImpl<PropertyRoleType> implements UnaryEdgeType<PropertyRoleType>{
 
-	public final static String PROP_TYPE = "org.neo4j.collections.graphdb.prop_type";
-	
-	public static enum RelTypes implements org.neo4j.graphdb.RelationshipType{
-		PROPTYPE_SUBREF,
-		BOOLEAN_PROPTYPE_SUBREF,
-		BOOLEAN_ARRAY_PROPTYPE_SUBREF,
-		BYTE_PROPTYPE_SUBREF,
-		BYTE_ARRAY_PROPTYPE_SUBREF,		
-		DOUBLE_PROPTYPE_SUBREF,		
-		DOUBLE_ARRAY_PROPTYPE_SUBREF,
-		FLOAT_PROPTYPE_SUBREF,
-		FLOAT_ARRAY_PROPTYPE_SUBREF,
-		LONG_PROPTYPE_SUBREF,
-		LONG_ARRAY_PROPTYPE_SUBREF,
-		INTEGER_PROPTYPE_SUBREF,
-		INTEGER_ARRAY_PROPTYPE_SUBREF,
-		SHORT_PROPTYPE_SUBREF,
-		SHORT_ARRAY_PROPTYPE_SUBREF,
-		STRING_PROPTYPE_SUBREF,
-		STRING_ARRAY_PROPTYPE_SUBREF		
+	private PropertyType(Node node) {
+		super(node);
 	}
-	
-	public long getId(){
-		return getNode().getId();
-	}
-	
-	private Node node;
-	
-	private final String nm; 
-	protected final GraphDatabaseService graphDb;
-	
-	public String getName(){
-		return nm;
-	}
-
-	private PropertyType(String name, GraphDatabaseService graphDb){
-		this.nm = name;
-		this.graphDb = graphDb;
-	}
-
-	public static PropertyType<?> getPropertyTypeByName(String key, GraphDatabaseService graphDb){
-		for(org.neo4j.graphdb.RelationshipType relType: RelTypes.values()){
-			if(!relType.equals(RelTypes.PROPTYPE_SUBREF)){
-				Node typeSubRef = getTypeSubRef(graphDb, relType);
-				if(typeSubRef.hasRelationship(DynamicRelationshipType.withName(key), Direction.OUTGOING)){
-					if(relType.equals(RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF)){
-						return new BooleanArrayPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.BOOLEAN_PROPTYPE_SUBREF)){
-						return new BooleanPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF)){
-						return new ByteArrayPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.BYTE_PROPTYPE_SUBREF)){
-						return new BytePropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.DOUBLE_PROPTYPE_SUBREF)){
-						return new DoublePropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF)){
-						return new DoubleArrayPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.FLOAT_PROPTYPE_SUBREF)){
-						return new FloatPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF)){
-						return new FloatArrayPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.INTEGER_PROPTYPE_SUBREF)){
-						return new IntegerPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF)){
-						return new IntegerArrayPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.LONG_PROPTYPE_SUBREF)){
-						return new LongPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.LONG_ARRAY_PROPTYPE_SUBREF)){
-						return new LongArrayPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.SHORT_PROPTYPE_SUBREF)){
-						return new ShortPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF)){
-						return new ShortArrayPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.STRING_PROPTYPE_SUBREF)){
-						return new StringPropertyType(key, graphDb);
-					}else if(relType.equals(RelTypes.STRING_ARRAY_PROPTYPE_SUBREF)){
-						return new StringArrayPropertyType(key, graphDb);
-					}
-				}
-			}
-		}
-		return null;
-	}
-	
-	public static Iterable<PropertyType<?>> getPropertyTypes(PropertyContainer pc, GraphDatabaseService graphDb){
-		ArrayList<PropertyType<?>> propertyTypes = new ArrayList<PropertyType<?>>();
-		for(String key: pc.getPropertyContainer().getPropertyKeys()){
-			propertyTypes.add(getPropertyTypeByName(key, graphDb));
-		}
-		return propertyTypes;
-	}
-	
-	protected abstract RelationshipType propertyNameSubRef();
 
 	@Override
-	public org.neo4j.graphdb.PropertyContainer getPropertyContainer() {
+	public PropertyContainer getPropertyContainer() {
 		return getNode();
 	}
 
-	private static Node getTypeSubRef(GraphDatabaseService graphDb, RelationshipType propertyNameSubRef){
-		Relationship subRefRel = graphDb.getReferenceNode().getSingleRelationship(RelTypes.PROPTYPE_SUBREF, Direction.OUTGOING);
-		Node subRef = null;
-		if(subRefRel == null){
-			Node n = graphDb.createNode();
-			graphDb.getReferenceNode().createRelationshipTo(n, RelTypes.PROPTYPE_SUBREF);
-			subRef = n;
-		}else{
-			subRef = (Node)subRefRel.getEndNode();
-		}
-		Relationship typeSubRefRel = subRef.getSingleRelationship(propertyNameSubRef, Direction.OUTGOING);
-		Node typeSubRef = null;
-		if(typeSubRefRel == null){
-			Node n = graphDb.createNode();
-			subRef.createRelationshipTo(n, propertyNameSubRef);
-			typeSubRef = n;
-		}else{
-			typeSubRef = (Node)typeSubRefRel.getEndNode();
-		}
-		return typeSubRef;
+	@SuppressWarnings("unchecked")
+	@Override
+	public Set<PropertyRole> getRoles() {
+		Set<PropertyRole> roles = new HashSet<PropertyRole>();
+		roles.add(new PropertyRole(PropertyRoleType.getOrCreateInstance(getDb()), this));
+		return roles;
 	}
 	
-	
-	@Override
-	public org.neo4j.graphdb.Node getNode(){
-		if(node == null){
-			for(org.neo4j.graphdb.RelationshipType relType: RelTypes.values()){
-				Node typeSubRef = getTypeSubRef(getGraphDatabase(), relType);
-				if(typeSubRef.hasRelationship(DynamicRelationshipType.withName(getName()), Direction.OUTGOING)){
-					if(relType.equals(propertyNameSubRef())){
-						Node node = typeSubRef.getSingleRelationship(DynamicRelationshipType.withName(getName()), Direction.OUTGOING).getEndNode();
-						return node.getNode();
-					}else{
-						throw new RuntimeException("PropertyType already exists with different data type");
-					}
-				}
-			}
-			Node typeSubRef = getTypeSubRef(getGraphDatabase(), propertyNameSubRef());			
-			node = getGraphDatabase().createNode();
-			node.setProperty(PROP_TYPE, getName());
-			typeSubRef.createRelationshipTo(node, DynamicRelationshipType.withName(getName()));
-			return node.getNode();
+	public PropertyRoleType getRole(String name) {
+		if(name.equals(PropertyRoleType.getOrCreateInstance(getDb()).getName())){
+			return PropertyRoleType.getOrCreateInstance(getDb());
 		}else{
-			return node.getNode();
+			return null;
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public GraphDatabaseService getGraphDatabase() {
-		return graphDb;
+	public <U extends EdgeType<PropertyRoleType>> EdgeRole<U, PropertyRoleType> getRole(
+			PropertyRoleType edgeRoleType) {
+		return (EdgeRole<U, PropertyRoleType>) new EdgeRole<PropertyType<T>, PropertyRoleType>(edgeRoleType, this);
+	}
+	
+	
+	public static PropertyType<?> getPropertyTypeByName(DatabaseService db, String name){
+		return (PropertyType<?>)VertexTypeImpl.getByName(db, name);
 	}
 	
 	public static abstract class ComparablePropertyType<T> extends PropertyType<T> implements Comparator<org.neo4j.graphdb.Node>, PropertyComparator<T>{
 
-		ComparablePropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		ComparablePropertyType(Node node) {
+			super(node);
 		}
 		
 		public abstract int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2);
@@ -193,46 +80,83 @@ public abstract class PropertyType<T> extends ElementImpl{
 
 	public static class BooleanArrayPropertyType extends PropertyType<Boolean[]>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.BOOLEAN_ARRAY_PROPTYPE_SUBREF;	
+		public BooleanArrayPropertyType(Node node){
+			super(node);
 		}
 
-		public BooleanArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$BooleanArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
+		
+		public static BooleanArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new BooleanArrayPropertyType(vertexType.getNode());
+		}
+
 	}
 	
 	public static class BooleanPropertyType extends PropertyType<Boolean>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.BOOLEAN_PROPTYPE_SUBREF;	
+		public BooleanPropertyType(Node node){
+			super(node);
+		}
+
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$BooleanPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
 		
-		public BooleanPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public static BooleanPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new BooleanPropertyType(vertexType.getNode());
 		}
 	}
 	
 	public static class ByteArrayPropertyType extends PropertyType<Byte[]>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.BYTE_ARRAY_PROPTYPE_SUBREF;	
+		public ByteArrayPropertyType(Node node){
+			super(node);
 		}
 
-		public ByteArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$ByteArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+
+		public static ByteArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new ByteArrayPropertyType(vertexType.getNode());
 		}
 		
 	}
 
 	public static class BytePropertyType extends ComparablePropertyType<Byte>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.BYTE_PROPTYPE_SUBREF;	
+		public BytePropertyType(Node node){
+			super(node);
 		}
 
-		public BytePropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$BytePropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+		
+		public static BytePropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new BytePropertyType(vertexType.getNode());
 		}
 
 		@Override
@@ -262,24 +186,42 @@ public abstract class PropertyType<T> extends ElementImpl{
 
 	public static class DoubleArrayPropertyType extends PropertyType<Double[]>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.DOUBLE_ARRAY_PROPTYPE_SUBREF;	
+		public DoubleArrayPropertyType(Node node){
+			super(node);
 		}
 
-		public DoubleArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$DoubleArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+		
+		public static DoubleArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new DoubleArrayPropertyType(vertexType.getNode());
 		}
 		
 	}
 
 	public static class DoublePropertyType extends ComparablePropertyType<Double>{
 
-		public DoublePropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public DoublePropertyType(Node node){
+			super(node);
 		}
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.DOUBLE_PROPTYPE_SUBREF;	
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$DoublePropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+
+		public static DoublePropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new DoublePropertyType(vertexType.getNode());
 		}
 
 		@Override
@@ -309,24 +251,42 @@ public abstract class PropertyType<T> extends ElementImpl{
 
 	public static class FloatArrayPropertyType extends PropertyType<Float[]>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.FLOAT_ARRAY_PROPTYPE_SUBREF;	
+		public FloatArrayPropertyType(Node node){
+			super(node);
 		}
 
-		public FloatArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$FloatArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+		
+		public static FloatArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new FloatArrayPropertyType(vertexType.getNode());
 		}
 		
 	}
 
 	public static class FloatPropertyType extends ComparablePropertyType<Float>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.FLOAT_PROPTYPE_SUBREF;	
+		public FloatPropertyType(Node node){
+			super(node);
 		}
-		
-		public FloatPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$FloatPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+
+		public static FloatPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new FloatPropertyType(vertexType.getNode());
 		}
 
 		@Override
@@ -354,30 +314,45 @@ public abstract class PropertyType<T> extends ElementImpl{
 		}
 	}
 
-	public static PropertyType<Integer[]> getIntegerArrayPropertyType(String name, GraphDatabaseService graphDb) {
-		return new IntegerArrayPropertyType(name, graphDb);
-	}
+	public static class IntegerArrayPropertyType extends PropertyType<Integer[]>{
 
-	private static class IntegerArrayPropertyType extends PropertyType<Integer[]>{
-
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.INTEGER_ARRAY_PROPTYPE_SUBREF;	
+		public IntegerArrayPropertyType(Node node){
+			super(node);
 		}
 		
-		public IntegerArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$IntegerArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+
+		public static IntegerArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new IntegerArrayPropertyType(vertexType.getNode());
 		}
 		
 	}
 
 	public static class IntegerPropertyType extends ComparablePropertyType<Integer>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.INTEGER_PROPTYPE_SUBREF;	
+
+		public IntegerPropertyType(Node node){
+			super(node);
 		}
-		
-		public IntegerPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$IntegerPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+
+		public static IntegerPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new IntegerPropertyType(vertexType.getNode());
 		}
 
 		@Override
@@ -407,23 +382,41 @@ public abstract class PropertyType<T> extends ElementImpl{
 
 	public static class LongArrayPropertyType extends PropertyType<Long[]>{
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.LONG_ARRAY_PROPTYPE_SUBREF;	
+		public LongArrayPropertyType(Node node){
+			super(node);
+		}
+		
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$LongArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
 
-		public LongArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public static LongArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new LongArrayPropertyType(vertexType.getNode());
 		}
 	}
 
 	public static class LongPropertyType extends ComparablePropertyType<Long>{
 
-		public LongPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public LongPropertyType(Node node){
+			super(node);
+		}
+		
+		public static LongPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new LongPropertyType(vertexType.getNode());
 		}
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.LONG_PROPTYPE_SUBREF;	
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$LongPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
 
 		@Override
@@ -453,26 +446,44 @@ public abstract class PropertyType<T> extends ElementImpl{
 
 	public static class ShortArrayPropertyType extends PropertyType<Short[]>{
 
-		public ShortArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public ShortArrayPropertyType(Node node){
+			super(node);
+		}
+		
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$ShortArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.SHORT_ARRAY_PROPTYPE_SUBREF;	
+		public static ShortArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new ShortArrayPropertyType(vertexType.getNode());
 		}
 
 	}
 
 	public static class ShortPropertyType extends ComparablePropertyType<Short>{
 
-		public ShortPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public ShortPropertyType(Node node){
+			super(node);
+		}
+		
+		public static ShortPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new ShortPropertyType(vertexType.getNode());
 		}
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.SHORT_PROPTYPE_SUBREF;	
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$ShortPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
-
+		
 		@Override
 		public int compare(Short value, org.neo4j.graphdb.Node node) {
 			if(node.hasProperty(getName()))
@@ -500,24 +511,41 @@ public abstract class PropertyType<T> extends ElementImpl{
 
 	public static class StringArrayPropertyType extends PropertyType<String[]>{
 
-		public StringArrayPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public StringArrayPropertyType(Node node){
+			super(node);
 		}
 		
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.STRING_ARRAY_PROPTYPE_SUBREF;	
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$StringArrayPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
-		
+
+		public static StringArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new StringArrayPropertyType(vertexType.getNode());
+		}
 	}
 
 	public static class StringPropertyType extends ComparablePropertyType<String>{
 
-		public StringPropertyType(String name, GraphDatabaseService graphDb) {
-			super(name, graphDb);
+		public StringPropertyType(Node node){
+			super(node);
 		}
 
-		protected final RelationshipType propertyNameSubRef(){
-			return RelTypes.STRING_PROPTYPE_SUBREF;	
+		public static StringPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new StringPropertyType(vertexType.getNode());
+		}
+
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$StringPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
 		}
 		
 		@Override

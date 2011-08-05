@@ -19,32 +19,18 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.BinaryEdge;
-import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Node;
+import org.neo4j.collections.graphdb.Edge;
+import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.EdgeRoleType;
 
-class RelationshipIterator implements Iterator<BinaryEdge>{
 
-	private final Iterator<Relationship> rels;
-	
-	RelationshipIterator(Iterator<Relationship> rels){
-		this.rels = rels;
+public abstract class EdgeImpl<T extends EdgeType<U>, U extends EdgeRoleType> extends VertexImpl implements Edge<T, U>{
+
+	EdgeImpl(Node node){
+		super(node);
 	}
 	
-	@Override
-	public boolean hasNext() {
-		return rels.hasNext();
-	}
 
-	@Override
-	public BinaryEdge next() {
-		return new BinaryEdgeImpl(rels.next());
-	}
-
-	@Override
-	public void remove() {
-		rels.remove();
-	}
-	
 }

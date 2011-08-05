@@ -21,19 +21,20 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.Node;
+import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.graphdb.Node;
 
-class NodeIterable implements Iterable<Node>{
+class NodeIterable implements Iterable<Vertex>{
 
-	private Iterable<org.neo4j.graphdb.Node> rels;
+	private Iterable<Node> nodes;
 	
-	NodeIterable(Iterable<org.neo4j.graphdb.Node> rels){
-		this.rels = rels;
+	NodeIterable(Iterable<Node> nodes){
+		this.nodes = nodes;
 	}
 	
 	@Override
-	public Iterator<Node> iterator() {
-		return new NodeIterator(rels.iterator());
+	public Iterator<Vertex> iterator() {
+		return new NodeIterator(nodes.iterator());
 	}
 	
 }
