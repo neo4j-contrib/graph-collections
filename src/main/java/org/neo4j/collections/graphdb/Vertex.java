@@ -20,14 +20,26 @@
 package org.neo4j.collections.graphdb;
 
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.RelationshipType;
 
-public interface Vertex{
+/**
+ * A vertex in the graph with properties and edges to other vertices.
+ */
+public interface Vertex extends Traversal{
 
+	public Vertex addEdge(Vertex n, RelationshipType rt);
+	
+	public Vertex addEdge(Vertex n, SortableBinaryEdgeType<?> rt);
+	
+	public <T> Vertex setProperty(PropertyType<T> pt, T value);
+
+	public Vertex removeProperty(PropertyType<?> pt);
+	
 	public BinaryEdge createEdgeTo(Vertex n, RelationshipType rt);
 	
-	public <T> SortableBinaryEdge<T> createRelationshipTo(Vertex n, SortableBinaryEdgeType<T> rt);
+	public <T> SortableBinaryEdge<T> createEdgeTo(Vertex n, SortableBinaryEdgeType<T> rt);
 	
 	public Iterable<BinaryEdge> getBinaryEdges();
 	
@@ -60,24 +72,24 @@ public interface Vertex{
 
 	public boolean hasBinaryEdge(RelationshipType relTypes, Direction dir);
 
-	abstract org.neo4j.graphdb.Node getNode();
+	Node getNode();
 
-	public long getId();
-	
 	public <T> Property<T> getProperty(PropertyType<T> pt);
 
 	public <T> T getPropertyValue(PropertyType<T> pt);
 	
 	public <T> boolean hasProperty(PropertyType<T> pt);
 
-	public <T> T removeProperty(PropertyType<T> pt);
-	
-	public <T> void setProperty(PropertyType<T> pt, T value);
-
 	public Iterable<PropertyType<?>> getPropertyTypes();
 	
 	public PropertyContainer getPropertyContainer();
 	
 	public DatabaseService getDb();
+	
+	public Iterable<VertexType> getTypes();
 
+	public Vertex addType(VertexType vertexType);
+	
+	public Vertex removeType(VertexType vertexType);
+	
 }

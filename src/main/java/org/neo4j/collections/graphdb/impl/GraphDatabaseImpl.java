@@ -47,7 +47,7 @@ import org.neo4j.graphdb.event.TransactionEventHandler;
 
 public class GraphDatabaseImpl implements DatabaseService {
 
-	public static String HYPERRELATIONSHIP_TYPE = "org.neo4j.collections.graphdb.hyperrelationship_type";
+	public static String EDGE_TYPE = "org.neo4j.collections.graphdb.edge_type";
 	
 	private final org.neo4j.graphdb.GraphDatabaseService graphDb;
 
@@ -74,11 +74,12 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return new NodeIterable(getGraphDatabaseService().getAllNodes());
 	}
 
+/*	
 	@Override
 	public Vertex getVertexById(long id) {
 		return getVertex(getGraphDatabaseService().getNodeById(id));
 	}
-
+*/
 	
 	@Override
 	public Vertex getReferenceVertex() {
@@ -203,10 +204,13 @@ public class GraphDatabaseImpl implements DatabaseService {
 
 	@Override
 	public NAryEdge createEdge(NAryEdgeType edgeType,
-			Set<EdgeElement> relationshipElements) {
+			EdgeElement... edgeElements) {
+		if(edgeElements.length != edgeType.getRoles().size()){
+			throw new RuntimeException("Number of edge elements provided ("+edgeElements.length+") is different from the number of edge roles required ("+edgeType.getRoles().size()+")");
+		}
 		for(EdgeRole<?,?> role: edgeType.getRoles()){
 			boolean found = false;
-			for(EdgeElement relement: relationshipElements){
+			for(EdgeElement relement: edgeElements){
 				if(relement.getRole().getName().equals(role.getName())){
 					found = true;
 				}
@@ -216,10 +220,10 @@ public class GraphDatabaseImpl implements DatabaseService {
 			}
 		}
 		Node n = graphDb.createNode();
-		n.setProperty(HYPERRELATIONSHIP_TYPE, edgeType.getId());
-		for(EdgeElement relement: relationshipElements){
-			for(Vertex elem: relement.getElements()){
-				n.createRelationshipTo(elem.getNode(), DynamicRelationshipType.withName(edgeType.getName()+"/#/"+relement.getRole().getName()));
+		n.setProperty(EDGE_TYPE, edgeType.getNode().getId());
+		for(EdgeElement relement: edgeElements){
+			for(Vertex elem: relement.getVertices()){
+				n.createRelationshipTo(elem.getNode(), DynamicRelationshipType.withName(edgeType.getName()+VertexImpl.EDGEROLE_SEPARATOR+relement.getRole().getName()));
 			}
 		}
 		return new NAryEdgeImpl(n);

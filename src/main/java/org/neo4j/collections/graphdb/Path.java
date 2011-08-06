@@ -19,23 +19,11 @@
  */
 package org.neo4j.collections.graphdb;
 
+public interface Path extends Iterable<Vertex>{
 
-public interface Edge<T extends EdgeType<U>, U extends EdgeRoleType> extends Vertex{
+	Vertex getFirstElement();
+	Vertex getLastElement();
 
-//	public long getId();
-	
-	public void delete();
-
-	public T getType();
-
-	public boolean isType(T relType);
-
-	public Iterable<EdgeElement> getEdgeElements();
-
-	public Iterable<EdgeElement> getEdgeElements(U... role);
-	
-	public Iterable<Vertex> getElements(U role);
-	
-	public Vertex getElement(FunctionalEdgeRoleType role);
+	int length();
 	
 }

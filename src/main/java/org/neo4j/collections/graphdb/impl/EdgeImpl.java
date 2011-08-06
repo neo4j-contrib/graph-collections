@@ -24,12 +24,18 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.Edge;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.EdgeRoleType;
+import org.neo4j.collections.graphdb.VertexType;
 
 
 public abstract class EdgeImpl<T extends EdgeType<U>, U extends EdgeRoleType> extends VertexImpl implements Edge<T, U>{
 
 	EdgeImpl(Node node){
 		super(node);
+	}
+
+	@Override
+	protected VertexType getSpecialVertexType(){
+		return getType();
 	}
 	
 

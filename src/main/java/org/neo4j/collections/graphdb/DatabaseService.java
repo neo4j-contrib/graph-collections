@@ -30,11 +30,11 @@ public interface DatabaseService extends GraphDatabaseService{
 
 	public Vertex createVertex();
 	
-	public NAryEdge createEdge(NAryEdgeType relType, Set<EdgeElement> relationshipElements);
+	public NAryEdge createEdge(NAryEdgeType relType, EdgeElement... edgeElements);
 
 	public Iterable<Vertex> getAllVertices();
 
-	public Vertex getVertexById(long arg0);
+//	public Vertex getVertexById(long arg0);
 	
 	public Vertex getReferenceVertex();
 	

@@ -85,11 +85,11 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		rel1.createEdgeTo(v1, RelTypes.TEST_REL2);
 		assertTrue(rel1.hasBinaryEdge(RelTypes.TEST_REL2, Direction.OUTGOING));
 		assertTrue(v1.hasBinaryEdge(RelTypes.TEST_REL2, Direction.INCOMING));
-		assertTrue(rel1.getSingleBinaryEdge(RelTypes.TEST_REL2, Direction.OUTGOING).getEndVertex().getId() == v1.getId());
+		assertTrue(rel1.getSingleBinaryEdge(RelTypes.TEST_REL2, Direction.OUTGOING).getEndVertex().getNode().getId() == v1.getNode().getId());
 		
 		assertTrue(rel1.getPropertyContainer().hasProperty(BinaryEdgeImpl.NODE_ID));
 		assertTrue(rel1.getPropertyContainer().getProperty(BinaryEdgeImpl.NODE_ID).equals(rel1.getNode().getId()));
-		assertTrue(rel1.getNode().getProperty(BinaryEdgeImpl.REL_ID).equals(rel1.getId()));
+		assertTrue(rel1.getNode().getProperty(BinaryEdgeImpl.REL_ID).equals(rel1.getRelationship().getId()));
 		
 		Property<String> prop = v1.getProperty(pt);
 		prop.setProperty(isChecked, true);
@@ -103,13 +103,13 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		assertTrue(prop.getNode().hasProperty(PropertyImpl.PROPERTYCONTAINER_ID));
 		assertTrue(prop.getNode().hasProperty(PropertyImpl.PROPERTYCONTAINER_TYPE));
 		assertTrue(prop.getNode().getProperty(PropertyImpl.PROPERTY_NAME).equals(prop.getPropertyType().getName()));
-		assertTrue(prop.getNode().getProperty(PropertyImpl.PROPERTYCONTAINER_ID).equals(v1.getId()));
+		assertTrue(prop.getNode().getProperty(PropertyImpl.PROPERTYCONTAINER_ID).equals(v1.getNode().getId()));
 		assertTrue(prop.getNode().getProperty(PropertyImpl.PROPERTYCONTAINER_TYPE).equals(PropertyImpl.PropertyContainerType.NODE.name()));
 		
 		prop.createEdgeTo(v2, RelTypes.TEST_REL2);
 		assertTrue(prop.hasBinaryEdge(RelTypes.TEST_REL2, Direction.OUTGOING));
 		assertTrue(v2.hasBinaryEdge(RelTypes.TEST_REL2, Direction.INCOMING));
-		assertTrue(v2.getSingleBinaryEdge(RelTypes.TEST_REL2, Direction.INCOMING).getStartVertex().getId() ==  prop.getNode().getId());
+		assertTrue(v2.getSingleBinaryEdge(RelTypes.TEST_REL2, Direction.INCOMING).getStartVertex().getNode().getId() ==  prop.getNode().getId());
 		
 		BinaryEdgeType relType = graphDbExt().getBinaryEdgeType(RelTypes.TEST_REL1);
 		assertTrue(relType.getName().equals(RelTypes.TEST_REL1.name()));
@@ -118,8 +118,8 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		assertTrue(relType.getRoles()[0].getId() == graphDbExt().getStartElementRoleType().getId() || relType.getRoles()[0].getId() == graphDbExt().getEndElementRoleType().getId());
 		assertTrue(relType.getRoles()[1].getId() == graphDbExt().getStartElementRoleType().getId() || relType.getRoles()[1].getId() == graphDbExt().getEndElementRoleType().getId());
 */		
-		assertTrue(rel1.getElement(graphDbExt().getStartElementRoleType()).getId() == v1.getId());
-		assertTrue(rel1.getElement(graphDbExt().getEndElementRoleType()).getId() == v2.getId());
+		assertTrue(rel1.getElement(graphDbExt().getStartElementRoleType()).getNode().getId() == v1.getNode().getId());
+		assertTrue(rel1.getElement(graphDbExt().getEndElementRoleType()).getNode().getId() == v2.getNode().getId());
 		
 		NAryEdgeRoleType giver = graphDbExt().getEdgeRoleType("giver");
 		NAryEdgeRoleType recipient = graphDbExt().getEdgeRoleType("recipient");
@@ -155,27 +155,22 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		EdgeElement recipients = new EdgeElement(recipient, rp);
 		EdgeElement gifts = new EdgeElement(gift, gf);
 
-		Set<EdgeElement> relationshipElements = new HashSet<EdgeElement>();
-		relationshipElements.add(givers);
-		relationshipElements.add(recipients);
-		relationshipElements.add(gifts);
-		
-		NAryEdge hrel = graphDbExt().createEdge(hrelType, relationshipElements);
+		NAryEdge hrel = graphDbExt().createEdge(hrelType, givers, recipients, gifts);
 		int count = 0;
 		for(Vertex element: hrel.getElements(giver)){
-			assertTrue(element.getId() == flo.getId() || element.getId() == eddie.getId());
+			assertTrue(element.getNode().getId() == flo.getNode().getId() || element.getNode().getId() == eddie.getNode().getId());
 			count++;
 		}
 		assertTrue(count == 2);
 		count = 0;
 		for(Vertex element: hrel.getElements(recipient)){
-			assertTrue(element.getId() == tom.getId() || element.getId() == dick.getId()  || element.getId() == harry.getId());
+			assertTrue(element.getNode().getId() == tom.getNode().getId() || element.getNode().getId() == dick.getNode().getId()  || element.getNode().getId() == harry.getNode().getId());
 			count++;
 		}
 		assertTrue(count == 3);
 		count = 0;
 		for(Vertex element: hrel.getElements(gift)){
-			assertTrue(element.getId() == book.getId() || element.getId() == spatula.getId());
+			assertTrue(element.getNode().getId() == book.getNode().getId() || element.getNode().getId() == spatula.getNode().getId());
 			count++;
 		}
 		assertTrue(count == 2);

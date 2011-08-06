@@ -57,6 +57,9 @@ public class VertexTypeImpl extends VertexImpl implements VertexType{
 		
 		
 		public void initialize(Node n){
+			if(name.startsWith("org.neo4j.collections.graphdb") || name.startsWith("ORG_NEO4J_COLLECTIONS_GRAPHDB")){
+				throw new RuntimeException("Type names should never start with org.neo4j.collections.graphdb or with ORG_NEO4J_COLLECTIONS_GRAPHDB");
+			}
 			n.setProperty(TYPE_NAME, name);
 			n.setProperty(CLASS_NAME, claz.getName());
 		}

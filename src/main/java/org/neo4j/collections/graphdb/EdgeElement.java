@@ -29,7 +29,7 @@ public class EdgeElement{
 		this.elements = elements;
 	}
 
-	public Iterable<Vertex> getElements(){
+	public Iterable<Vertex> getVertices(){
 		return elements;
 	}
 	

@@ -17,25 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.neo4j.collections.graphdb;
 
-
-public interface Edge<T extends EdgeType<U>, U extends EdgeRoleType> extends Vertex{
-
-//	public long getId();
-	
-	public void delete();
-
-	public T getType();
-
-	public boolean isType(T relType);
-
-	public Iterable<EdgeElement> getEdgeElements();
-
-	public Iterable<EdgeElement> getEdgeElements(U... role);
-	
-	public Iterable<Vertex> getElements(U role);
-	
-	public Vertex getElement(FunctionalEdgeRoleType role);
-	
+public interface Traversal extends Iterable<Path>{
 }

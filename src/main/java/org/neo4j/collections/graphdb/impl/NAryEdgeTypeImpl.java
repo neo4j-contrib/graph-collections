@@ -51,8 +51,27 @@ public class NAryEdgeTypeImpl extends EdgeTypeImpl<NAryEdgeRoleType> implements 
 		}
 	}
 
+	public static class NAryEdgeTypeNodeDescriptor extends TypeNodeDescriptor{
+
+		private final Set<NAryEdgeRoleType> edgeRoleTypes;
+		
+		public NAryEdgeTypeNodeDescriptor(DatabaseService db, String name,
+				Class<?> claz, Set<NAryEdgeRoleType> edgeRoleTypes) {
+			super(db, name, claz);
+			this.edgeRoleTypes = edgeRoleTypes;
+		}
+		
+		@Override
+		public void initialize(Node n){
+			super.initialize(n);
+			for(NAryEdgeRoleType role: edgeRoleTypes){
+				n.createRelationshipTo(role.getNode(), RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE);
+			}
+		}
+	}
+	
 	public static NAryEdgeTypeImpl getOrCreateInstance(DatabaseService db, String name, Set<NAryEdgeRoleType> edgeRoleTypes){
-		VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+		VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new NAryEdgeTypeNodeDescriptor(db, name, getImplementationClass(), edgeRoleTypes)));
 		return new NAryEdgeTypeImpl(vertexType.getNode());
 	}
 

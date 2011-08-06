@@ -50,14 +50,14 @@ public class NAryEdgeImpl extends EdgeImpl<NAryEdgeType, NAryEdgeRoleType> imple
 	@Override
 	public NAryEdgeType getType() {
 		if(relType == null){
-			relType = (NAryEdgeType)getDb().getVertexById((Long)getNode().getProperty(GraphDatabaseImpl.HYPERRELATIONSHIP_TYPE));
+			relType = (NAryEdgeType)getDb().getVertex(getDb().getNodeById((Long)getNode().getProperty(GraphDatabaseImpl.EDGE_TYPE)));
 		}
 		return relType;
 	}
 
 	@Override
 	public boolean isType(NAryEdgeType relType) {
-		return (relType.getId() == getType().getId());
+		return (relType.getNode().getId() == getType().getNode().getId());
 	}
 	@Override
 	public PropertyContainer getPropertyContainer() {
@@ -67,11 +67,6 @@ public class NAryEdgeImpl extends EdgeImpl<NAryEdgeType, NAryEdgeRoleType> imple
 	@Override
 	public DatabaseService getDb() {
 		return new GraphDatabaseImpl(getNode().getGraphDatabase());
-	}
-
-	@Override
-	public long getId() {
-		return getNode().getId();
 	}
 
 	@Override
@@ -98,7 +93,7 @@ public class NAryEdgeImpl extends EdgeImpl<NAryEdgeType, NAryEdgeRoleType> imple
 		@Override
 		public EdgeElement next() {
 			if(hasNext()){
-				String roleName = getType().getName().substring(getType().getName().indexOf("/#/")+3);
+				String roleName = getType().getName().substring(getType().getName().indexOf(EDGEROLE_SEPARATOR)+3);
 				NAryEdgeRole role = getType().getRole(roleName);
 				Iterable<Vertex> elems = new ElementIterable(role.getEdgeRoleType());
 				return new EdgeElement(role.getEdgeRoleType(), elems);
@@ -117,7 +112,7 @@ public class NAryEdgeImpl extends EdgeImpl<NAryEdgeType, NAryEdgeRoleType> imple
 		private final Iterator<Relationship> rels;
 		
 		public ElementIterator(NAryEdgeRoleType role) {
-			this.rels = getNode().getRelationships(DynamicRelationshipType.withName(getType().getName()+"/#/"+role.getName()), Direction.OUTGOING).iterator();
+			this.rels = getNode().getRelationships(DynamicRelationshipType.withName(getType().getName()+EDGEROLE_SEPARATOR+role.getName()), Direction.OUTGOING).iterator();
 		}
 
 		@Override
@@ -196,7 +191,7 @@ public class NAryEdgeImpl extends EdgeImpl<NAryEdgeType, NAryEdgeRoleType> imple
 
 	@Override
 	public Vertex getElement(FunctionalEdgeRoleType role) {
-		return getDb().getVertex(getNode().getSingleRelationship(DynamicRelationshipType.withName(getType().getName()+"/#/"+role.getName()), Direction.OUTGOING).getEndNode());
+		return getDb().getVertex(getNode().getSingleRelationship(DynamicRelationshipType.withName(getType().getName()+EDGEROLE_SEPARATOR+role.getName()), Direction.OUTGOING).getEndNode());
 	}
 
 }

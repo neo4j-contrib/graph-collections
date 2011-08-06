@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.FunctionalEdgeElement;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.EdgeElement;
@@ -75,15 +76,15 @@ public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements Sortabl
 	}
 
 	@Override
-	public long getId() {
-		return getNode().getId();
-	}
-
-	@Override
 	public void delete() {
 		getRelIdx().removeRelationshipTo(getEndVertex().getNode());
 	}
 
+	@Override
+	protected VertexType getSpecialVertexType(){
+		return getType();
+	}
+	
 	@Override
 	public BinaryEdgeType getType() {
 		return SortableBinaryEdgeTypeImpl.getOrCreateInstance(getDb(), rel.getType());

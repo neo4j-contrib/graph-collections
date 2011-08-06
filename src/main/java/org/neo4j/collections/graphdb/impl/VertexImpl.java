@@ -33,8 +33,10 @@ import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.NAryEdge;
 import org.neo4j.collections.graphdb.NAryEdgeRoleType;
 import org.neo4j.collections.graphdb.NAryEdgeType;
+import org.neo4j.collections.graphdb.Path;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.Property;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.SortableBinaryEdge;
@@ -47,8 +49,11 @@ import org.neo4j.graphdb.RelationshipType;
 
 public class VertexImpl implements Vertex{
 
-	public static final String hyperRelSeparator = "/#/";
-
+	public static final String EDGEROLE_SEPARATOR = "/#/";
+	public static final String TYPE_IDS = "org.neo4j.collections.graphdb.type_ids";
+	
+	private Vertex outer = this;
+	
 	private Node node;  
 	
 	public VertexImpl(Node node){
@@ -63,7 +68,7 @@ public class VertexImpl implements Vertex{
 	}
 
 	@Override
-	public <T> SortableBinaryEdge<T> createRelationshipTo(
+	public <T> SortableBinaryEdge<T> createEdgeTo(
 			Vertex n,
 			SortableBinaryEdgeType<T> rt) {
 		IndexedRelationship idxRel = new IndexedRelationship(DynamicRelationshipType.withName(rt.getName()), Direction.OUTGOING,  rt.getPropertyType(), true, this.getNode(), getDb().getGraphDatabaseService());
@@ -154,15 +159,16 @@ public class VertexImpl implements Vertex{
 		return getPropertyContainer().hasProperty(pt.getName());
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T removeProperty(PropertyType<T> pt) {
-		return (T)getPropertyContainer().removeProperty(pt.getName());
+	public Vertex removeProperty(PropertyType<?> pt) {
+		getPropertyContainer().removeProperty(pt.getName());
+		return this;
 	}
 
 	@Override
-	public <T> void setProperty(PropertyType<T> pt, T value) {
+	public <T> Vertex setProperty(PropertyType<T> pt, T value) {
 		getPropertyContainer().setProperty(pt.getName(), value);
+		return this;
 	}
 
 	
@@ -215,7 +221,7 @@ public class VertexImpl implements Vertex{
 		private final Iterator<Relationship> edgeRoleRels;
 		
 		public NAryEdgeIterator(EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType> edgeRole) {
-			this.edgeRoleRels = getNode().getRelationships(DynamicRelationshipType.withName(edgeRole.getEdgeType().getName()+"/#/"+edgeRole.getEdgeRoleType().getName()), Direction.INCOMING).iterator();
+			this.edgeRoleRels = getNode().getRelationships(DynamicRelationshipType.withName(edgeRole.getEdgeType().getName()+EDGEROLE_SEPARATOR+edgeRole.getEdgeRoleType().getName()), Direction.INCOMING).iterator();
 		}
 		
 		@Override
@@ -387,11 +393,6 @@ public class VertexImpl implements Vertex{
 	}
 
 	@Override
-	public long getId() {
-		return node.getId();
-	}
-
-	@Override
 	public PropertyContainer getPropertyContainer() {
 		return node;
 	}
@@ -419,6 +420,210 @@ public class VertexImpl implements Vertex{
 	@Override
 	public boolean hasEdge(NAryEdgeType edgeType, NAryEdgeRoleType... roles) {
 		return getEdges(edgeType, roles).iterator().hasNext();
+	}
+
+	class PathIterator implements Iterator<Path>{
+
+		class PathElementIterator implements Iterator<Vertex>{
+
+			boolean hasNext = true;
+
+			@Override
+			public boolean hasNext() {
+				return hasNext;
+			}
+
+			@Override
+			public Vertex next() {
+				if(hasNext){
+					hasNext = false;
+					return outer;
+				}else{
+					throw new NoSuchElementException();
+				}
+			}
+
+			@Override
+			public void remove() {
+			}
+		}
+		
+		boolean hasNext = true;
+		
+		@Override
+		public boolean hasNext() {
+			return hasNext;
+		}
+
+		@Override
+		public Path next() {
+			if(hasNext){
+				hasNext = false;
+				return new Path() {
+
+					@Override
+					public Vertex getFirstElement() {
+						return outer;
+					}
+
+					@Override
+					public Vertex getLastElement() {
+						return outer;
+					}
+
+					@Override
+					public Iterator<Vertex> iterator() {
+						return new PathElementIterator();
+					}
+
+					@Override
+					public int length() {
+						return 0;
+					}
+				};
+			}else{
+				throw new NoSuchElementException();
+			}
+		}
+
+		@Override
+		public void remove() {
+		}
+		
+	}
+	
+	@Override
+	public Iterator<Path> iterator() {
+		return new PathIterator();
+	}
+
+	@Override
+	public Vertex addEdge(Vertex n, RelationshipType rt) {
+		createEdgeTo(n, rt);
+		return this;
+	}
+
+	@Override
+	public Vertex addEdge(Vertex n, SortableBinaryEdgeType<?> rt) {
+		createEdgeTo(n, rt);
+		return this;
+	}
+
+	protected VertexType getSpecialVertexType(){
+		return null;
+	}
+	
+	private class VertexTypeIterator implements Iterator<VertexType>{
+
+		private final Iterator<Node> nodes;
+		boolean foundSpecial = false;
+		VertexType special = getSpecialVertexType();
+		
+		public VertexTypeIterator() {
+			ArrayList<Node> nodes = new ArrayList<Node>();
+			Long[] nodeIds = (Long[])getNode().getProperty(TYPE_IDS);
+			for(Long id: nodeIds){
+				nodes.add(getDb().getNodeById(id));
+			}
+			this.nodes = nodes.iterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			if(nodes.hasNext()){
+				return true;
+			}else if(foundSpecial){
+				return false;
+			}else if(special == null){
+				return false;
+			}else{
+				return true;
+			}
+		}
+
+		@Override
+		public VertexType next() {
+			if(hasNext()){
+				if(nodes.hasNext()){
+					VertexType vertexType = (VertexType)getDb().getVertex(nodes.next());
+					if(special.getName().equals(vertexType.getName())){
+						foundSpecial = true;
+					}
+					return vertexType;
+				}else {
+					return special;
+				}
+			}else{
+				throw new NoSuchElementException();
+			}
+		}
+
+		@Override
+		public void remove() {
+		}
+		
+	}
+	
+	
+	private class VertexTypeIterable implements Iterable<VertexType>{
+
+		@Override
+		public Iterator<VertexType> iterator() {
+			return new VertexTypeIterator();
+		}
+		
+	}
+	
+	@Override
+	public Iterable<VertexType> getTypes() {
+		return new VertexTypeIterable();
+	}
+
+	@Override
+	public Vertex addType(VertexType vertexType) {
+		Long[] nodeIds = (Long[])getNode().getProperty(TYPE_IDS);
+		boolean exists = false;
+		for(Long id: nodeIds){
+			if(id == vertexType.getNode().getId()){
+				exists = true;
+			}
+		}
+		if(!exists){
+			Long[] ids = new Long[nodeIds.length+1];
+			for(int i=0;i < nodeIds.length;i++){
+				ids[i] = nodeIds[i];
+			}
+			ids[nodeIds.length] = vertexType.getNode().getId();
+		}
+		return this;
+	}
+
+	@Override
+	public Vertex removeType(VertexType vertexType) {
+		Long[] nodeIds = (Long[])getNode().getProperty(TYPE_IDS);
+		boolean exists = false;
+		for(Long id: nodeIds){
+			if(id == vertexType.getNode().getId()){
+				exists = true;
+			}
+		}
+		if(!exists){
+			Long[] ids = new Long[nodeIds.length-1];
+			boolean skipped = false;
+			for(int i=0;i < nodeIds.length;i++){
+				if(skipped){
+					ids[i-1] = nodeIds[i];
+				}else{
+					if(ids[i] == nodeIds[i]){
+						skipped = true;
+					}else{
+						ids[i] = nodeIds[i];
+					}
+				}
+			}
+			ids[nodeIds.length] = vertexType.getNode().getId();
+		}
+		return this;
 	}
 	
 }

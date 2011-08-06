@@ -26,6 +26,7 @@ import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.FunctionalEdgeRoleType;
 import org.neo4j.collections.graphdb.PropertyRoleType;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyType;
@@ -91,7 +92,7 @@ public class PropertyImpl<T> extends VertexImpl implements Property<T>{
 				return getDb().getGraphDatabaseService().getNodeById((Long)vertex.getPropertyContainer().getProperty(propertyType.getName()+".node_id"));
 			}else{
 				Node n = graphDb.createNode();
-				n.setProperty(PROPERTYCONTAINER_ID, vertex.getId());
+				n.setProperty(PROPERTYCONTAINER_ID, vertex.getNode().getId());
 				n.setProperty(PROPERTY_NAME, propertyType.getName());
 				if(vertex instanceof BinaryEdge){
 					n.setProperty(PROPERTYCONTAINER_TYPE, PropertyContainerType.RELATIONSHIP.name());
@@ -115,13 +116,18 @@ public class PropertyImpl<T> extends VertexImpl implements Property<T>{
 	}
 
 	@Override
+	protected VertexType getSpecialVertexType(){
+		return getType();
+	}
+	
+	@Override
 	public PropertyType<T> getType() {
 		return this.propertyType;
 	}
 
 	@Override
 	public boolean isType(PropertyType<T> relType) {
-		return this.propertyType.getId() == relType.getId();
+		return this.propertyType.getNode().getId() == relType.getNode().getId();
 	}
 
 	@Override

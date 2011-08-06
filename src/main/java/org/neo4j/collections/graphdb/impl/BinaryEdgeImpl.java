@@ -30,6 +30,7 @@ import org.neo4j.collections.graphdb.EdgeRoleType;
 import org.neo4j.collections.graphdb.FunctionalEdgeElement;
 import org.neo4j.collections.graphdb.FunctionalEdgeRoleType;
 import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -58,11 +59,6 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 	public org.neo4j.graphdb.Relationship getRelationship() {
 		return rel;
 	}
-	
-	@Override
-	public long getId() {
-		return rel.getId();
-	}
 
 	@Override
 	public Vertex[] getVertices() {
@@ -76,6 +72,11 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 		return enodes;
 	}
 
+	
+	@Override
+	protected VertexType getSpecialVertexType(){
+		return getType();
+	}
 
 	@Override
 	public BinaryEdgeType getType() {

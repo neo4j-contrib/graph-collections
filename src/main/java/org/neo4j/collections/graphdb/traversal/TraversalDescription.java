@@ -17,25 +17,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.graphdb;
+package org.neo4j.collections.graphdb.traversal;
 
+import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.EdgeRoleType;
+import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.graphdb.Direction;
 
-public interface Edge<T extends EdgeType<U>, U extends EdgeRoleType> extends Vertex{
+public interface TraversalDescription {
 
-//	public long getId();
-	
-	public void delete();
-
-	public T getType();
-
-	public boolean isType(T relType);
-
-	public Iterable<EdgeElement> getEdgeElements();
-
-	public Iterable<EdgeElement> getEdgeElements(U... role);
-	
-	public Iterable<Vertex> getElements(U role);
-	
-	public Vertex getElement(FunctionalEdgeRoleType role);
+	TraversalDescription set(Evaluator evaluator);
+	TraversalDescription set(BranchSelector selector);
+	TraversalDescription add(BinaryEdgeType edgeType);
+	TraversalDescription add(BinaryEdgeType edgeType, Direction dir);
+	TraversalDescription add(EdgeType<?> edgeType, EdgeRoleType edgeRoleTypeFrom, EdgeRoleType edgeRoleTypeTo);
 	
 }
