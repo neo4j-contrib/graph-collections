@@ -121,7 +121,7 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 	}
 
 	@Override
-	public Iterable<Vertex> getElements(BinaryEdgeRoleType role) {
+	public Iterable<Vertex> getVertices(BinaryEdgeRoleType role) {
 		ArrayList<Vertex> elements = new ArrayList<Vertex>();
 		if(role.getName().equals(BinaryEdgeRoleType.StartElement.getOrCreateInstance(getDb()))){
 			elements.add(getDb().getVertex(rel.getStartNode()));
@@ -135,7 +135,7 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 	}
 
 	@Override
-	public Vertex getElement(FunctionalEdgeRoleType role) {
+	public Vertex getVertex(FunctionalEdgeRoleType role) {
 		if(role.getName().equals(BinaryEdgeRoleType.StartElement.getOrCreateInstance(getDb()).getName())){
 			return getDb().getVertex(rel.getStartNode());
 		}else if(role.getName().equals(BinaryEdgeRoleType.EndElement.getOrCreateInstance(getDb()).getName())){

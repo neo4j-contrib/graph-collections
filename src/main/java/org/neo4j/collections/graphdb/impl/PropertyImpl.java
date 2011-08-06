@@ -132,28 +132,32 @@ public class PropertyImpl<T> extends VertexImpl implements Property<T>{
 
 	@Override
 	public Iterable<EdgeElement> getEdgeElements() {
-		ArrayList<Vertex> elems = new ArrayList<Vertex>();
-		elems.add(getVertex());
-		//TODO
-		return null;
+		ArrayList<EdgeElement> elems = new ArrayList<EdgeElement>();
+		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
+		vertices.add(getVertex());
+		elems.add(new EdgeElement(getDb().getPropertyRoleType(), vertices));
+		return elems;
 	}
 
 	@Override
-	public Vertex getElement(FunctionalEdgeRoleType role) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vertex getVertex(FunctionalEdgeRoleType roleType) {
+		if(roleType.getName().equals(getDb().getPropertyRoleType().getName())){
+			return getVertex();
+		}else{
+			return null;
+		}
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements(PropertyRoleType... role) {
-		// TODO Auto-generated method stub
-		return null;
+	public Iterable<EdgeElement> getEdgeElements(PropertyRoleType... roleType) {
+		return getEdgeElements();
 	}
 
 	@Override
-	public Iterable<Vertex> getElements(PropertyRoleType role) {
-		// TODO Auto-generated method stub
-		return null;
+	public Iterable<Vertex> getVertices(PropertyRoleType roleType) {
+		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
+		vertices.add(getVertex());
+		return vertices;
 	}
 
 

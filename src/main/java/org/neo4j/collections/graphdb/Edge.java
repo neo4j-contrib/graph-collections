@@ -22,8 +22,6 @@ package org.neo4j.collections.graphdb;
 
 public interface Edge<T extends EdgeType<U>, U extends EdgeRoleType> extends Vertex{
 
-//	public long getId();
-	
 	public void delete();
 
 	public T getType();
@@ -32,10 +30,10 @@ public interface Edge<T extends EdgeType<U>, U extends EdgeRoleType> extends Ver
 
 	public Iterable<EdgeElement> getEdgeElements();
 
-	public Iterable<EdgeElement> getEdgeElements(U... role);
+	public Iterable<EdgeElement> getEdgeElements(U... roleType);
 	
-	public Iterable<Vertex> getElements(U role);
+	public Iterable<Vertex> getVertices(U roleType);
 	
-	public Vertex getElement(FunctionalEdgeRoleType role);
+	public Vertex getVertex(FunctionalEdgeRoleType roleType);
 	
 }

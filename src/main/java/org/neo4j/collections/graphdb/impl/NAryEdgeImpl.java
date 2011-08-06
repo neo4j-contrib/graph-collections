@@ -185,12 +185,12 @@ public class NAryEdgeImpl extends EdgeImpl<NAryEdgeType, NAryEdgeRoleType> imple
 
 	
 	@Override
-	public Iterable<Vertex> getElements(NAryEdgeRoleType role) {
+	public Iterable<Vertex> getVertices(NAryEdgeRoleType role) {
 		return new ElementIterable(role);
 	}
 
 	@Override
-	public Vertex getElement(FunctionalEdgeRoleType role) {
+	public Vertex getVertex(FunctionalEdgeRoleType role) {
 		return getDb().getVertex(getNode().getSingleRelationship(DynamicRelationshipType.withName(getType().getName()+EDGEROLE_SEPARATOR+role.getName()), Direction.OUTGOING).getEndNode());
 	}
 
