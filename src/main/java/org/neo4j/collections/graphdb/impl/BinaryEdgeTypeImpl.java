@@ -22,16 +22,21 @@ package org.neo4j.collections.graphdb.impl;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.neo4j.collections.graphdb.BinaryEdgeRole;
-import org.neo4j.collections.graphdb.BinaryEdgeRoleType;
+import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.ConnectionMode;
+import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.EdgeRole;
+import org.neo4j.collections.graphdb.Connector;
+import org.neo4j.collections.graphdb.InjectiveConnectionMode;
+import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 
-public class BinaryEdgeTypeImpl extends EdgeTypeImpl<BinaryEdgeRoleType> implements BinaryEdgeType{
+public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 
 	public BinaryEdgeTypeImpl(Node node) {
 		super(node);
@@ -54,19 +59,60 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl<BinaryEdgeRoleType> impleme
 		return DynamicRelationshipType.withName(getName());
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	@Override
-	public Set<BinaryEdgeRole> getRoles() {
-		Set<BinaryEdgeRole> roles = new HashSet<BinaryEdgeRole>();
-		roles.add(new BinaryEdgeRole(BinaryEdgeRoleType.StartElement.getOrCreateInstance(getDb()), this));
-		roles.add(new BinaryEdgeRole(BinaryEdgeRoleType.EndElement.getOrCreateInstance(getDb()), this));
+	public Set<Connector<?>> getConnectors() {
+		Set<Connector<?>> roles = new HashSet<Connector<?>>();
+		roles.add(getStartConnector());
+		roles.add(getEndConnector());
 		return roles;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public EdgeRole<BinaryEdgeType, BinaryEdgeRoleType> getRole(BinaryEdgeRoleType edgeRoleType) {
-		return new EdgeRole<BinaryEdgeType, BinaryEdgeRoleType>(edgeRoleType, this);
+	public <T extends ConnectionMode> Connector<T> getConnector(
+			ConnectorType<T> edgeRoleType) {
+		return new Connector<T>(edgeRoleType, this);
+	}
+
+	@Override
+	public BinaryEdge createEdge(Vertex startVertex, Vertex endVertex) {
+		return new BinaryEdgeImpl(startVertex.getNode().createRelationshipTo(endVertex.getNode(),
+				this.getRelationshipType()));
+	}
+
+	@Override
+	public Iterable<BinaryEdge> getEdges(Vertex vertex) {
+		return new RelationshipIterable(vertex.getNode().getRelationships(this.getRelationshipType()));
+	}
+
+	@Override
+	public Iterable<BinaryEdge> getEdges(Vertex vertex, Direction dir) {
+		return new RelationshipIterable(vertex.getNode().getRelationships(this.getRelationshipType(), dir));
+	}
+
+	@Override
+	public BinaryEdge getSingleBinaryEdge(Vertex vertex, Direction dir) {
+		Relationship rel = vertex.getNode().getSingleRelationship(getRelationshipType(), dir);
+		if (rel == null) {
+			return null;
+		} else {
+			return new BinaryEdgeImpl(rel);
+		}
+	}
+
+	@Override
+	public boolean hasEdge(Vertex vertex, Direction dir) {
+		return vertex.getNode().hasRelationship(getRelationshipType(), dir);
+	}
+
+	@Override
+	public Connector<InjectiveConnectionMode> getStartConnector() {
+		return new Connector<InjectiveConnectionMode>(BinaryEdgeConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb()), this);
+	}
+
+	@Override
+	public Connector<InjectiveConnectionMode> getEndConnector() {
+		return new Connector<InjectiveConnectionMode>(BinaryEdgeConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb()), this);
 	}
 	
 }

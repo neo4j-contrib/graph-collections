@@ -19,6 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface UnaryEdge<U extends UnaryEdgeRoleType, T extends UnaryEdgeType<U>> extends Edge<T, U>{
+public interface UnaryEdge extends Edge{
 
 }

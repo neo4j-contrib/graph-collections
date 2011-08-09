@@ -30,12 +30,10 @@ public interface DatabaseService extends GraphDatabaseService{
 
 	public Vertex createVertex();
 	
-	public NAryEdge createEdge(NAryEdgeType relType, EdgeElement... edgeElements);
+	public Edge createEdge(EdgeType relType, EdgeElement... edgeElements);
 
 	public Iterable<Vertex> getAllVertices();
 
-//	public Vertex getVertexById(long arg0);
-	
 	public Vertex getReferenceVertex();
 	
 	public Vertex getVertex(Node node);
@@ -44,17 +42,14 @@ public interface DatabaseService extends GraphDatabaseService{
 	
 	public BinaryEdgeType getBinaryEdgeType(RelationshipType relType);
 
-	public BinaryEdgeRoleType getStartElementRoleType();
 	
-	public BinaryEdgeRoleType getEndElementRoleType();
+	public PropertyConnectorType getPropertyRoleType();
 	
-	public PropertyRoleType getPropertyRoleType();
+	public <U extends ConnectionMode> ConnectorType<U> getConnectorType(String name, U connectionMode);
 	
-	public NAryEdgeRoleType getEdgeRoleType(String name);
+	public EdgeType getEdgeType(String name, Set<ConnectorType<?>> roles);
 	
-	public NAryEdgeType getEdgeType(String name, Set<NAryEdgeRoleType> roles);
-	
-	public Iterable<EdgeType<?>> getEdgeTypes();
+	public Iterable<EdgeType> getEdgeTypes();
 
 	public PropertyType<Boolean> getBooleanPropertyType(String name);
 	

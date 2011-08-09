@@ -20,16 +20,18 @@
 package org.neo4j.collections.graphdb.traversal;
 
 import org.neo4j.collections.graphdb.BinaryEdgeType;
-import org.neo4j.collections.graphdb.EdgeRoleType;
-import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.Connector;
+import org.neo4j.collections.graphdb.Traversal;
 import org.neo4j.graphdb.Direction;
 
-public interface TraversalDescription {
+public interface TraversalDescription extends Iterable<TraversalDescription>{
 
 	TraversalDescription set(Evaluator evaluator);
 	TraversalDescription set(BranchSelector selector);
 	TraversalDescription add(BinaryEdgeType edgeType);
 	TraversalDescription add(BinaryEdgeType edgeType, Direction dir);
-	TraversalDescription add(EdgeType<?> edgeType, EdgeRoleType edgeRoleTypeFrom, EdgeRoleType edgeRoleTypeTo);
-	
+	TraversalDescription add(Connector<?>[] connectors);
+	TraversalDescription add(TraversalDescription description);
+	TraversalDescription insert(TraversalDescription description, int position);
+	Traversal traverse(Traversal traversal);
 }

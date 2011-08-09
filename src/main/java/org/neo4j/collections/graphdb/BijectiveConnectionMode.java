@@ -19,6 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface FunctionalEdgeRoleType extends EdgeRoleType{
+public interface BijectiveConnectionMode extends InjectiveConnectionMode, SurjectiveConnectionMode{
 
 }

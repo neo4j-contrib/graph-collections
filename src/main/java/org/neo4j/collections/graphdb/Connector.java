@@ -19,10 +19,26 @@
  */
 package org.neo4j.collections.graphdb;
 
-public class PropertyRole extends EdgeRole<PropertyType<?>, PropertyRoleType>{
-
-	public PropertyRole(PropertyRoleType edgeRoleType, PropertyType<?> edgeType) {
-		super(edgeRoleType, edgeType);
+public class Connector<T extends ConnectionMode> {
+	
+	private final ConnectorType<T> connectorType;
+	private final EdgeType edgeType;
+	
+	public Connector(ConnectorType<T> connectorType, EdgeType edgeType) {
+		this.connectorType = connectorType;
+		this.edgeType = edgeType;
 	}
 
+	public EdgeType getEdgeType(){
+		return edgeType;
+	}
+	
+	public ConnectorType<T> getConnectorType(){
+		return connectorType;
+	}
+
+	public String getName(){
+		return connectorType.getName();
+	}
+	
 }

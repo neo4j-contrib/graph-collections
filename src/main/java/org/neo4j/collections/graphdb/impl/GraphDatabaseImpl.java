@@ -22,13 +22,12 @@ package org.neo4j.collections.graphdb.impl;
 import java.util.Set;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
-import org.neo4j.collections.graphdb.BinaryEdgeRoleType;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
-import org.neo4j.collections.graphdb.EdgeRole;
-import org.neo4j.collections.graphdb.NAryEdge;
-import org.neo4j.collections.graphdb.NAryEdgeRoleType;
-import org.neo4j.collections.graphdb.NAryEdgeType;
-import org.neo4j.collections.graphdb.PropertyRoleType;
+import org.neo4j.collections.graphdb.ConnectionMode;
+import org.neo4j.collections.graphdb.Connector;
+import org.neo4j.collections.graphdb.ConnectorType;
+import org.neo4j.collections.graphdb.Edge;
+import org.neo4j.collections.graphdb.PropertyConnectorType;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.DatabaseService;
@@ -48,7 +47,7 @@ import org.neo4j.graphdb.event.TransactionEventHandler;
 public class GraphDatabaseImpl implements DatabaseService {
 
 	public static String EDGE_TYPE = "org.neo4j.collections.graphdb.edge_type";
-	
+
 	private final org.neo4j.graphdb.GraphDatabaseService graphDb;
 
 	GraphDatabaseImpl(org.neo4j.graphdb.GraphDatabaseService graphDb) {
@@ -93,7 +92,7 @@ public class GraphDatabaseImpl implements DatabaseService {
 	}
 
 	@Override
-	public Iterable<EdgeType<?>> getEdgeTypes() {
+	public Iterable<EdgeType> getEdgeTypes() {
 		return new RelationshipTypeIterable(graphDb.getRelationshipTypes(),
 				this);
 	}
@@ -203,30 +202,30 @@ public class GraphDatabaseImpl implements DatabaseService {
 	}
 
 	@Override
-	public NAryEdge createEdge(NAryEdgeType edgeType,
+	public Edge createEdge(EdgeType edgeType,
 			EdgeElement... edgeElements) {
-		if(edgeElements.length != edgeType.getRoles().size()){
-			throw new RuntimeException("Number of edge elements provided ("+edgeElements.length+") is different from the number of edge roles required ("+edgeType.getRoles().size()+")");
+		if(edgeElements.length != edgeType.getConnectors().size()){
+			throw new RuntimeException("Number of edge elements provided ("+edgeElements.length+") is different from the number of edge roles required ("+edgeType.getConnectors().size()+")");
 		}
-		for(EdgeRole<?,?> role: edgeType.getRoles()){
+		for(Connector<?> connector: edgeType.getConnectors()){
 			boolean found = false;
 			for(EdgeElement relement: edgeElements){
-				if(relement.getRole().getName().equals(role.getName())){
+				if(relement.getConnector().getName().equals(connector.getName())){
 					found = true;
 				}
 			}
 			if(found == false){
-				throw new RuntimeException("To create relationship an element with role "+role.getName()+" should be provide");
+				throw new RuntimeException("To create relationship an element with role "+connector.getName()+" should be provide");
 			}
 		}
 		Node n = graphDb.createNode();
 		n.setProperty(EDGE_TYPE, edgeType.getNode().getId());
 		for(EdgeElement relement: edgeElements){
 			for(Vertex elem: relement.getVertices()){
-				n.createRelationshipTo(elem.getNode(), DynamicRelationshipType.withName(edgeType.getName()+VertexImpl.EDGEROLE_SEPARATOR+relement.getRole().getName()));
+				n.createRelationshipTo(elem.getNode(), DynamicRelationshipType.withName(edgeType.getName()+VertexImpl.EDGEROLE_SEPARATOR+relement.getConnector().getName()));
 			}
 		}
-		return new NAryEdgeImpl(n);
+		return new EdgeImpl(n);
 	}
 
 
@@ -289,28 +288,19 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return BinaryEdgeTypeImpl.getOrCreateInstance(this, relType);
 	}
 
+
 	@Override
-	public BinaryEdgeRoleType getStartElementRoleType() {
-		return BinaryEdgeRoleType.StartElement.getOrCreateInstance(this);
+	public <U extends ConnectionMode> ConnectorType<U> getConnectorType(String name, U connectionMode) {
+		return ConnectorTypeImpl.getOrCreateInstance(this, name, connectionMode);
 	}
 
 	@Override
-	public BinaryEdgeRoleType getEndElementRoleType() {
-		return BinaryEdgeRoleType.EndElement.getOrCreateInstance(this);
+	public EdgeType getEdgeType(String name, Set<ConnectorType<?>> connectorTypes) {
+		return EdgeTypeImpl.getOrCreateInstance(this, name, connectorTypes);
 	}
 
 	@Override
-	public NAryEdgeRoleType getEdgeRoleType(String name) {
-		return NAryEdgeRoleTypeImpl.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public NAryEdgeType getEdgeType(String name, Set<NAryEdgeRoleType> roles) {
-		return NAryEdgeTypeImpl.getOrCreateInstance(this, name, roles);
-	}
-
-	@Override
-	public PropertyRoleType getPropertyRoleType() {
-		return PropertyRoleType.getOrCreateInstance(this);
+	public PropertyConnectorType getPropertyRoleType() {
+		return PropertyConnectorType.getOrCreateInstance(this);
 	}
 }

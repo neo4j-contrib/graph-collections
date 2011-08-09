@@ -22,20 +22,21 @@ package org.neo4j.collections.graphdb.impl;
 import java.util.ArrayList;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
-import org.neo4j.collections.graphdb.BinaryEdgeRoleType;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeElement;
-import org.neo4j.collections.graphdb.EdgeRoleType;
-import org.neo4j.collections.graphdb.FunctionalEdgeElement;
-import org.neo4j.collections.graphdb.FunctionalEdgeRoleType;
+import org.neo4j.collections.graphdb.ConnectorType;
+import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.InjectiveConnectionMode;
+import org.neo4j.collections.graphdb.InjectiveEdgeElement;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
-public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
+public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 
 	private Node node;
 	
@@ -84,7 +85,7 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 	}
 
 	@Override
-	public boolean isType(BinaryEdgeType relType) {
+	public boolean isType(EdgeType relType) {
 		return rel.isType(DynamicRelationshipType.withName(relType.getName()));
 	}
 
@@ -115,18 +116,18 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 	@Override
 	public Iterable<EdgeElement> getEdgeElements(){
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new FunctionalEdgeElement(getDb().getStartElementRoleType(), getStartVertex()));
-		relements.add(new FunctionalEdgeElement(getDb().getEndElementRoleType(), getEndVertex()));
+		relements.add(new InjectiveEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
+		relements.add(new InjectiveEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
 		return relements;
 	}
 
 	@Override
-	public Iterable<Vertex> getVertices(BinaryEdgeRoleType role) {
+	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType) {
 		ArrayList<Vertex> elements = new ArrayList<Vertex>();
-		if(role.getName().equals(BinaryEdgeRoleType.StartElement.getOrCreateInstance(getDb()))){
+		if(connectorType.getName().equals(getType().getStartConnector().getName())){
 			elements.add(getDb().getVertex(rel.getStartNode()));
 			return elements;
-		}else if(role.getName().equals(BinaryEdgeRoleType.EndElement.getOrCreateInstance(getDb()).getName())){
+		}else if(connectorType.getName().equals(getType().getEndConnector().getName())){
 			elements.add(getDb().getVertex(rel.getEndNode()));
 			return elements;
 		}else{
@@ -135,10 +136,10 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 	}
 
 	@Override
-	public Vertex getVertex(FunctionalEdgeRoleType role) {
-		if(role.getName().equals(BinaryEdgeRoleType.StartElement.getOrCreateInstance(getDb()).getName())){
+	public <U extends InjectiveConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
+		if(connectorType.getName().equals(getType().getStartConnector().getName())){
 			return getDb().getVertex(rel.getStartNode());
-		}else if(role.getName().equals(BinaryEdgeRoleType.EndElement.getOrCreateInstance(getDb()).getName())){
+		}else if(connectorType.getName().equals(getType().getEndConnector().getName())){
 			return getDb().getVertex(rel.getEndNode());
 		}else{
 			throw new RuntimeException("Supplied role is not supported");
@@ -158,13 +159,13 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 
 	@Override
 	public Iterable<EdgeElement> getEdgeElements(
-			BinaryEdgeRoleType... roles) {
+			ConnectorType<?>... connectorTypes) {
 		boolean includeStart = false;
 		boolean includeEnd = false;
-		for(EdgeRoleType role: roles){
-			if(role.getName().equals(BinaryEdgeRoleType.StartElement.getOrCreateInstance(getDb()).getName())){
+		for(ConnectorType<?> connectorType: connectorTypes){
+			if(connectorType.getName().equals(getType().getStartConnector().getName())){
 				includeStart = true;
-			}else if(role.getName().equals(BinaryEdgeRoleType.EndElement.getOrCreateInstance(getDb()).getName())){
+			}else if(connectorType.getName().equals(getType().getEndConnector().getName())){
 				includeEnd = true;
 			}else{
 				throw new RuntimeException("Supplied role is not part of this RelationshipType");
@@ -172,10 +173,10 @@ public class BinaryEdgeImpl extends VertexImpl implements BinaryEdge{
 		}
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
 		if(includeStart){
-			relements.add(new FunctionalEdgeElement(getDb().getStartElementRoleType(), getStartVertex()));
+			relements.add(new InjectiveEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
 		}
 		if(includeEnd){
-			relements.add(new FunctionalEdgeElement(getDb().getEndElementRoleType(), getEndVertex()));
+			relements.add(new InjectiveEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
 		}
 		return relements;
 	}

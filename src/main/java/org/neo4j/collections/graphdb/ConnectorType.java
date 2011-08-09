@@ -19,8 +19,9 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface NAryEdgeRoleType extends EdgeRoleType{
-
-	public EdgeRole<NAryEdgeType, NAryEdgeRoleType> getRole(NAryEdgeType egdeType);
+public interface ConnectorType<T extends ConnectionMode> extends Vertex{
+	public String getName();
 	
+	public ConnectionMode getConnectionMode();
 }
+

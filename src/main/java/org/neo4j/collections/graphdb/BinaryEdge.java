@@ -19,7 +19,7 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface BinaryEdge extends Edge<BinaryEdgeType, BinaryEdgeRoleType>{
+public interface BinaryEdge extends Edge{
 
 	public Vertex getEndVertex();
 	
@@ -30,4 +30,5 @@ public interface BinaryEdge extends Edge<BinaryEdgeType, BinaryEdgeRoleType>{
 	public Vertex[] getVertices();
 	
 	public org.neo4j.graphdb.Relationship getRelationship();
+	
 }

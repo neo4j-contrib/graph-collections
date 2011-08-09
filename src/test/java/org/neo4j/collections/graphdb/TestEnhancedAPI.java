@@ -118,19 +118,21 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		assertTrue(relType.getRoles()[0].getId() == graphDbExt().getStartElementRoleType().getId() || relType.getRoles()[0].getId() == graphDbExt().getEndElementRoleType().getId());
 		assertTrue(relType.getRoles()[1].getId() == graphDbExt().getStartElementRoleType().getId() || relType.getRoles()[1].getId() == graphDbExt().getEndElementRoleType().getId());
 */		
-		assertTrue(rel1.getElement(graphDbExt().getStartElementRoleType()).getNode().getId() == v1.getNode().getId());
-		assertTrue(rel1.getElement(graphDbExt().getEndElementRoleType()).getNode().getId() == v2.getNode().getId());
+/*		
+		assertTrue(rel1.getVertex(graphDbExt().getStartElementRoleType()).getNode().getId() == v1.getNode().getId());
+		assertTrue(rel1.getVertex(graphDbExt().getEndElementRoleType()).getNode().getId() == v2.getNode().getId());
+*/		
 		
-		NAryEdgeRoleType giver = graphDbExt().getEdgeRoleType("giver");
-		NAryEdgeRoleType recipient = graphDbExt().getEdgeRoleType("recipient");
-		NAryEdgeRoleType gift = graphDbExt().getEdgeRoleType("gift");
+		ConnectorType<?> giver = graphDbExt().getConnectorType("giver", ConnectionMode.UNRESTRICTED);
+		ConnectorType<?> recipient = graphDbExt().getConnectorType("recipient", ConnectionMode.UNRESTRICTED);
+		ConnectorType<?> gift = graphDbExt().getConnectorType("gift", ConnectionMode.UNRESTRICTED);
 
-		Set<NAryEdgeRoleType> roles = new HashSet<NAryEdgeRoleType>();
+		Set<ConnectorType<?>> roles = new HashSet<ConnectorType<?>>();
 		roles.add(giver);
 		roles.add(recipient);
 		roles.add(gift);
 
-		NAryEdgeType hrelType = db.getEdgeType("GIVES", roles);
+		EdgeType hrelType = db.getEdgeType("GIVES", roles);
 		
 		Vertex flo = graphDbExt().createVertex();
 		Vertex eddie = graphDbExt().createVertex();
@@ -155,21 +157,21 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		EdgeElement recipients = new EdgeElement(recipient, rp);
 		EdgeElement gifts = new EdgeElement(gift, gf);
 
-		NAryEdge hrel = graphDbExt().createEdge(hrelType, givers, recipients, gifts);
+		Edge hrel = graphDbExt().createEdge(hrelType, givers, recipients, gifts);
 		int count = 0;
-		for(Vertex element: hrel.getElements(giver)){
+		for(Vertex element: hrel.getVertices(giver)){
 			assertTrue(element.getNode().getId() == flo.getNode().getId() || element.getNode().getId() == eddie.getNode().getId());
 			count++;
 		}
 		assertTrue(count == 2);
 		count = 0;
-		for(Vertex element: hrel.getElements(recipient)){
+		for(Vertex element: hrel.getVertices(recipient)){
 			assertTrue(element.getNode().getId() == tom.getNode().getId() || element.getNode().getId() == dick.getNode().getId()  || element.getNode().getId() == harry.getNode().getId());
 			count++;
 		}
 		assertTrue(count == 3);
 		count = 0;
-		for(Vertex element: hrel.getElements(gift)){
+		for(Vertex element: hrel.getVertices(gift)){
 			assertTrue(element.getNode().getId() == book.getNode().getId() || element.getNode().getId() == spatula.getNode().getId());
 			count++;
 		}

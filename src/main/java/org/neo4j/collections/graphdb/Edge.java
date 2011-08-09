@@ -20,20 +20,20 @@
 package org.neo4j.collections.graphdb;
 
 
-public interface Edge<T extends EdgeType<U>, U extends EdgeRoleType> extends Vertex{
+public interface Edge extends Vertex{
 
 	public void delete();
 
-	public T getType();
+	public EdgeType getType();
 
-	public boolean isType(T relType);
+	public boolean isType(EdgeType relType);
 
 	public Iterable<EdgeElement> getEdgeElements();
 
-	public Iterable<EdgeElement> getEdgeElements(U... roleType);
+	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorType);
 	
-	public Iterable<Vertex> getVertices(U roleType);
+	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType);
 	
-	public Vertex getVertex(FunctionalEdgeRoleType roleType);
+	public <U extends InjectiveConnectionMode>Vertex getVertex(ConnectorType<U> connectorType);
 	
 }

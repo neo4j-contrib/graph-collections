@@ -21,18 +21,19 @@ package org.neo4j.collections.graphdb;
 
 import java.util.ArrayList;
 
-public class FunctionalEdgeElement extends EdgeElement{
+public class InjectiveEdgeElement extends EdgeElement{
 
-	private final Vertex element;
-	
-	private static Iterable<Vertex> packElement(Vertex element){
+	private static Iterable<Vertex> toElements(Vertex vertex){
 		ArrayList<Vertex> elements = new ArrayList<Vertex>();
-		elements.add(element);
+		elements.add(vertex);
 		return elements;
 	}
 	
-	public FunctionalEdgeElement(FunctionalEdgeRoleType role, Vertex element) {
-		super(role, packElement(element));
+	private final Vertex element;
+	
+	public <T extends InjectiveConnectionMode> InjectiveEdgeElement(ConnectorType<T> connector,
+			Vertex element) {
+		super(connector, toElements(element));
 		this.element = element;
 	}
 

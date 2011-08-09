@@ -23,4 +23,5 @@ public interface SortableBinaryEdgeType<T> extends BinaryEdgeType{
 	
 	PropertyType.ComparablePropertyType<T> getPropertyType();
 
+	public SortableBinaryEdge<T> createEdge(Vertex startVertex, Vertex endVertex);
 }

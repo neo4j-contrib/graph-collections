@@ -19,8 +19,19 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface NAryEdgeType extends EdgeType<NAryEdgeRoleType>{
+import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Unrestricted;
+import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Injective;
+import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Surjective;
+import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Bijective;
 
-	public NAryEdgeRole getRole(String name);
+
+public interface ConnectionMode {
+
+	public String getName();
+	
+	public static UnrestrictedConnectionMode UNRESTRICTED = new Unrestricted();
+	public static InjectiveConnectionMode INJECTIVE = new Injective();
+	public static SurjectiveConnectionMode SURJECTIVE = new Surjective();
+	public static BijectiveConnectionMode BIJECTIVE = new Bijective();
 	
 }

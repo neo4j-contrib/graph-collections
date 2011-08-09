@@ -19,24 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-import org.neo4j.collections.graphdb.impl.EdgeRoleTypeImpl;
-import org.neo4j.graphdb.Node;
+public interface SurjectiveConnectionMode extends ConnectionMode{
 
-public class PropertyRoleType extends EdgeRoleTypeImpl implements UnaryEdgeRoleType{
-	
-	private static final String propertyRoleTypeName = "PropertyRoleType";
-	
-	public PropertyRoleType(Node node) {
-		super(node);
-	}
-
-	public static PropertyRoleType getOrCreateInstance(DatabaseService db) {
-		return new PropertyRoleType(EdgeRoleTypeImpl.getOrCreateInstanceNode(db, propertyRoleTypeName));
-		
-	}
-
-	@Override
-	public String getName() {
-		return propertyRoleTypeName;
-	}
 }

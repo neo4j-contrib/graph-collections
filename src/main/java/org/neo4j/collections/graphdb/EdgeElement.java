@@ -21,11 +21,11 @@ package org.neo4j.collections.graphdb;
 
 public class EdgeElement{
 
-	private final EdgeRoleType role;
+	private final ConnectorType<?> connector;
 	private final Iterable<Vertex> elements;
 	
-	public EdgeElement(EdgeRoleType role, Iterable<Vertex> elements) {
-		this.role = role;
+	public EdgeElement(ConnectorType<?> connector, Iterable<Vertex> elements) {
+		this.connector = connector;
 		this.elements = elements;
 	}
 
@@ -33,8 +33,8 @@ public class EdgeElement{
 		return elements;
 	}
 	
-	public EdgeRoleType getRole(){
-		return role;
+	public ConnectorType<?> getConnector(){
+		return connector;
 	}
 	
 }

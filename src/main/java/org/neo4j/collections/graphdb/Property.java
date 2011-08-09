@@ -19,7 +19,7 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Property<T> extends UnaryEdge<PropertyRoleType, PropertyType<T>>{
+public interface Property<T> extends UnaryEdge{
 
 	public T getValue();
 	

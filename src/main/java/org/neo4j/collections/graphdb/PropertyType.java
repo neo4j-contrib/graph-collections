@@ -26,40 +26,67 @@ import java.util.Set;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.impl.EdgeTypeImpl;
+import org.neo4j.collections.graphdb.impl.PropertyImpl;
 import org.neo4j.collections.graphdb.impl.VertexTypeImpl;
 
-public abstract class PropertyType<T> extends EdgeTypeImpl<PropertyRoleType> implements UnaryEdgeType<PropertyRoleType>{
+public abstract class PropertyType<T> extends EdgeTypeImpl{
 
 	private PropertyType(Node node) {
 		super(node);
 	}
 
+	public boolean hasProperty(Vertex vertex){
+		return vertex.getPropertyContainer().hasProperty(getName());
+	}
+	
+	@SuppressWarnings("unchecked")
+	public T getPropertyValue(Vertex vertex){
+		return (T)vertex.getPropertyContainer().getProperty(getName());
+	}
+
+	public Property<T> getProperty(Vertex vertex){
+		return new PropertyImpl<T>(getDb(), vertex, this);
+	}
+
+	
+	public Property<T> setProperty(Vertex vertex, T value){
+		vertex.getPropertyContainer().setProperty(getName(), value);
+		return getProperty(vertex);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public T removeProperty(Vertex vertex) {
+		return (T)vertex.getPropertyContainer().removeProperty(this.getName());
+	}
+	
 	@Override
 	public PropertyContainer getPropertyContainer() {
 		return getNode();
 	}
 
-	@SuppressWarnings("unchecked")
+	public Connector<BijectiveConnectionMode> getPropertyConnector(){
+		return new PropertyConnector(PropertyConnectorType.getOrCreateInstance(getDb()), this);		
+	}
+	
 	@Override
-	public Set<PropertyRole> getRoles() {
-		Set<PropertyRole> roles = new HashSet<PropertyRole>();
-		roles.add(new PropertyRole(PropertyRoleType.getOrCreateInstance(getDb()), this));
+	public Set<Connector<?>> getConnectors() {
+		Set<Connector<?>> roles = new HashSet<Connector<?>>();
+		roles.add(getPropertyConnector());
 		return roles;
 	}
 	
-	public PropertyRoleType getRole(String name) {
-		if(name.equals(PropertyRoleType.getOrCreateInstance(getDb()).getName())){
-			return PropertyRoleType.getOrCreateInstance(getDb());
+	public PropertyConnectorType getRole(String name) {
+		if(name.equals(PropertyConnectorType.getOrCreateInstance(getDb()).getName())){
+			return PropertyConnectorType.getOrCreateInstance(getDb());
 		}else{
 			return null;
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <U extends EdgeType<PropertyRoleType>> EdgeRole<U, PropertyRoleType> getRole(
-			PropertyRoleType edgeRoleType) {
-		return (EdgeRole<U, PropertyRoleType>) new EdgeRole<PropertyType<T>, PropertyRoleType>(edgeRoleType, this);
+	public <U extends ConnectionMode> Connector<U> getConnector(
+			ConnectorType<U> edgeRoleType) {
+		return new Connector<U>(edgeRoleType, this);
 	}
 	
 	
@@ -573,4 +600,49 @@ public abstract class PropertyType<T> extends EdgeTypeImpl<PropertyRoleType> imp
 			return propertyValue1.compareTo(propertyValue2);
 		}
 	}
+	
+	public static class VertexPropertyType extends PropertyType<Vertex>{
+
+		public VertexPropertyType(Node node){
+			super(node);
+		}
+		
+		private static Class<?> getImplementationClass(){
+			try{
+				return Class.forName("org.neo4j.collections.graphdb.PropertyType$VertexPropertyType");
+			}catch(ClassNotFoundException cce){
+				throw new RuntimeException(cce);
+			}
+		}
+
+		public static VertexPropertyType getOrCreateInstance(DatabaseService db, String name) {
+			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
+			return new VertexPropertyType(vertexType.getNode());
+		}
+		
+		public boolean hasProperty(Vertex vertex){
+			return vertex.getPropertyContainer().hasProperty(getName());
+		}
+		
+		public Vertex getPropertyValue(Vertex vertex){
+			return getDb().getVertex(getDb().getNodeById((Long)vertex.getPropertyContainer().getProperty(getName())));
+		}
+
+		public Property<Vertex> getProperty(Vertex vertex){
+			return new PropertyImpl<Vertex>(getDb(), vertex, this);
+		}
+
+		
+		public Property<Vertex> setProperty(Vertex vertex, Vertex value){
+			vertex.getPropertyContainer().setProperty(getName(), value.getNode().getId());
+			return getProperty(vertex);
+		}
+		
+		public Vertex removeProperty(Vertex vertex) {
+			return getDb().getVertex(getDb().getNodeById((Long)vertex.getPropertyContainer().removeProperty(getName())));
+		}
+
+	}
+
+	
 }

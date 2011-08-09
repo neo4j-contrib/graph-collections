@@ -21,10 +21,16 @@ package org.neo4j.collections.graphdb;
 
 import java.util.Set;
 
-public interface EdgeType<T extends EdgeRoleType> extends VertexType{
+public interface EdgeType extends VertexType{
 
-	public <U extends EdgeType<T>> Set<EdgeRole<U, T>> getRoles();
+	public Set<Connector<?>> getConnectors();
 	
-	public <U extends EdgeType<T>> EdgeRole<U, T> getRole(T edgeRoleType);
+	public <T extends ConnectionMode> Connector<T> getConnector(ConnectorType<T> connectorType);
+
+	public Iterable<Edge> getEdges(Vertex vertex, ConnectorType<?>... connectorTypes);
+	
+	public boolean hasEdge(Vertex vertex, ConnectorType<?>... connectorTypes);
+	
+	public Connector<?> getConnector(String name);
 	
 }

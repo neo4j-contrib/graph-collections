@@ -19,6 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface UnaryEdgeRoleType extends EdgeRoleType{
+public interface InjectiveConnectionMode extends ConnectionMode{
 
 }

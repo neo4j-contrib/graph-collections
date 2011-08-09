@@ -19,10 +19,25 @@
  */
 package org.neo4j.collections.graphdb;
 
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
 
-public interface BinaryEdgeType extends EdgeType<BinaryEdgeRoleType> {
+public interface BinaryEdgeType extends EdgeType {
 	
 	public RelationshipType getRelationshipType();
+	
+	public BinaryEdge createEdge(Vertex startVertex, Vertex endVertex);
+	
+	public Iterable<BinaryEdge> getEdges(Vertex vertex);
+	
+	public Iterable<BinaryEdge> getEdges(Vertex vertex, Direction dir);
+	
+	public boolean hasEdge(Vertex vertex, Direction dir);
+	
+	public BinaryEdge getSingleBinaryEdge(Vertex vertex, Direction dir);
+	
+	public Connector<InjectiveConnectionMode> getStartConnector();
+	
+	public Connector<InjectiveConnectionMode> getEndConnector();
 	
 }

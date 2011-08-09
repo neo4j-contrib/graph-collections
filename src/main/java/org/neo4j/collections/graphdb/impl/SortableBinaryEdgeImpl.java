@@ -22,8 +22,9 @@ package org.neo4j.collections.graphdb.impl;
 import java.util.ArrayList;
 
 import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.Vertex;
-import org.neo4j.collections.graphdb.FunctionalEdgeElement;
+import org.neo4j.collections.graphdb.InjectiveEdgeElement;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
@@ -91,15 +92,15 @@ public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements Sortabl
 	}
 
 	@Override
-	public boolean isType(BinaryEdgeType relType) {
+	public boolean isType(EdgeType relType) {
 		return rel.isType(DynamicRelationshipType.withName(relType.getName()));
 	}
 
 	@Override
 	public Iterable<EdgeElement> getEdgeElements(){
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new FunctionalEdgeElement(getDb().getStartElementRoleType(), getDb().getVertex(rel.getStartNode())));
-		relements.add(new FunctionalEdgeElement(getDb().getEndElementRoleType(), getDb().getVertex(rel.getEndNode())));
+		relements.add(new InjectiveEdgeElement(getType().getStartConnector().getConnectorType(), getDb().getVertex(rel.getStartNode())));
+		relements.add(new InjectiveEdgeElement(getType().getEndConnector().getConnectorType(), getDb().getVertex(rel.getEndNode())));
 		return relements;
 	}
 

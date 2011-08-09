@@ -20,20 +20,18 @@
 package org.neo4j.collections.graphdb.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.EdgeRole;
+import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.EdgeType;
-import org.neo4j.collections.graphdb.NAryEdge;
-import org.neo4j.collections.graphdb.NAryEdgeRoleType;
-import org.neo4j.collections.graphdb.NAryEdgeType;
+import org.neo4j.collections.graphdb.Edge;
+import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.Path;
+import org.neo4j.collections.graphdb.Traversal;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.VertexType;
@@ -41,145 +39,243 @@ import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.SortableBinaryEdge;
 import org.neo4j.collections.graphdb.SortableBinaryEdgeType;
-import org.neo4j.collections.indexedrelationship.IndexedRelationship;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 
-public class VertexImpl implements Vertex{
+public class VertexImpl implements Vertex {
 
-	public static final String EDGEROLE_SEPARATOR = "/#/";
-	public static final String TYPE_IDS = "org.neo4j.collections.graphdb.type_ids";
-	
-	private Vertex outer = this;
-	
-	private Node node;  
-	
-	public VertexImpl(Node node){
-		this.node = node;
-	}
-	
-	@Override
-	public BinaryEdge createEdgeTo(
-			Vertex n,
-			RelationshipType rt) {
-		return new BinaryEdgeImpl(getNode().createRelationshipTo(n.getNode(), rt));
-	}
+	static class EdgeIterator implements Iterator<Edge> {
 
-	@Override
-	public <T> SortableBinaryEdge<T> createEdgeTo(
-			Vertex n,
-			SortableBinaryEdgeType<T> rt) {
-		IndexedRelationship idxRel = new IndexedRelationship(DynamicRelationshipType.withName(rt.getName()), Direction.OUTGOING,  rt.getPropertyType(), true, this.getNode(), getDb().getGraphDatabaseService());
-		Relationship rel = idxRel.createRelationshipTo(n.getNode());
-		return new SortableBinaryEdgeImpl<T>(rel, idxRel);
-	}
-	
-	@Override
-	public Iterable<BinaryEdge> getBinaryEdges() {
-		return new RelationshipIterable(node.getRelationships());
-	}
+		private final Iterator<Relationship> connectorRels;
 
-	@Override
-	public Iterable<BinaryEdge> getBinaryEdges(
-			RelationshipType... relTypes) {
-		return new RelationshipIterable(node.getRelationships(relTypes));
-	}
+		public EdgeIterator(
+				Connector<?> connector,
+				Vertex vertex) {
+			this.connectorRels = vertex
+					.getNode()
+					.getRelationships(
+							DynamicRelationshipType.withName(connector
+									.getEdgeType().getName()
+									+ EDGEROLE_SEPARATOR
+									+ connector.getConnectorType().getName()),
+							Direction.INCOMING).iterator();
+		}
 
-	@Override
-	public Iterable<BinaryEdge> getBinaryEdges(
-			Direction dir) {
-		return new RelationshipIterable(getNode().getRelationships(dir));
-	}
+		@Override
+		public boolean hasNext() {
+			return connectorRels.hasNext();
+		}
 
-	@Override
-	public Iterable<BinaryEdge> getBinaryEdges(
-			Direction dir, RelationshipType... relTypes) {
-		return new RelationshipIterable(getNode().getRelationships(dir, relTypes));
-	}
+		@Override
+		public Edge next() {
+			if (connectorRels.hasNext()) {
+				return new EdgeImpl(connectorRels.next().getStartNode());
+			} else {
+				throw new NoSuchElementException();
+			}
+		}
 
-	@Override
-	public Iterable<BinaryEdge> getBinaryEdges(
-			RelationshipType relType, Direction dir) {
-		return new RelationshipIterable(getNode().getRelationships(relType, dir));
-	}
-
-	@Override
-	public BinaryEdge getSingleBinaryEdge(
-			RelationshipType relType, Direction dir) {
-		org.neo4j.graphdb.Relationship rel  = getNode().getSingleRelationship(relType, dir);
-		if(rel == null){
-			return null;
-		}else{
-			return new BinaryEdgeImpl(rel);
+		@Override
+		public void remove() {
 		}
 	}
 
-	@Override
-	public boolean hasBinaryEdge() {
-		return getNode().hasRelationship();
+	static class ConnectorIterable implements Iterable<Edge> {
+
+		Iterable<Connector<?>> connectors;
+
+		private final Vertex vertex;
+
+		public ConnectorIterable(
+				Iterable<Connector<?>> connectors,
+				Vertex vertex) {
+			this.connectors = connectors;
+			this.vertex = vertex;
+		}
+
+		@Override
+		public Iterator<Edge> iterator() {
+			return new ConnectorIterator(connectors, vertex);
+		}
+
 	}
 
-	@Override
-	public boolean hasBinaryEdge(RelationshipType... relType) {
-		return getNode().hasRelationship(relType);
+	static class ConnectorIterator implements Iterator<Edge> {
+
+		private final Iterator<Connector<?>> connectors;
+
+		private final Vertex vertex;
+		private EdgeIterator currentEdgeIterator = null;
+		private Boolean hasNext = null;
+
+		public ConnectorIterator(
+				Iterable<Connector<?>> connectors,
+				Vertex vertex) {
+			this.connectors = connectors.iterator();
+			this.vertex = vertex;
+		}
+
+		@Override
+		public boolean hasNext() {
+			if (hasNext == null) {
+				if (currentEdgeIterator == null) {
+					if (connectors.hasNext()) {
+						currentEdgeIterator = new EdgeIterator(
+								connectors.next(), vertex);
+						return hasNext();
+					} else {
+						hasNext = false;
+						return false;
+					}
+				} else {
+					if (currentEdgeIterator.hasNext()) {
+						hasNext = true;
+						return true;
+					} else {
+						currentEdgeIterator = null;
+						return hasNext();
+					}
+				}
+			} else {
+				return hasNext;
+			}
+		}
+
+		@Override
+		public Edge next() {
+			if (hasNext()) {
+				hasNext = null;
+				return currentEdgeIterator.next();
+			} else {
+				throw new NoSuchElementException();
+			}
+		}
+
+		@Override
+		public void remove() {
+		}
+
 	}
 
-	@Override
-	public boolean hasBinaryEdge(Direction dir) {
-		return getNode().hasRelationship(dir);
+	static class EdgeTypeIterable implements Iterable<Edge> {
+
+		EdgeType[] edgeTypes;
+
+		private final Vertex vertex;
+
+		EdgeTypeIterable(Vertex vertex, EdgeType... edgeTypes) {
+			this.edgeTypes = edgeTypes;
+			this.vertex = vertex;
+		}
+
+		@Override
+		public Iterator<Edge> iterator() {
+			ArrayList<EdgeType> ets = new ArrayList<EdgeType>();
+			for (EdgeType edgeType : edgeTypes) {
+				ets.add(edgeType);
+			}
+			return new EdgeTypeIterator(ets.iterator(), vertex);
+		}
+
 	}
 
-	@Override
-	public boolean hasBinaryEdge(Direction dir,
-			RelationshipType... relTypes) {
-		return getNode().hasRelationship(dir, relTypes);
+	static class EdgeTypeIterator implements Iterator<Edge> {
+
+		Iterator<EdgeType> edgeTypes;
+		ConnectorIterator currentConnectorIterator = null;
+		Boolean hasNext = null;
+		private final Vertex vertex;
+
+		EdgeTypeIterator(Iterator<EdgeType> edgeTypes, Vertex vertex) {
+			this.edgeTypes = edgeTypes;
+			this.vertex = vertex;
+		}
+
+		@Override
+		public boolean hasNext() {
+			if (hasNext == null) {
+				if (currentConnectorIterator == null) {
+					if (edgeTypes.hasNext()) {
+						currentConnectorIterator = new ConnectorIterator(
+								edgeTypes.next().getConnectors(), vertex);
+						return hasNext();
+					} else {
+						hasNext = false;
+						return false;
+					}
+				} else {
+					if (currentConnectorIterator.hasNext()) {
+						hasNext = true;
+						return true;
+					} else {
+						currentConnectorIterator = null;
+						return hasNext();
+					}
+				}
+			} else {
+				return hasNext;
+			}
+		}
+
+		@Override
+		public Edge next() {
+			if (hasNext()) {
+				hasNext = null;
+				return currentConnectorIterator.next();
+			} else {
+				throw new NoSuchElementException();
+			}
+		}
+
+		@Override
+		public void remove() {
+		}
+
 	}
 
-	@Override
-	public boolean hasBinaryEdge(RelationshipType relType,
-			Direction dir) {
-		return getNode().hasRelationship(relType, dir);
+	class TraversalIterator implements Iterator<Traversal> {
+
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
+
+		@Override
+		public Traversal next() {
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public void remove() {
+		}
+
 	}
 
-	@Override
-	public <T> Property<T> getProperty(PropertyType<T> pt) {
-		return new PropertyImpl<T>(getDb(), this, pt);
+	class PropertyTypeIterable implements Iterable<PropertyType<?>> {
+
+		final Node node;
+
+		public PropertyTypeIterable(Node node) {
+			this.node = node;
+		}
+
+		@Override
+		public Iterator<PropertyType<?>> iterator() {
+			return new PropertyTypeIterator(node);
+		}
+
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T getPropertyValue(PropertyType<T> pt) {
-		return (T)getPropertyContainer().getProperty(pt.getName());
-	}
-
-	@Override
-	public <T> boolean hasProperty(PropertyType<T> pt) {
-		return getPropertyContainer().hasProperty(pt.getName());
-	}
-
-	@Override
-	public Vertex removeProperty(PropertyType<?> pt) {
-		getPropertyContainer().removeProperty(pt.getName());
-		return this;
-	}
-
-	@Override
-	public <T> Vertex setProperty(PropertyType<T> pt, T value) {
-		getPropertyContainer().setProperty(pt.getName(), value);
-		return this;
-	}
-
-	
-	class PropertyTypeIterator implements Iterator<PropertyType<?>>{
+	class PropertyTypeIterator implements Iterator<PropertyType<?>> {
 
 		final Iterator<String> keys;
-		
-		PropertyTypeIterator(Node n){
+
+		PropertyTypeIterator(Node n) {
 			keys = n.getPropertyKeys().iterator();
 		}
-		
+
 		@Override
 		public boolean hasNext() {
 			return keys.hasNext();
@@ -193,336 +289,28 @@ public class VertexImpl implements Vertex{
 		@Override
 		public void remove() {
 		}
-		
-	}
-	
-	class PropertyTypeIterable implements Iterable<PropertyType<?>>{
 
-		final Node node;
-		
-		public PropertyTypeIterable(Node node) {
-			this.node = node;
-		}
+	}
+
+	private class VertexTypeIterable implements Iterable<VertexType> {
 
 		@Override
-		public Iterator<PropertyType<?>> iterator() {
-			return new PropertyTypeIterator(node);
+		public Iterator<VertexType> iterator() {
+			return new VertexTypeIterator();
 		}
-		
-	}
-	
-	@Override
-	public Iterable<PropertyType<?>> getPropertyTypes() {
-		return new PropertyTypeIterable(getNode());
+
 	}
 
-	private class NAryEdgeIterator implements Iterator<NAryEdge>{
-
-		private final Iterator<Relationship> edgeRoleRels;
-		
-		public NAryEdgeIterator(EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType> edgeRole) {
-			this.edgeRoleRels = getNode().getRelationships(DynamicRelationshipType.withName(edgeRole.getEdgeType().getName()+EDGEROLE_SEPARATOR+edgeRole.getEdgeRoleType().getName()), Direction.INCOMING).iterator();
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return edgeRoleRels.hasNext();
-		}
-
-		@Override
-		public NAryEdge next() {
-			if(edgeRoleRels.hasNext()){
-				return new NAryEdgeImpl(edgeRoleRels.next().getStartNode());
-			}else{
-				throw new NoSuchElementException();
-			}
-		}
-
-		@Override
-		public void remove() {
-		}
-	}
-
-	
-	private class NAryEdgeRoleIterator implements Iterator<NAryEdge>{
-
-		private final Iterator<EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType>> edgeRoles;
-		
-		private NAryEdgeIterator currentEdgeIterator = null;
-		private Boolean hasNext = null;
-		
-		public NAryEdgeRoleIterator(Iterable<EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType>> roles) {
-			this.edgeRoles = roles.iterator();
-		}
-		
-		@Override
-		public boolean hasNext() {
-			if(hasNext == null){
-				if(currentEdgeIterator == null){
-					if(edgeRoles.hasNext()){
-						currentEdgeIterator = new NAryEdgeIterator(edgeRoles.next());
-						return hasNext();
-					}else{
-						hasNext = false;
-						return false;
-					}
-				}else{
-					if(currentEdgeIterator.hasNext()){
-						hasNext = true;
-						return true;
-					}else{
-						currentEdgeIterator = null;
-						return hasNext();
-					}
-				}
-			}else{
-				return hasNext;
-			}
-		}
-
-		@Override
-		public NAryEdge next() {
-			if(hasNext()){
-				hasNext = null;
-				return currentEdgeIterator.next();
-			}else{
-				throw new NoSuchElementException();
-			}
-		}
-
-		@Override
-		public void remove() {
-		}
-		
-	}
-
-	private class NAryEdgeRoleIterable implements Iterable<NAryEdge>{
-
-		Iterable<EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType>> roles;
-		
-		public NAryEdgeRoleIterable(
-				Iterable<EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType>> roles) {
-			this.roles = roles;
-		}
-
-		@Override
-		public Iterator<NAryEdge> iterator() {
-			return new NAryEdgeRoleIterator(roles);
-		}
-		
-	}
-	
-	private class NAryEdgeTypeIterator implements Iterator<NAryEdge>{
-
-		Iterator<NAryEdgeType> edgeTypes;
-		NAryEdgeRoleIterator currentEdgeRoleIterator = null;
-		Boolean hasNext = null;
-		
-		NAryEdgeTypeIterator(Iterator<NAryEdgeType> edgeTypes){
-			this.edgeTypes = edgeTypes;
-		}
-
-		@Override
-		public boolean hasNext() {
-			if(hasNext == null){
-				if(currentEdgeRoleIterator == null){
-					if(edgeTypes.hasNext()){
-						currentEdgeRoleIterator = new NAryEdgeRoleIterator(edgeTypes.next().getRoles());
-						return hasNext();
-					}else{
-						hasNext = false;
-						return false;
-					}
-				}else{
-					if(currentEdgeRoleIterator.hasNext()){
-						hasNext = true;
-						return true;
-					}else{
-						currentEdgeRoleIterator = null;
-						return hasNext();
-					}
-				}
-			}else{
-				return hasNext;
-			}
-		}
-
-		@Override
-		public NAryEdge next() {
-			if(hasNext()){
-				hasNext = null;
-				return currentEdgeRoleIterator.next();
-			}else{
-				throw new NoSuchElementException();
-			}
-		}
-
-		@Override
-		public void remove() {
-		}
-		
-	}
-	
-	private class NAryEdgeTypeIterable implements Iterable<NAryEdge>{
-
-		NAryEdgeType[] edgeTypes;
-		
-		NAryEdgeTypeIterable(NAryEdgeType... edgeTypes){
-			this.edgeTypes = edgeTypes;
-		}
-		
-		@Override
-		public Iterator<NAryEdge> iterator() {
-			ArrayList<NAryEdgeType> ets = new ArrayList<NAryEdgeType>();
-			for(NAryEdgeType edgeType: edgeTypes){
-				ets.add(edgeType);
-			}
-			return new NAryEdgeTypeIterator(ets.iterator());
-		}
-		
-	}
-	
-	@Override
-	public Iterable<NAryEdge> getEdges(NAryEdgeType... edgeTypes) {
-		return new NAryEdgeTypeIterable(edgeTypes);
-	}
-
-	@Override
-	public Node getNode() {
-		return node;
-	}
-
-	@Override
-	public PropertyContainer getPropertyContainer() {
-		return node;
-	}
-
-	@Override
-	public DatabaseService getDb() {
-		return new GraphDatabaseImpl(getPropertyContainer().getGraphDatabase());
-	}
-
-	@Override
-	public Iterable<NAryEdge> getEdges(NAryEdgeType edgeType, NAryEdgeRoleType... roles) {
-		Set<EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType>> roles1 = new HashSet<EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType>>();
-		Set<EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType>> roles2 = edgeType.getRoles();
-		for(NAryEdgeRoleType role: roles){
-			for(EdgeRole<EdgeType<NAryEdgeRoleType>, NAryEdgeRoleType> role2: roles2){
-				if(role.getName().equals(role2.getEdgeRoleType().getName())){
-					roles1.add(role2);
-				}
-			}
-		}
-		
-		return new NAryEdgeRoleIterable(roles1);
-	}
-
-	@Override
-	public boolean hasEdge(NAryEdgeType edgeType, NAryEdgeRoleType... roles) {
-		return getEdges(edgeType, roles).iterator().hasNext();
-	}
-
-	class PathIterator implements Iterator<Path>{
-
-		class PathElementIterator implements Iterator<Vertex>{
-
-			boolean hasNext = true;
-
-			@Override
-			public boolean hasNext() {
-				return hasNext;
-			}
-
-			@Override
-			public Vertex next() {
-				if(hasNext){
-					hasNext = false;
-					return outer;
-				}else{
-					throw new NoSuchElementException();
-				}
-			}
-
-			@Override
-			public void remove() {
-			}
-		}
-		
-		boolean hasNext = true;
-		
-		@Override
-		public boolean hasNext() {
-			return hasNext;
-		}
-
-		@Override
-		public Path next() {
-			if(hasNext){
-				hasNext = false;
-				return new Path() {
-
-					@Override
-					public Vertex getFirstElement() {
-						return outer;
-					}
-
-					@Override
-					public Vertex getLastElement() {
-						return outer;
-					}
-
-					@Override
-					public Iterator<Vertex> iterator() {
-						return new PathElementIterator();
-					}
-
-					@Override
-					public int length() {
-						return 0;
-					}
-				};
-			}else{
-				throw new NoSuchElementException();
-			}
-		}
-
-		@Override
-		public void remove() {
-		}
-		
-	}
-	
-	@Override
-	public Iterator<Path> iterator() {
-		return new PathIterator();
-	}
-
-	@Override
-	public Vertex addEdge(Vertex n, RelationshipType rt) {
-		createEdgeTo(n, rt);
-		return this;
-	}
-
-	@Override
-	public Vertex addEdge(Vertex n, SortableBinaryEdgeType<?> rt) {
-		createEdgeTo(n, rt);
-		return this;
-	}
-
-	protected VertexType getSpecialVertexType(){
-		return null;
-	}
-	
-	private class VertexTypeIterator implements Iterator<VertexType>{
+	private class VertexTypeIterator implements Iterator<VertexType> {
 
 		private final Iterator<Node> nodes;
 		boolean foundSpecial = false;
 		VertexType special = getSpecialVertexType();
-		
+
 		public VertexTypeIterator() {
 			ArrayList<Node> nodes = new ArrayList<Node>();
-			Long[] nodeIds = (Long[])getNode().getProperty(TYPE_IDS);
-			for(Long id: nodeIds){
+			Long[] nodeIds = (Long[]) getNode().getProperty(TYPE_IDS);
+			for (Long id : nodeIds) {
 				nodes.add(getDb().getNodeById(id));
 			}
 			this.nodes = nodes.iterator();
@@ -530,30 +318,31 @@ public class VertexImpl implements Vertex{
 
 		@Override
 		public boolean hasNext() {
-			if(nodes.hasNext()){
+			if (nodes.hasNext()) {
 				return true;
-			}else if(foundSpecial){
+			} else if (foundSpecial) {
 				return false;
-			}else if(special == null){
+			} else if (special == null) {
 				return false;
-			}else{
+			} else {
 				return true;
 			}
 		}
 
 		@Override
 		public VertexType next() {
-			if(hasNext()){
-				if(nodes.hasNext()){
-					VertexType vertexType = (VertexType)getDb().getVertex(nodes.next());
-					if(special.getName().equals(vertexType.getName())){
+			if (hasNext()) {
+				if (nodes.hasNext()) {
+					VertexType vertexType = (VertexType) getDb().getVertex(
+							nodes.next());
+					if (special.getName().equals(vertexType.getName())) {
 						foundSpecial = true;
 					}
 					return vertexType;
-				}else {
+				} else {
 					return special;
 				}
-			}else{
+			} else {
 				throw new NoSuchElementException();
 			}
 		}
@@ -561,36 +350,45 @@ public class VertexImpl implements Vertex{
 		@Override
 		public void remove() {
 		}
-		
-	}
-	
-	
-	private class VertexTypeIterable implements Iterable<VertexType>{
 
-		@Override
-		public Iterator<VertexType> iterator() {
-			return new VertexTypeIterator();
-		}
-		
 	}
-	
+
+	public static final String EDGEROLE_SEPARATOR = "/#/";
+
+	public static final String TYPE_IDS = "org.neo4j.collections.graphdb.type_ids";
+
+	private Vertex outer = this;
+
+	private Node node;
+
+	public VertexImpl(Node node) {
+		this.node = node;
+	}
+
 	@Override
-	public Iterable<VertexType> getTypes() {
-		return new VertexTypeIterable();
+	public Vertex addEdge(Vertex vertex, RelationshipType type) {
+		createEdgeTo(vertex, type);
+		return this;
+	}
+
+	@Override
+	public Vertex addEdge(Vertex vertex, SortableBinaryEdgeType<?> type) {
+		createEdgeTo(vertex, type);
+		return this;
 	}
 
 	@Override
 	public Vertex addType(VertexType vertexType) {
-		Long[] nodeIds = (Long[])getNode().getProperty(TYPE_IDS);
+		Long[] nodeIds = (Long[]) getNode().getProperty(TYPE_IDS);
 		boolean exists = false;
-		for(Long id: nodeIds){
-			if(id == vertexType.getNode().getId()){
+		for (Long id : nodeIds) {
+			if (id == vertexType.getNode().getId()) {
 				exists = true;
 			}
 		}
-		if(!exists){
-			Long[] ids = new Long[nodeIds.length+1];
-			for(int i=0;i < nodeIds.length;i++){
+		if (!exists) {
+			Long[] ids = new Long[nodeIds.length + 1];
+			for (int i = 0; i < nodeIds.length; i++) {
 				ids[i] = nodeIds[i];
 			}
 			ids[nodeIds.length] = vertexType.getNode().getId();
@@ -599,24 +397,194 @@ public class VertexImpl implements Vertex{
 	}
 
 	@Override
+	public BinaryEdge createEdgeTo(Vertex vertex, RelationshipType type) {
+		return getDb().getBinaryEdgeType(type).createEdge(this, vertex);
+	}
+
+	@Override
+	public <T> SortableBinaryEdge<T> createEdgeTo(Vertex vertex,
+			SortableBinaryEdgeType<T> type) {
+		return type.createEdge(this, vertex);
+	}
+
+	/**
+	 * We don't dispatch here to Binary Edges because we can't iterate over
+	 * relationship types.
+	 */
+	@Override
+	public Iterable<BinaryEdge> getBinaryEdges() {
+		return new RelationshipIterable(node.getRelationships());
+	}
+
+	/**
+	 * We don't dispatch here to Binary Edges because we can't iterate over
+	 * relationship types.
+	 */
+	@Override
+	public Iterable<BinaryEdge> getBinaryEdges(Direction dir) {
+		return new RelationshipIterable(getNode().getRelationships(dir));
+	}
+
+	/**
+	 * We don't dispatch here to Binary Edges because then we would have to read
+	 * all relationships for each type. As soon as relationships are partitioned
+	 * per relationship type, per role/direction, the implementation of this
+	 * method can dispatch to Binary Edge
+	 */
+	@Override
+	public Iterable<BinaryEdge> getBinaryEdges(Direction dir,
+			RelationshipType... relTypes) {
+		return new RelationshipIterable(getNode().getRelationships(dir,
+				relTypes));
+	}
+
+	/**
+	 * We don't dispatch here to Binary Edges because then we would have to read
+	 * all relationships for each type. As soon as relationships are partitioned
+	 * per relationship type, per role/direction, the implementation of this
+	 * method can dispatch to Binary Edge
+	 */
+	@Override
+	public Iterable<BinaryEdge> getBinaryEdges(RelationshipType... relTypes) {
+		return new RelationshipIterable(node.getRelationships(relTypes));
+	}
+
+	/**
+	 * We can dispatch here to Binary Edge because we have a single
+	 * RelationshipType
+	 */
+	@Override
+	public Iterable<BinaryEdge> getBinaryEdges(RelationshipType relType,
+			Direction dir) {
+		return getDb().getBinaryEdgeType(relType).getEdges(this, dir);
+	}
+
+	@Override
+	public DatabaseService getDb() {
+		return new GraphDatabaseImpl(getPropertyContainer().getGraphDatabase());
+	}
+
+	/**
+	 * We don't dispatch here to Binary Edges because then we would have to read
+	 * all relationships for each type. As soon as relationships are partitioned
+	 * per relationship type, per role/direction, the implementation of this
+	 * method can dispatch to Binary Edge
+	 */
+	@Override
+	public Iterable<Edge> getEdges(EdgeType... edgeTypes) {
+		return new EdgeTypeIterable(this, edgeTypes);
+	}
+
+	@Override
+	public Iterable<Edge> getEdges(EdgeType type,
+			ConnectorType<?>... connectors) {
+		return type.getEdges(this, connectors);
+	}
+
+	@Override
+	public Node getNode() {
+		return node;
+	}
+
+	@Override
+	public <T> Property<T> getProperty(PropertyType<T> pt) {
+		return pt.getProperty(this);
+	}
+
+	@Override
+	public PropertyContainer getPropertyContainer() {
+		return node;
+	}
+
+	@Override
+	public Iterable<PropertyType<?>> getPropertyTypes() {
+		return new PropertyTypeIterable(getNode());
+	}
+
+	@Override
+	public <T> T getPropertyValue(PropertyType<T> pt) {
+		return pt.getPropertyValue(this);
+	}
+
+	@Override
+	public BinaryEdge getSingleBinaryEdge(RelationshipType type, Direction dir) {
+		return getDb().getBinaryEdgeType(type).getSingleBinaryEdge(this, dir);
+	}
+
+	protected VertexType getSpecialVertexType() {
+		return null;
+	}
+
+	@Override
+	public Iterable<VertexType> getTypes() {
+		return new VertexTypeIterable();
+	}
+
+	@Override
+	public boolean hasBinaryEdge() {
+		return getNode().hasRelationship();
+	}
+
+	@Override
+	public boolean hasBinaryEdge(Direction dir) {
+		return getNode().hasRelationship(dir);
+	}
+
+	@Override
+	public boolean hasBinaryEdge(Direction dir, RelationshipType... relTypes) {
+		return getNode().hasRelationship(dir, relTypes);
+	}
+
+	@Override
+	public boolean hasBinaryEdge(RelationshipType... relType) {
+		return getNode().hasRelationship(relType);
+	}
+
+	@Override
+	public boolean hasBinaryEdge(RelationshipType relType, Direction dir) {
+		return getDb().getBinaryEdgeType(relType).hasEdge(this, dir);
+	}
+
+	@Override
+	public boolean hasEdge(EdgeType edgeType, ConnectorType<?>... connectors) {
+		return edgeType.hasEdge(this, connectors);
+	}
+
+	@Override
+	public <T> boolean hasProperty(PropertyType<T> pt) {
+		return pt.hasProperty(this);
+	}
+
+	@Override
+	public Iterator<Traversal> iterator() {
+		return new TraversalIterator();
+	}
+
+	@Override
+	public Vertex removeProperty(PropertyType<?> pt) {
+		pt.removeProperty(this);
+		return this;
+	}
+
+	@Override
 	public Vertex removeType(VertexType vertexType) {
-		Long[] nodeIds = (Long[])getNode().getProperty(TYPE_IDS);
+		Long[] nodeIds = (Long[]) getNode().getProperty(TYPE_IDS);
 		boolean exists = false;
-		for(Long id: nodeIds){
-			if(id == vertexType.getNode().getId()){
+		for (Long id : nodeIds) {
+			if (id == vertexType.getNode().getId()) {
 				exists = true;
 			}
 		}
-		if(!exists){
-			Long[] ids = new Long[nodeIds.length-1];
+		if (!exists) {
+			Long[] ids = new Long[nodeIds.length - 1];
 			boolean skipped = false;
-			for(int i=0;i < nodeIds.length;i++){
-				if(skipped){
-					ids[i-1] = nodeIds[i];
-				}else{
-					if(ids[i] == nodeIds[i]){
+			for (int i = 0; i < nodeIds.length; i++) {
+				if (skipped) {
+					ids[i - 1] = nodeIds[i];
+				} else {
+					if (ids[i] == nodeIds[i]) {
 						skipped = true;
-					}else{
+					} else {
 						ids[i] = nodeIds[i];
 					}
 				}
@@ -625,5 +593,61 @@ public class VertexImpl implements Vertex{
 		}
 		return this;
 	}
-	
+
+	@Override
+	public <T> Vertex setProperty(PropertyType<T> pt, T value) {
+		pt.setProperty(this, value);
+		return this;
+	}
+
+	@Override
+	public Path getPath() {
+		return new Path() {
+
+			@Override
+			public Iterator<Vertex> iterator() {
+				return new Iterator<Vertex>() {
+
+					boolean hasNext = true;
+
+					@Override
+					public boolean hasNext() {
+						return hasNext;
+					}
+
+					@Override
+					public Vertex next() {
+						if (hasNext) {
+							hasNext = false;
+							return outer;
+						} else {
+							throw new NoSuchElementException();
+						}
+					}
+
+					@Override
+					public void remove() {
+					}
+				};
+			}
+
+			@Override
+			public Vertex getFirstElement() {
+				return outer;
+			}
+
+			@Override
+			public Vertex getLastElement() {
+				return outer;
+			}
+
+			@Override
+			public int length() {
+				return 0;
+			}
+
+		};
+
+	}
+
 }

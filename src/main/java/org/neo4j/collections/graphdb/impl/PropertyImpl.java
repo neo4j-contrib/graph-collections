@@ -22,17 +22,20 @@ package org.neo4j.collections.graphdb.impl;
 import java.util.ArrayList;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
+import org.neo4j.collections.graphdb.ConnectionMode;
+import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeElement;
-import org.neo4j.collections.graphdb.FunctionalEdgeRoleType;
-import org.neo4j.collections.graphdb.PropertyRoleType;
+import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.InjectiveConnectionMode;
+import org.neo4j.collections.graphdb.InjectiveEdgeElement;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Vertex;
 
-public class PropertyImpl<T> extends VertexImpl implements Property<T>{
+public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 
 	public final static String PROPERTYCONTAINER_ID = "org.neo4j.collections.graphdb.propertycontainer_id";
 	public final static String PROPERTYCONTAINER_TYPE = "org.neo4j.collections.graphdb.propertycontainer_type";
@@ -47,7 +50,7 @@ public class PropertyImpl<T> extends VertexImpl implements Property<T>{
 	private final DatabaseService graphDb;
 	private Node node;
 
-	PropertyImpl(DatabaseService graphDb, Vertex vertex, PropertyType<T> propertyType){
+	public PropertyImpl(DatabaseService graphDb, Vertex vertex, PropertyType<T> propertyType){
 		super(null);
 		this.vertex = vertex;
 		this.propertyType = propertyType;
@@ -126,22 +129,20 @@ public class PropertyImpl<T> extends VertexImpl implements Property<T>{
 	}
 
 	@Override
-	public boolean isType(PropertyType<T> relType) {
+	public boolean isType(EdgeType relType) {
 		return this.propertyType.getNode().getId() == relType.getNode().getId();
 	}
 
 	@Override
 	public Iterable<EdgeElement> getEdgeElements() {
 		ArrayList<EdgeElement> elems = new ArrayList<EdgeElement>();
-		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
-		vertices.add(getVertex());
-		elems.add(new EdgeElement(getDb().getPropertyRoleType(), vertices));
+		elems.add(new InjectiveEdgeElement(getType().getPropertyConnector().getConnectorType(), getVertex()));
 		return elems;
 	}
 
 	@Override
-	public Vertex getVertex(FunctionalEdgeRoleType roleType) {
-		if(roleType.getName().equals(getDb().getPropertyRoleType().getName())){
+	public <U extends InjectiveConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
+		if(connectorType.getName().equals(getDb().getPropertyRoleType().getName())){
 			return getVertex();
 		}else{
 			return null;
@@ -149,12 +150,12 @@ public class PropertyImpl<T> extends VertexImpl implements Property<T>{
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements(PropertyRoleType... roleType) {
+	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... roleType) {
 		return getEdgeElements();
 	}
 
 	@Override
-	public Iterable<Vertex> getVertices(PropertyRoleType roleType) {
+	public <U extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<U> connectorType) {
 		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 		vertices.add(getVertex());
 		return vertices;

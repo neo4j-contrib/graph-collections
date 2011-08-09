@@ -19,11 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public class NAryEdgeRole extends EdgeRole<NAryEdgeType, NAryEdgeRoleType>{
-
-	public NAryEdgeRole(NAryEdgeRoleType edgeRoleType,
-			NAryEdgeType edgeType) {
-		super(edgeRoleType, edgeType);
-	}
+public interface UnrestrictedConnectionMode extends ConnectionMode{
 
 }

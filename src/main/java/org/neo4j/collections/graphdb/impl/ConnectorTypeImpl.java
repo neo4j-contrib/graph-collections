@@ -19,18 +19,20 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.EdgeRoleType;
+import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 
-public abstract class EdgeRoleTypeImpl extends VertexImpl implements EdgeRoleType{
+public class ConnectorTypeImpl<T extends ConnectionMode> extends VertexImpl implements ConnectorType<T>{
 
-	public final static String EDGEROLE_NAME = "org.neo4j.collections.graphdb.edge_role_name";
+	public final static String CONNECTOR_TYPE_NAME = "org.neo4j.collections.graphdb.connector_type_name";
+	public final static String CONNECTOR_MODE = "org.neo4j.collections.graphdb.connector_mode";
 	
-	public EdgeRoleTypeImpl(Node node) {
+	public ConnectorTypeImpl(Node node) {
 		super(node);
 	}
 	public enum RelTypes implements RelationshipType{
@@ -47,16 +49,45 @@ public abstract class EdgeRoleTypeImpl extends VertexImpl implements EdgeRoleTyp
 		}
 	}
 	
-	public static Node getOrCreateInstanceNode(DatabaseService db, String name) {
+	public static <U extends ConnectionMode> ConnectorType<U> getOrCreateInstance(DatabaseService db, String name, U connectionMode) {
 		Node subRef = getRolesSubRef(db);
 		if(getRolesSubRef(db).hasRelationship(DynamicRelationshipType.withName(name), Direction.OUTGOING)){
-			return getRolesSubRef(db).getSingleRelationship(DynamicRelationshipType.withName(name), Direction.OUTGOING).getEndNode();
+			return new ConnectorTypeImpl<U>(getRolesSubRef(db).getSingleRelationship(DynamicRelationshipType.withName(name), Direction.OUTGOING).getEndNode());
 		}else{
 			Node n = db.createNode();
 			subRef.createRelationshipTo(n, DynamicRelationshipType.withName(name));
-			n.setProperty(EDGEROLE_NAME, name);
-			return n;
+			n.setProperty(CONNECTOR_TYPE_NAME, name);
+			n.setProperty(CONNECTOR_MODE, connectionMode.getName());
+			return new ConnectorTypeImpl<U>(n);
 		}
+	}
+
+	@Override
+	public String getName() {
+		return (String)getNode().getProperty(CONNECTOR_TYPE_NAME);
+	}
+
+	public static ConnectionMode getConnectionMode(String name){
+		if(name.equals("unrestricted")){
+			return ConnectionMode.UNRESTRICTED;
+		}
+		if(name.equals("injective")){
+			return ConnectionMode.INJECTIVE;
+		}
+		if(name.equals("surjective")){
+			return ConnectionMode.SURJECTIVE;
+		}
+		if(name.equals("bijective")){
+			return ConnectionMode.BIJECTIVE;
+		}else{
+			throw new RuntimeException("Unknown connection mode "+name);
+		}
+	}
+	
+	@Override
+	public ConnectionMode getConnectionMode() {
+		String connectionModeName = (String)getNode().getProperty(CONNECTOR_MODE);
+		return getConnectionMode(connectionModeName);
 	}
 
 	

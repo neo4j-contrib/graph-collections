@@ -19,11 +19,10 @@
  */
 package org.neo4j.collections.graphdb;
 
-public class BinaryEdgeRole extends FunctionalEdgeRole<BinaryEdgeType, BinaryEdgeRoleType> {
+public class PropertyConnector extends Connector<BijectiveConnectionMode>{
 
-	public BinaryEdgeRole(BinaryEdgeRoleType edgeRoleType,
-			BinaryEdgeType edgeType) {
-		super(edgeRoleType, edgeType);
+	public PropertyConnector(PropertyConnectorType connectorType, PropertyType<?> edgeType) {
+		super(connectorType, edgeType);
 	}
 
 }

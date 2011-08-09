@@ -20,5 +20,8 @@
 
 package org.neo4j.collections.graphdb;
 
-public interface Traversal extends Iterable<Path>{
+public interface Traversal extends Iterable<Traversal>{
+	
+	Path getPath();
+	
 }

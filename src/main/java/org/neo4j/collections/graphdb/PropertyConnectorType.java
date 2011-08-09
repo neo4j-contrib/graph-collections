@@ -19,10 +19,24 @@
  */
 package org.neo4j.collections.graphdb;
 
-public class FunctionalEdgeRole<T extends EdgeType<U>, U extends FunctionalEdgeRoleType>  extends EdgeRole<T, U>{
+import org.neo4j.collections.graphdb.impl.ConnectorTypeImpl;
+import org.neo4j.graphdb.Node;
 
-	public FunctionalEdgeRole(U edgeRoleType, T edgeType) {
-		super(edgeRoleType, edgeType);
+public class PropertyConnectorType extends ConnectorTypeImpl<BijectiveConnectionMode>{
+	
+	private static final String propertyRoleTypeName = "PropertyRoleType";
+	
+	public PropertyConnectorType(Node node) {
+		super(node);
 	}
 
+	public static PropertyConnectorType getOrCreateInstance(DatabaseService db) {
+		return new PropertyConnectorType(ConnectorTypeImpl.getOrCreateInstance(db, propertyRoleTypeName, ConnectionMode.BIJECTIVE).getNode());
+		
+	}
+
+	@Override
+	public String getName() {
+		return propertyRoleTypeName;
+	}
 }

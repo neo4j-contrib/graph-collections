@@ -24,7 +24,7 @@ import java.util.Iterator;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.DatabaseService;
 
-class RelationshipTypeIterator implements Iterator<EdgeType<?>>{
+class RelationshipTypeIterator implements Iterator<EdgeType>{
 
 	private final Iterator<org.neo4j.graphdb.RelationshipType> relTypes;
 	private final DatabaseService graphDb;
@@ -40,7 +40,7 @@ class RelationshipTypeIterator implements Iterator<EdgeType<?>>{
 	}
 
 	@Override
-	public EdgeType<?> next() {
+	public EdgeType next() {
 		return BinaryEdgeTypeImpl.getOrCreateInstance(graphDb, relTypes.next());
 	}
 
