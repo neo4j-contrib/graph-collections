@@ -234,4 +234,6 @@ public interface Vertex extends Traversal {
 
 	public <T> Vertex setProperty(PropertyType<T> pt, T value);
 
+	public Connection<BijectiveConnectionMode> getSelfConnection();
+	
 }

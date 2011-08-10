@@ -359,8 +359,6 @@ public class VertexImpl implements Vertex {
 
 	public static final String TYPE_IDS = "org.neo4j.collections.graphdb.type_ids";
 
-	private Vertex outer = this;
-
 	private Node node;
 
 	public VertexImpl(Node node) {
@@ -621,7 +619,7 @@ public class VertexImpl implements Vertex {
 					public Connection<?> next() {
 						if (hasNext) {
 							hasNext = false;
-							return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), outer);
+							return getSelfConnection();
 						} else {
 							throw new NoSuchElementException();
 						}
@@ -635,12 +633,12 @@ public class VertexImpl implements Vertex {
 
 			@Override
 			public Connection<?> getFirstElement() {
-				return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), outer);
+				return getSelfConnection();
 			}
 
 			@Override
 			public Connection<?> getLastElement() {
-				return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), outer);
+				return getSelfConnection();
 			}
 
 			@Override
@@ -650,6 +648,11 @@ public class VertexImpl implements Vertex {
 
 		};
 
+	}
+
+	@Override
+	public Connection<BijectiveConnectionMode> getSelfConnection() {
+		return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), this);
 	}
 
 }
