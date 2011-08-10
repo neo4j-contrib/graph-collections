@@ -19,8 +19,6 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import java.util.Set;
-
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
 import org.neo4j.collections.graphdb.ConnectionMode;
@@ -295,7 +293,7 @@ public class GraphDatabaseImpl implements DatabaseService {
 	}
 
 	@Override
-	public EdgeType getEdgeType(String name, Set<ConnectorType<?>> connectorTypes) {
+	public EdgeType getEdgeType(String name, ConnectorType<?>... connectorTypes) {
 		return EdgeTypeImpl.getOrCreateInstance(this, name, connectorTypes);
 	}
 

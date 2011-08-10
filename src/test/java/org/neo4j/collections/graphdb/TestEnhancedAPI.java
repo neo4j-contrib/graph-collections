@@ -127,12 +127,7 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		ConnectorType<?> recipient = graphDbExt().getConnectorType("recipient", ConnectionMode.UNRESTRICTED);
 		ConnectorType<?> gift = graphDbExt().getConnectorType("gift", ConnectionMode.UNRESTRICTED);
 
-		Set<ConnectorType<?>> roles = new HashSet<ConnectorType<?>>();
-		roles.add(giver);
-		roles.add(recipient);
-		roles.add(gift);
-
-		EdgeType hrelType = db.getEdgeType("GIVES", roles);
+		EdgeType hrelType = db.getEdgeType("GIVES", giver, recipient, gift);
 		
 		Vertex flo = graphDbExt().createVertex();
 		Vertex eddie = graphDbExt().createVertex();
@@ -142,20 +137,9 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		Vertex book = graphDbExt().createVertex();
 		Vertex spatula = graphDbExt().createVertex();
 
-		ArrayList<Vertex> gv = new ArrayList<Vertex>();
-		gv.add(flo);
-		gv.add(eddie);
-		ArrayList<Vertex> rp = new ArrayList<Vertex>();
-		rp.add(tom);
-		rp.add(dick);
-		rp.add(harry);
-		ArrayList<Vertex> gf = new ArrayList<Vertex>();
-		gf.add(book);
-		gf.add(spatula);
-
-		EdgeElement givers = new EdgeElement(giver, gv);
-		EdgeElement recipients = new EdgeElement(recipient, rp);
-		EdgeElement gifts = new EdgeElement(gift, gf);
+		EdgeElement givers = new EdgeElement(giver, flo, eddie);
+		EdgeElement recipients = new EdgeElement(recipient, tom, dick, harry);
+		EdgeElement gifts = new EdgeElement(gift, book, spatula);
 
 		Edge hrel = graphDbExt().createEdge(hrelType, givers, recipients, gifts);
 		int count = 0;

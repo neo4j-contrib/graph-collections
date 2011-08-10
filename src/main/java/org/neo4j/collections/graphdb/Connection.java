@@ -19,11 +19,29 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Path extends Iterable<Connection<?>>{
+public class Connection<T extends ConnectionMode> {
 
-	Connection<?> getFirstElement();
-	Connection<?> getLastElement();
+	private final ConnectorType<T> connectorType;
+	private final Edge edge;
+	private final Vertex vertex;
 
-	int length();
+	public Connection(ConnectorType<T> connectorType, Edge edge, Vertex vertex) {
+		super();
+		this.connectorType = connectorType;
+		this.edge = edge;
+		this.vertex = vertex;
+	}
+	
+	public ConnectorType<T> getConnectorType() {
+		return connectorType;
+	}
+	
+	public Edge getEdge() {
+		return edge;
+	}
+	
+	public Vertex getVertex() {
+		return vertex;
+	}
 	
 }

@@ -19,8 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-import java.util.Set;
-
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -47,7 +45,7 @@ public interface DatabaseService extends GraphDatabaseService{
 	
 	public <U extends ConnectionMode> ConnectorType<U> getConnectorType(String name, U connectionMode);
 	
-	public EdgeType getEdgeType(String name, Set<ConnectorType<?>> roles);
+	public EdgeType getEdgeType(String name, ConnectorType<?>... connectorTypes);
 	
 	public Iterable<EdgeType> getEdgeTypes();
 

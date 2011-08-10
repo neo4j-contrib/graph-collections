@@ -19,11 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface Path extends Iterable<Connection<?>>{
+public interface NullaryConnectorType  extends ConnectorType<BijectiveConnectionMode>{
 
-	Connection<?> getFirstElement();
-	Connection<?> getLastElement();
-
-	int length();
-	
 }

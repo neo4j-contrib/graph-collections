@@ -19,6 +19,8 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface BinaryEdgeConnectorType  extends ConnectorType<InjectiveConnectionMode>{
-
+public interface NullaryEdgeType extends EdgeType {
+	
+	public Connector<BijectiveConnectionMode> getConnector();
+	
 }

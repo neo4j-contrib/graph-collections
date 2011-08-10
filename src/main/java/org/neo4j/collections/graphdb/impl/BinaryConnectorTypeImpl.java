@@ -19,15 +19,15 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.BinaryEdgeConnectorType;
+import org.neo4j.collections.graphdb.BinaryConnectorType;
 import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.InjectiveConnectionMode;
 import org.neo4j.graphdb.Node;
 
-public abstract class BinaryEdgeConnectorTypeImpl extends ConnectorTypeImpl<InjectiveConnectionMode> implements BinaryEdgeConnectorType{
+public abstract class BinaryConnectorTypeImpl extends ConnectorTypeImpl<InjectiveConnectionMode> implements BinaryConnectorType{
 
-	private BinaryEdgeConnectorTypeImpl(Node node) {
+	private BinaryConnectorTypeImpl(Node node) {
 		super(node);
 	}
 
@@ -41,7 +41,7 @@ public abstract class BinaryEdgeConnectorTypeImpl extends ConnectorTypeImpl<Inje
 
 	
 	
-	public static class StartConnector extends BinaryEdgeConnectorTypeImpl{
+	public static class StartConnector extends BinaryConnectorTypeImpl{
 
 		public StartConnector(Node node){
 			super(node);
@@ -58,7 +58,7 @@ public abstract class BinaryEdgeConnectorTypeImpl extends ConnectorTypeImpl<Inje
 		}
 	}
 
-	public static class EndConnector extends BinaryEdgeConnectorTypeImpl{
+	public static class EndConnector extends BinaryConnectorTypeImpl{
 		
 		public EndConnector(Node node){
 			super(node);

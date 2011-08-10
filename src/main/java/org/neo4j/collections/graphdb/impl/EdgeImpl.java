@@ -162,7 +162,7 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorTypes) {
 		Set<Connector<?>> connectorTypeSet = new HashSet<Connector<?>>();
 		for(ConnectorType<?> connectorType: connectorTypes){
-			Connector<?> er = new Connector<ConnectionMode>((ConnectorType<ConnectionMode>) connectorType, getType());
+			Connector<?> er = new Connector(connectorType, getType());
 			connectorTypeSet.add(er);
 		}
 		return new RelationshipElementIterable(connectorTypeSet);

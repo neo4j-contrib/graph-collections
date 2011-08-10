@@ -19,6 +19,8 @@
  */
 package org.neo4j.collections.graphdb;
 
+import java.util.ArrayList;
+
 public class EdgeElement{
 
 	private final ConnectorType<?> connector;
@@ -29,6 +31,15 @@ public class EdgeElement{
 		this.elements = elements;
 	}
 
+	public EdgeElement(ConnectorType<?> connector, Vertex... elements) {
+		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
+		for(Vertex vertex: elements){
+			vertices.add(vertex);
+		}
+		this.connector = connector;
+		this.elements = vertices;
+	}
+	
 	public Iterable<Vertex> getVertices(){
 		return elements;
 	}

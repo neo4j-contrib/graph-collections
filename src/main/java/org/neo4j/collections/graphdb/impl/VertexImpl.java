@@ -25,6 +25,8 @@ import java.util.NoSuchElementException;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.graphdb.Node;
+import org.neo4j.collections.graphdb.BijectiveConnectionMode;
+import org.neo4j.collections.graphdb.Connection;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.EdgeType;
@@ -605,8 +607,8 @@ public class VertexImpl implements Vertex {
 		return new Path() {
 
 			@Override
-			public Iterator<Vertex> iterator() {
-				return new Iterator<Vertex>() {
+			public Iterator<Connection<?>> iterator() {
+				return new Iterator<Connection<?>>() {
 
 					boolean hasNext = true;
 
@@ -616,10 +618,10 @@ public class VertexImpl implements Vertex {
 					}
 
 					@Override
-					public Vertex next() {
+					public Connection<?> next() {
 						if (hasNext) {
 							hasNext = false;
-							return outer;
+							return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), outer);
 						} else {
 							throw new NoSuchElementException();
 						}
@@ -632,13 +634,13 @@ public class VertexImpl implements Vertex {
 			}
 
 			@Override
-			public Vertex getFirstElement() {
-				return outer;
+			public Connection<?> getFirstElement() {
+				return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), outer);
 			}
 
 			@Override
-			public Vertex getLastElement() {
-				return outer;
+			public Connection<?> getLastElement() {
+				return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), outer);
 			}
 
 			@Override

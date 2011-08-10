@@ -54,10 +54,10 @@ public class EdgeTypeImpl extends VertexTypeImpl implements EdgeType {
 
 	public static class EdgeTypeNodeDescriptor extends TypeNodeDescriptor{
 
-		private final Set<ConnectorType<?>> connectorTypes;
+		private final ConnectorType<?>[] connectorTypes;
 		
 		public EdgeTypeNodeDescriptor(DatabaseService db, String name,
-				Class<?> claz, Set<ConnectorType<?>> connectorTypes) {
+				Class<?> claz, ConnectorType<?>... connectorTypes) {
 			super(db, name, claz);
 			this.connectorTypes = connectorTypes;
 		}
@@ -71,7 +71,7 @@ public class EdgeTypeImpl extends VertexTypeImpl implements EdgeType {
 		}
 	}
 	
-	public static EdgeTypeImpl getOrCreateInstance(DatabaseService db, String name, Set<ConnectorType<?>> connectorTypes){
+	public static EdgeTypeImpl getOrCreateInstance(DatabaseService db, String name, ConnectorType<?>... connectorTypes){
 		VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new EdgeTypeNodeDescriptor(db, name, getImplementationClass(), connectorTypes)));
 		return new EdgeTypeImpl(vertexType.getNode());
 	}

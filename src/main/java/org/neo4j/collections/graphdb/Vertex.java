@@ -140,8 +140,7 @@ public interface Vertex extends Traversal {
      * @return all binary edges of the given type(s) that are attached to this
      *         vertex
      */
-	public Iterable<BinaryEdge> getBinaryEdges(Direction direction,
-			RelationshipType... types);
+	public Iterable<BinaryEdge> getBinaryEdges(Direction direction, RelationshipType... types);
 
 	/**
      * Returns all binary edges of any of the types in <code>types</code>
@@ -170,8 +169,7 @@ public interface Vertex extends Traversal {
      * @return all relationships attached to this node that match the given type
      *         and direction
      */
-	public Iterable<BinaryEdge> getBinaryEdges(RelationshipType type,
-			Direction dir);
+	public Iterable<BinaryEdge> getBinaryEdges(RelationshipType type, Direction dir);
 
 	/**
 	 * @return the database this vertex is created in
@@ -184,8 +182,7 @@ public interface Vertex extends Traversal {
 	 */
 	public Iterable<Edge> getEdges(EdgeType... edgeTypes);
 
-	public Iterable<Edge> getEdges(EdgeType edgeType,
-			ConnectorType<?>... role);
+	public Iterable<Edge> getEdges(EdgeType edgeType, ConnectorType<?>... role);
 
 	Node getNode();
 

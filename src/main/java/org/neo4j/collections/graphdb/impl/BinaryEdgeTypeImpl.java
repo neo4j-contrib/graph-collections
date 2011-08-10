@@ -107,12 +107,12 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 
 	@Override
 	public Connector<InjectiveConnectionMode> getStartConnector() {
-		return new Connector<InjectiveConnectionMode>(BinaryEdgeConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb()), this);
+		return new Connector<InjectiveConnectionMode>(BinaryConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb()), this);
 	}
 
 	@Override
 	public Connector<InjectiveConnectionMode> getEndConnector() {
-		return new Connector<InjectiveConnectionMode>(BinaryEdgeConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb()), this);
+		return new Connector<InjectiveConnectionMode>(BinaryConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb()), this);
 	}
 	
 }
