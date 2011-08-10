@@ -29,6 +29,7 @@ import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.InjectiveConnectionMode;
+import org.neo4j.collections.graphdb.SurjectiveConnectionMode;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -106,13 +107,13 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 	}
 
 	@Override
-	public Connector<InjectiveConnectionMode> getStartConnector() {
-		return new Connector<InjectiveConnectionMode>(BinaryConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb()), this);
+	public Connector<SurjectiveConnectionMode> getStartConnector() {
+		return new Connector<SurjectiveConnectionMode>(BinaryConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb()), this);
 	}
 
 	@Override
-	public Connector<InjectiveConnectionMode> getEndConnector() {
-		return new Connector<InjectiveConnectionMode>(BinaryConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb()), this);
+	public Connector<SurjectiveConnectionMode> getEndConnector() {
+		return new Connector<SurjectiveConnectionMode>(BinaryConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb()), this);
 	}
 	
 }

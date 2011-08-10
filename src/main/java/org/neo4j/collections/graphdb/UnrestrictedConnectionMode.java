@@ -19,6 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface UnrestrictedConnectionMode extends ConnectionMode{
+public interface UnrestrictedConnectionMode extends LeftUnrestrictedConnectionMode, RightUnrestrictedConnectionMode{
 
 }

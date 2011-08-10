@@ -37,7 +37,7 @@ import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.Edge;
 import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.EdgeType;
-import org.neo4j.collections.graphdb.InjectiveConnectionMode;
+import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.VertexType;
 
@@ -194,7 +194,7 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	}
 
 	@Override
-	public <U extends InjectiveConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
+	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
 		return getDb().getVertex(getNode().getSingleRelationship(DynamicRelationshipType.withName(getType().getName()+EDGEROLE_SEPARATOR+connectorType.getName()), Direction.OUTGOING).getEndNode());
 	}
 

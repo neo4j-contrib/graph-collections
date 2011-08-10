@@ -28,7 +28,8 @@ import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.InjectiveConnectionMode;
-import org.neo4j.collections.graphdb.InjectiveEdgeElement;
+import org.neo4j.collections.graphdb.LeftRestricedEdgeElement;
+import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.Property;
@@ -136,12 +137,12 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 	@Override
 	public Iterable<EdgeElement> getEdgeElements() {
 		ArrayList<EdgeElement> elems = new ArrayList<EdgeElement>();
-		elems.add(new InjectiveEdgeElement(getType().getPropertyConnector().getConnectorType(), getVertex()));
+		elems.add(new LeftRestricedEdgeElement(getType().getPropertyConnector().getConnectorType(), getVertex()));
 		return elems;
 	}
 
 	@Override
-	public <U extends InjectiveConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
+	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
 		if(connectorType.getName().equals(getDb().getPropertyRoleType().getName())){
 			return getVertex();
 		}else{
@@ -150,7 +151,7 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... roleType) {
+	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorType) {
 		return getEdgeElements();
 	}
 

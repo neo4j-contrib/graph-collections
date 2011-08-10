@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.Vertex;
-import org.neo4j.collections.graphdb.InjectiveEdgeElement;
+import org.neo4j.collections.graphdb.LeftRestricedEdgeElement;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
@@ -99,8 +99,8 @@ public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements Sortabl
 	@Override
 	public Iterable<EdgeElement> getEdgeElements(){
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new InjectiveEdgeElement(getType().getStartConnector().getConnectorType(), getDb().getVertex(rel.getStartNode())));
-		relements.add(new InjectiveEdgeElement(getType().getEndConnector().getConnectorType(), getDb().getVertex(rel.getEndNode())));
+		relements.add(new LeftRestricedEdgeElement(getType().getStartConnector().getConnectorType(), getDb().getVertex(rel.getStartNode())));
+		relements.add(new LeftRestricedEdgeElement(getType().getEndConnector().getConnectorType(), getDb().getVertex(rel.getEndNode())));
 		return relements;
 	}
 

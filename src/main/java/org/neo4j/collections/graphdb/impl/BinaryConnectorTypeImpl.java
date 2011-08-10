@@ -22,18 +22,18 @@ package org.neo4j.collections.graphdb.impl;
 import org.neo4j.collections.graphdb.BinaryConnectorType;
 import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.InjectiveConnectionMode;
+import org.neo4j.collections.graphdb.SurjectiveConnectionMode;
 import org.neo4j.graphdb.Node;
 
-public abstract class BinaryConnectorTypeImpl extends ConnectorTypeImpl<InjectiveConnectionMode> implements BinaryConnectorType{
+public abstract class BinaryConnectorTypeImpl extends ConnectorTypeImpl<SurjectiveConnectionMode> implements BinaryConnectorType{
 
 	private BinaryConnectorTypeImpl(Node node) {
 		super(node);
 	}
 
 	@Override
-	public InjectiveConnectionMode getConnectionMode() {
-		return ConnectionMode.INJECTIVE;
+	public SurjectiveConnectionMode getConnectionMode() {
+		return ConnectionMode.SURJECTIVE;
 	}
 
 	private static final String startConnectorName = "StartConnector";

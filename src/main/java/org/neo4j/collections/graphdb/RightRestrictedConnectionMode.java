@@ -19,21 +19,6 @@
  */
 package org.neo4j.collections.graphdb;
 
+public interface RightRestrictedConnectionMode extends ConnectionMode {
 
-public interface Edge extends Vertex{
-
-	public void delete();
-
-	public EdgeType getType();
-
-	public boolean isType(EdgeType relType);
-
-	public Iterable<EdgeElement> getEdgeElements();
-
-	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorType);
-	
-	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType);
-	
-	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType);
-	
 }

@@ -26,6 +26,7 @@ import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.InjectiveConnectionMode;
+import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.NullaryEdge;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.impl.NullaryConnectorTypeImpl.NullaryConnectorType;
@@ -76,7 +77,7 @@ public class NullaryEdgeImpl extends VertexImpl implements NullaryEdge{
 	}
 
 	@Override
-	public <U extends InjectiveConnectionMode> Vertex getVertex(
+	public <U extends LeftRestrictedConnectionMode> Vertex getVertex(
 			ConnectorType<U> connectorType) {
 		// TODO Auto-generated method stub
 		return null;

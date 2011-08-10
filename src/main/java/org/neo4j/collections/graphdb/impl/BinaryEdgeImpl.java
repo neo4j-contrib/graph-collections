@@ -29,7 +29,8 @@ import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.InjectiveConnectionMode;
-import org.neo4j.collections.graphdb.InjectiveEdgeElement;
+import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
+import org.neo4j.collections.graphdb.LeftRestricedEdgeElement;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -116,8 +117,8 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 	@Override
 	public Iterable<EdgeElement> getEdgeElements(){
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new InjectiveEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
-		relements.add(new InjectiveEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
+		relements.add(new LeftRestricedEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
+		relements.add(new LeftRestricedEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
 		return relements;
 	}
 
@@ -136,7 +137,7 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 	}
 
 	@Override
-	public <U extends InjectiveConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
+	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
 		if(connectorType.getName().equals(getType().getStartConnector().getName())){
 			return getDb().getVertex(rel.getStartNode());
 		}else if(connectorType.getName().equals(getType().getEndConnector().getName())){
@@ -173,10 +174,10 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 		}
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
 		if(includeStart){
-			relements.add(new InjectiveEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
+			relements.add(new LeftRestricedEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
 		}
 		if(includeEnd){
-			relements.add(new InjectiveEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
+			relements.add(new LeftRestricedEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
 		}
 		return relements;
 	}

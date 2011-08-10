@@ -19,21 +19,26 @@
  */
 package org.neo4j.collections.graphdb;
 
+import java.util.ArrayList;
 
-public interface Edge extends Vertex{
+public class LeftRestricedEdgeElement extends EdgeElement{
 
-	public void delete();
-
-	public EdgeType getType();
-
-	public boolean isType(EdgeType relType);
-
-	public Iterable<EdgeElement> getEdgeElements();
-
-	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorType);
+	private static Iterable<Vertex> toElements(Vertex vertex){
+		ArrayList<Vertex> elements = new ArrayList<Vertex>();
+		elements.add(vertex);
+		return elements;
+	}
 	
-	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType);
+	private final Vertex element;
 	
-	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType);
+	public <T extends LeftRestrictedConnectionMode> LeftRestricedEdgeElement(ConnectorType<T> connector,
+			Vertex element) {
+		super(connector, toElements(element));
+		this.element = element;
+	}
+
+	public Vertex getElement(){
+		return element;
+	}
 	
 }
