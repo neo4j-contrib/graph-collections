@@ -32,6 +32,7 @@ import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.Edge;
 import org.neo4j.collections.graphdb.ConnectorType;
+import org.neo4j.collections.graphdb.RightRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.TraversalPath;
 import org.neo4j.collections.graphdb.Traversal;
 import org.neo4j.collections.graphdb.TraversalDescription;
@@ -674,6 +675,18 @@ public class VertexImpl implements Vertex {
 	public Iterable<TraversalPath> getContainedPaths() {
 		ArrayList<TraversalPath> paths = new ArrayList<TraversalPath>();
 		return paths;
+	}
+
+	@Override
+	public Edge getEdge(EdgeType edgeType,
+			ConnectorType<RightRestrictedConnectionMode> connectorType) {
+		Relationship rel = getNode().getSingleRelationship(DynamicRelationshipType.withName(edgeType.getName()+EDGEROLE_SEPARATOR+connectorType.getName()), Direction.INCOMING);
+		if(rel == null){
+			return null;
+		}else{
+			return new EdgeImpl(rel.getStartNode());
+		}
+		 
 	}
 
 }

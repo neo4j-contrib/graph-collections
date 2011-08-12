@@ -184,6 +184,8 @@ public interface Vertex extends Traversal {
 	public Iterable<Edge> getEdges(EdgeType... types);
 
 	public Iterable<Edge> getEdges(EdgeType edgeType, ConnectorType<?>... connectorType);
+	
+	public Edge getEdge(EdgeType edgeType, ConnectorType<RightRestrictedConnectionMode> connectorType);
 
 	Node getNode();
 
