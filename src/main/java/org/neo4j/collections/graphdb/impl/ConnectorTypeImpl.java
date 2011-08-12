@@ -5,17 +5,17 @@
  * This file is part of Neo4j.
  *
  * Neo4j is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.neo4j.collections.graphdb.impl;
 
@@ -68,16 +68,16 @@ public class ConnectorTypeImpl<T extends ConnectionMode> extends VertexImpl impl
 	}
 
 	public static ConnectionMode getConnectionMode(String name){
-		if(name.equals("unrestricted")){
+		if(name.equals(ConnectionMode.UNRESTRICTED.getName())){
 			return ConnectionMode.UNRESTRICTED;
 		}
-		if(name.equals("injective")){
+		if(name.equals(ConnectionMode.INJECTIVE.getName())){
 			return ConnectionMode.INJECTIVE;
 		}
-		if(name.equals("surjective")){
+		if(name.equals(ConnectionMode.SURJECTIVE.getName())){
 			return ConnectionMode.SURJECTIVE;
 		}
-		if(name.equals("bijective")){
+		if(name.equals(ConnectionMode.BIJECTIVE.getName())){
 			return ConnectionMode.BIJECTIVE;
 		}else{
 			throw new RuntimeException("Unknown connection mode "+name);

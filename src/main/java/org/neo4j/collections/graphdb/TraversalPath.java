@@ -19,8 +19,11 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface VertexType extends Vertex{
-	
-	public String getName();
+public interface TraversalPath extends Iterable<Connection<?>>{
 
+	Connection<?> getFirstElement();
+	Connection<?> getLastElement();
+
+	int length();
+	
 }

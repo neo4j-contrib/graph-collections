@@ -5,17 +5,17 @@
  * This file is part of Neo4j.
  *
  * Neo4j is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.neo4j.collections.graphdb;
 
@@ -32,7 +32,7 @@ import org.neo4j.graphdb.RelationshipType;
 public interface Vertex extends Traversal {
 
 	/**
-	 * Creates a {@Link BinaryEdge} from this vertex to another vertex. The
+	 * Creates a {@link BinaryEdge} from this vertex to another vertex. The
      * edge is of type <code>type</code>. It starts at this vertex and
      * ends at <code>otherVertex</code>.
      * <p>
@@ -40,23 +40,23 @@ public interface Vertex extends Traversal {
      * need to create another relationship in the opposite direction (with regards
      * to traversal or performance).
 	 * 
-	 * @param the vertex to create a {@Link BinaryEdge} to 
-	 * @param the type of the relationship 
-	 * @return the updated vertex
+	 * @param vertex, the vertex to create a {@link BinaryEdge} to 
+	 * @param type, the type of the relationship 
+	 * @return the modified vertex
 	 */
-	public Vertex addEdge(Vertex vertex, RelationshipType relationshipType);
+	public Vertex addEdge(Vertex vertex, RelationshipType type);
 
 	/**
-	 * Creates a {@Link SortableBinaryEdge} from this vertex to another vertex. The
+	 * Creates a {@link SortableBinaryEdge} from this vertex to another vertex. The
      * edge is of type <code>type</code>. It starts at this vertex and
      * ends at <code>otherVertex</code>.
      * <p>
 	 * A sortable binary edge is stored in a Btree having its root at this vertex. The
 	 * tree is sorted on a property of the <code>otherVertex</code>.
 	 * 
-	 * @param the vertex to create a {@Link SortableBinaryEdge} to
-	 * @param the type of the relationship
-	 * @return the updated vertex
+	 * @param vertex, the vertex to create a {@link SortableBinaryEdge} to
+	 * @param type, the type of the relationship
+	 * @return the modified vertex
 	 */
 	public Vertex addEdge(Vertex vertex, SortableBinaryEdgeType<?> type);
 
@@ -65,13 +65,13 @@ public interface Vertex extends Traversal {
 	 * are vertices with a unique name, that applications can use to make
 	 * statements about vertices. 
 	 * 
-	 * @param the type a vertex belongs to
-	 * @return the updated vertex
+	 * @param type, the type a vertex belongs to
+	 * @return the modified vertex
 	 */
-	public Vertex addType(VertexType vertexType);
+	public Vertex addType(VertexType type);
 
 	/**
-	 * Creates a {@Link BinaryEdge} from this vertex to another vertex. The
+	 * Creates a {@link BinaryEdge} from this vertex to another vertex. The
      * edge is of type <code>type</code>. It starts at this vertex and
      * ends at <code>otherVertex</code>.
      * <p>
@@ -79,14 +79,14 @@ public interface Vertex extends Traversal {
      * need to create another relationship in the opposite direction (with regards
      * to traversal or performance).
      * 
-	 * @param the vertex to create an edge to 
-	 * @param the type of the relationship 
+	 * @param vertex, the vertex to create an edge to 
+	 * @param type, the type of the relationship 
 	 * @return the created edge
 	 */
 	public BinaryEdge createEdgeTo(Vertex vertex, RelationshipType type);
 
 	/**
-	 * Creates a {@Link SortableBinaryEdge} from this vertex to another vertex. The
+	 * Creates a {@link SortableBinaryEdge} from this vertex to another vertex. The
      * edge is of type <code>type</code>. It starts at this vertex and
      * ends at <code>otherVertex</code>.
      * <p>
@@ -94,8 +94,8 @@ public interface Vertex extends Traversal {
 	 * tree is sorted on a property of the <code>otherVertex</code>.
 	 * 
 	 * @param <T> the data type of the property used to sort the index tree by 
-	 * @param the vertex to create an edge to
-	 * @param the type of the relationship
+	 * @param vertex, the vertex to create an edge to
+	 * @param type, the type of the relationship
 	 * @return the created edge
 	 */
 	public <T> SortableBinaryEdge<T> createEdgeTo(Vertex vertex,
@@ -135,8 +135,8 @@ public interface Vertex extends Traversal {
      * If no binary edges of the given types are attached to this vertex, an empty
      * iterable will be returned.
      *
-     * @param direction the direction of the relationships to return.
-     * @param types the given relationship type(s)
+     * @param direction, the direction of the relationships to return.
+     * @param types, the given relationship type(s)
      * @return all binary edges of the given type(s) that are attached to this
      *         vertex
      */
@@ -148,7 +148,7 @@ public interface Vertex extends Traversal {
      * vcertices of the given types are attached to this vertex, an empty
      * iterable will be returned.
      *
-     * @param types the given relationship type(s)
+     * @param types, the given relationship type(s)
      * @return all relationships of the given type(s) that are attached to this
      *         node
      */
@@ -159,8 +159,8 @@ public interface Vertex extends Traversal {
      * attached to this vertex. If there are no matching edges, an empty
      * iterable will be returned.
      *
-     * @param type the given type
-     * @param dir the given direction, where <code>Direction.OUTGOING</code>
+     * @param type, the given type
+     * @param dir, the given direction, where <code>Direction.OUTGOING</code>
      *            means all relationships that have this node as
      *            {@link BinaryEdge#getStartVertex() start vertex} and <code>
 	 * Direction.INCOMING</code>
@@ -177,24 +177,25 @@ public interface Vertex extends Traversal {
 	public DatabaseService getDb();
 
 	/**
-	 * @param edgeTypes
-	 * @return
+	 * @param types, the types for which to return edges
+	 * @return edges connected to this Vertex having one of the
+	 * supplied types 
 	 */
-	public Iterable<Edge> getEdges(EdgeType... edgeTypes);
+	public Iterable<Edge> getEdges(EdgeType... types);
 
-	public Iterable<Edge> getEdges(EdgeType edgeType, ConnectorType<?>... role);
+	public Iterable<Edge> getEdges(EdgeType edgeType, ConnectorType<?>... connectorType);
 
 	Node getNode();
 
-	public <T> Property<T> getProperty(PropertyType<T> pt);
+	public <T> Property<T> getProperty(PropertyType<T> type);
 
 	public PropertyContainer getPropertyContainer();
 
 	public Iterable<PropertyType<?>> getPropertyTypes();
 
-	public <T> T getPropertyValue(PropertyType<T> pt);
+	public <T> T getPropertyValue(PropertyType<T> type);
 
-	public BinaryEdge getSingleBinaryEdge(RelationshipType relType,
+	public BinaryEdge getSingleBinaryEdge(RelationshipType type,
 			Direction dir);
 
 	/**
@@ -206,34 +207,37 @@ public interface Vertex extends Traversal {
 
 	public boolean hasBinaryEdge(Direction dir);
 
-	public boolean hasBinaryEdge(Direction dir, RelationshipType... relTypes);
+	public boolean hasBinaryEdge(Direction dir, RelationshipType... types);
 
-	public boolean hasBinaryEdge(RelationshipType... relTypes);
+	public boolean hasBinaryEdge(RelationshipType... types);
 
-	public boolean hasBinaryEdge(RelationshipType relTypes, Direction dir);
+	public boolean hasBinaryEdge(RelationshipType types, Direction dir);
 
 	public boolean hasEdge(EdgeType edgeType, ConnectorType<?>... role);
 
 	/**
-	 * @param {@link PropertyType<T>} pt
-	 * @return <T>
+	 * @param <T>, the data type of the property
+	 * @param type, the given type
+	 * @return boolean, indicates if this Vertex has a propety of the given type 
 	 */
-	public <T> boolean hasProperty(PropertyType<T> pt);
+	public <T> boolean hasProperty(PropertyType<T> type);
 
 	/**
-	 * @param pt
-	 * @return
+	 * @param type, the given type
+	 * @return the modified Vertex after removing a property of the given type.
 	 */
-	public Vertex removeProperty(PropertyType<?> pt);
+	public Vertex removeProperty(PropertyType<?> type);
 
 	/**
-	 * @param vertexType
-	 * @return {@link Vertex}
+	 * @param type, type of the Vertex to remove
+	 * @return the modified Vertex.
 	 */
-	public Vertex removeType(VertexType vertexType);
+	public Vertex removeType(VertexType type);
 
-	public <T> Vertex setProperty(PropertyType<T> pt, T value);
+	public <T> Vertex setProperty(PropertyType<T> type, T value);
 
 	public Connection<BijectiveConnectionMode> getSelfConnection();
+	
+	public Traversal traverse(TraversalDescription descr);
 	
 }

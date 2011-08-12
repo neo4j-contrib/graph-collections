@@ -5,17 +5,17 @@
  * This file is part of Neo4j.
  *
  * Neo4j is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.neo4j.collections.graphdb.impl;
 
@@ -162,16 +162,10 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorTypes) {
 		Set<Connector<?>> connectorTypeSet = new HashSet<Connector<?>>();
 		for(ConnectorType<?> connectorType: connectorTypes){
-			Connector<?> er = new Connector(connectorType, getType());
+			Connector<?> er = Connector.getInstance(connectorType, getType());
 			connectorTypeSet.add(er);
 		}
 		return new RelationshipElementIterable(connectorTypeSet);
-	}
-
-	@Override
-	public Iterable<Edge> getEdges(EdgeType edgeType, ConnectorType<?>... connectorType) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -202,13 +196,7 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType) {
 		return new ElementIterable(connectorType);
 	}
-
-	@Override
-	public boolean hasEdge(EdgeType edgeType, ConnectorType<?>... connectorType) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
+	
 	@Override
 	public boolean isType(EdgeType relType) {
 		return (relType.getNode().getId() == getType().getNode().getId());

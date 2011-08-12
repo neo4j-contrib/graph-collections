@@ -19,8 +19,18 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface VertexType extends Vertex{
-	
-	public String getName();
+import org.neo4j.collections.graphdb.traversal.BranchSelector;
+import org.neo4j.collections.graphdb.traversal.Evaluator;
+import org.neo4j.graphdb.Direction;
 
+public interface TraversalDescription extends Iterable<TraversalDescription>{
+
+	TraversalDescription set(Evaluator evaluator);
+	TraversalDescription set(BranchSelector selector);
+	TraversalDescription add(BinaryEdgeType edgeType);
+	TraversalDescription add(BinaryEdgeType edgeType, Direction dir);
+	TraversalDescription add(Connector<?>[] connectors);
+	TraversalDescription add(TraversalDescription description);
+	TraversalDescription insert(TraversalDescription description, int position);
+	Traversal traverse(Traversal traversal);
 }

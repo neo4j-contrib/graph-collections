@@ -17,10 +17,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.graphdb;
+package org.neo4j.collections.graphdb.traversal.impl;
 
-public interface VertexType extends Vertex{
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import org.neo4j.collections.graphdb.Connection;
+import org.neo4j.collections.graphdb.TraversalPath;
+
+public class TraversalPathImpl implements TraversalPath{
+
+	private LinkedList<Connection<?>> connections;
 	
-	public String getName();
+	@Override
+	public Iterator<Connection<?>> iterator() {
+		return connections.iterator();
+	}
 
+	@Override
+	public Connection<?> getFirstElement() {
+		return connections.getFirst();
+	}
+
+	@Override
+	public Connection<?> getLastElement() {
+		return connections.getLast();
+	}
+
+	@Override
+	public int length() {
+		return connections.size();
+	}
+	
 }

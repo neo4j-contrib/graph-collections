@@ -5,17 +5,17 @@
  * This file is part of Neo4j.
  *
  * Neo4j is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.neo4j.collections.graphdb.impl;
 
@@ -32,8 +32,9 @@ import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.Edge;
 import org.neo4j.collections.graphdb.ConnectorType;
-import org.neo4j.collections.graphdb.Path;
+import org.neo4j.collections.graphdb.TraversalPath;
 import org.neo4j.collections.graphdb.Traversal;
+import org.neo4j.collections.graphdb.TraversalDescription;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.VertexType;
@@ -601,8 +602,8 @@ public class VertexImpl implements Vertex {
 	}
 
 	@Override
-	public Path getPath() {
-		return new Path() {
+	public TraversalPath getPath() {
+		return new TraversalPath() {
 
 			@Override
 			public Iterator<Connection<?>> iterator() {
@@ -653,6 +654,17 @@ public class VertexImpl implements Vertex {
 	@Override
 	public Connection<BijectiveConnectionMode> getSelfConnection() {
 		return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), this);
+	}
+
+	@Override
+	public Traversal traverse(TraversalDescription descr) {
+		return descr.traverse(this);
+	}
+
+	@Override
+	public Iterable<TraversalPath> getContainedPaths() {
+		ArrayList<TraversalPath> paths = new ArrayList<TraversalPath>();
+		return paths;
 	}
 
 }
