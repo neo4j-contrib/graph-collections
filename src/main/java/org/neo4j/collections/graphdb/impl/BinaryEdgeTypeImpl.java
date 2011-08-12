@@ -24,10 +24,8 @@ import java.util.Set;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
-import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.SurjectiveConnectionMode;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.graphdb.Direction;
@@ -61,17 +59,11 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 
 	
 	@Override
-	public Set<Connector<?>> getConnectors() {
-		Set<Connector<?>> roles = new HashSet<Connector<?>>();
-		roles.add(getStartConnector());
-		roles.add(getEndConnector());
-		return roles;
-	}
-
-	@Override
-	public <T extends ConnectionMode> Connector<T> getConnector(
-			ConnectorType<T> edgeRoleType) {
-		return new Connector<T>(edgeRoleType, this);
+	public Set<ConnectorType<?>> getConnectorTypes() {
+		Set<ConnectorType<?>> connectorTypes = new HashSet<ConnectorType<?>>();
+		connectorTypes.add(getStartConnectorType());
+		connectorTypes.add(getEndConnectorType());
+		return connectorTypes;
 	}
 
 	@Override
@@ -106,13 +98,18 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 	}
 
 	@Override
-	public Connector<SurjectiveConnectionMode> getStartConnector() {
-		return new Connector<SurjectiveConnectionMode>(BinaryConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb()), this);
+	public ConnectorType<SurjectiveConnectionMode> getStartConnectorType() {
+		return BinaryConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb());
 	}
 
 	@Override
-	public Connector<SurjectiveConnectionMode> getEndConnector() {
-		return new Connector<SurjectiveConnectionMode>(BinaryConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb()), this);
+	public ConnectorType<SurjectiveConnectionMode> getEndConnectorType() {
+		return BinaryConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb());
+	}
+
+	@Override
+	public boolean hasEdge(Vertex vertex) {
+		return vertex.getNode().hasRelationship(getRelationshipType());
 	}
 	
 }

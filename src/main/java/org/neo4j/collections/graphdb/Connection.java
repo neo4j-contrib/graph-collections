@@ -21,23 +21,21 @@ package org.neo4j.collections.graphdb;
 
 public class Connection<T extends ConnectionMode> {
 
-	private final ConnectorType<T> connectorType;
-	private final Edge edge;
+	private final Connector<T> connector;
 	private final Vertex vertex;
 
-	public Connection(ConnectorType<T> connectorType, Edge edge, Vertex vertex) {
+	public Connection(Connector<T> connector, Vertex vertex) {
 		super();
-		this.connectorType = connectorType;
-		this.edge = edge;
+		this.connector = connector;
 		this.vertex = vertex;
 	}
 	
-	public ConnectorType<T> getConnectorType() {
-		return connectorType;
+	public Connector<T> getConnector() {
+		return connector;
 	}
 	
 	public Edge getEdge() {
-		return edge;
+		return connector.getEdge();
 	}
 	
 	public Vertex getVertex() {

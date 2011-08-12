@@ -23,14 +23,12 @@ import java.util.Set;
 
 public interface EdgeType extends VertexType{
 
-	public Set<Connector<?>> getConnectors();
-	
-	public <T extends ConnectionMode> Connector<T> getConnector(ConnectorType<T> connectorType);
-
 	public Iterable<Edge> getEdges(Vertex vertex, ConnectorType<?>... connectorTypes);
 	
 	public boolean hasEdge(Vertex vertex, ConnectorType<?>... connectorTypes);
 	
-	public Connector<?> getConnector(String name);
+	public ConnectorType<?> getConnectorType(String name);
+	
+	public Set<ConnectorType<?>> getConnectorTypes();
 	
 }

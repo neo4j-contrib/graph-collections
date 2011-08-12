@@ -20,6 +20,18 @@
 
 package org.neo4j.collections.graphdb;
 
-public interface BijectiveConnectionMode extends LeftRestrictedConnectionMode, RightRestrictedConnectionMode{
+/**
+ * Defines the {@link ConnectionMode} that is both a
+ * {@link LeftRestrictedConnectionMode} and a
+ * {@link RightRestrictedConnectionMode}.
+ * <p>
+ * When a {@link Connnector} has a BijectiveConnectionMode, only one Vertex may
+ * connect to that Connector, and that Vertex may only connect to one Connector
+ * with the same {@link ConnectorType} on an {@link Edge} with a particular
+ * {@link EdgeType}
+ * </p>
+ */
+public interface BijectiveConnectionMode extends LeftRestrictedConnectionMode,
+		RightRestrictedConnectionMode {
 
 }

@@ -21,8 +21,8 @@ package org.neo4j.collections.graphdb;
 
 public class PropertyConnector extends Connector<BijectiveConnectionMode>{
 
-	public PropertyConnector(PropertyConnectorType connectorType, PropertyType<?> edgeType) {
-		super(connectorType, edgeType);
+	public PropertyConnector(PropertyConnectorType connectorType, Property<?> prop) {
+		super(connectorType, prop);
 	}
 
 }

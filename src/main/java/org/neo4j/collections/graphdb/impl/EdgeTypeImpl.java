@@ -22,7 +22,6 @@ package org.neo4j.collections.graphdb.impl;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
@@ -77,20 +76,21 @@ public class EdgeTypeImpl extends VertexTypeImpl implements EdgeType {
 	}
 
 	@Override
-	public Connector<?> getConnector(String name) {
+	public ConnectorType<?> getConnectorType(String name) {
 		for(Relationship rel: getNode().getRelationships(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE, Direction.OUTGOING)){
 			if(rel.getEndNode().hasProperty(ConnectorTypeImpl.CONNECTOR_TYPE_NAME)){
 				if(rel.getEndNode().getProperty(ConnectorTypeImpl.CONNECTOR_TYPE_NAME).equals(name)){
 					String connectionModeName = (String)rel.getEndNode().getProperty(ConnectorTypeImpl.CONNECTOR_MODE);
-					return Connector.getInstance(ConnectorTypeImpl.getOrCreateInstance(getDb(), name, ConnectorTypeImpl.getConnectionMode(connectionModeName)), this);
+					return ConnectorTypeImpl.getOrCreateInstance(getDb(), name, ConnectorTypeImpl.getConnectionMode(connectionModeName));
 				}
 			}
 		}
 		return null;
 	}
-	
+
+/*	
 	@Override
-	public <T extends ConnectionMode> Connector<T> getConnector(
+	public <T extends ConnectionMode> ConnectorType<T> getConnectorType(
 			ConnectorType<T> connectorType) {
 		for(Relationship rel: getNode().getRelationships(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE, Direction.OUTGOING)){
 			if(rel.getEndNode().hasProperty(ConnectorTypeImpl.CONNECTOR_TYPE_NAME)){
@@ -101,28 +101,28 @@ public class EdgeTypeImpl extends VertexTypeImpl implements EdgeType {
 		}
 		return null;
 	}
+*/	
 
 	public Iterable<Edge> getEdges(Vertex vertex, ConnectorType<?>... connectorTypes) {
-		Set<Connector<?>> connectorTypes1 = new HashSet<Connector<?>>();
-		Set<Connector<?>> connectorTypes2 = getConnectors();
+		Set<ConnectorType<?>> connectorTypes1 = new HashSet<ConnectorType<?>>();
+		Set<ConnectorType<?>> connectorTypes2 = getConnectorTypes();
 		for (ConnectorType<?> connectorType : connectorTypes) {
-			for (Connector<?> connectorType2 : connectorTypes2) {
-				if (connectorType.getName().equals(connectorType2.getConnectorType().getName())) {
+			for (ConnectorType<?> connectorType2 : connectorTypes2) {
+				if (connectorType.getName().equals(connectorType2.getName())) {
 					connectorTypes1.add(connectorType2);
 				}
 			}
 		}
-
-		return new ConnectorIterable(connectorTypes1, vertex);
+		return new ConnectorTypeIterable(this, connectorTypes1, vertex);
 	}
 
 	@Override
-	public Set<Connector<?>> getConnectors() {
-		Set<Connector<?>> connectorTypes = new HashSet<Connector<?>>();
+	public Set<ConnectorType<?>> getConnectorTypes() {
+		Set<ConnectorType<?>> connectorTypes = new HashSet<ConnectorType<?>>();
 		for(Relationship rel: getNode().getRelationships(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE, Direction.OUTGOING)){
 			String connectorName = (String)rel.getEndNode().getProperty(ConnectorTypeImpl.CONNECTOR_TYPE_NAME);
 			ConnectionMode connectionMode = ConnectorTypeImpl.getConnectionMode((String) rel.getEndNode().getProperty(ConnectorTypeImpl.CONNECTOR_MODE));
-			connectorTypes.add(Connector.getInstance(ConnectorTypeImpl.getOrCreateInstance(getDb(), connectorName, connectionMode), this));
+			connectorTypes.add(ConnectorTypeImpl.getOrCreateInstance(getDb(), connectorName, connectionMode));
 		}
 		return connectorTypes;
 	}

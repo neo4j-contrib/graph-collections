@@ -44,6 +44,8 @@ import org.neo4j.collections.graphdb.VertexType;
 
 public class EdgeImpl extends VertexImpl implements Edge{
 
+	Edge outer = this;
+	
 	private class ElementIterable implements Iterable<Vertex>{
 
 		private final ConnectorType<?> connectorType;
@@ -86,20 +88,23 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	
 	private class RelationshipElementIterable implements Iterable<EdgeElement>{
 
-		private final Set<Connector<?>> connectorTypes;
+		private final Set<Connector<?>> connectors;
 		
 		public RelationshipElementIterable() {
-			this.connectorTypes = getType().getConnectors();
+			this.connectors = new HashSet<Connector<?>>();
+			for(ConnectorType<?> connectorType: getType().getConnectorTypes()){
+				connectors.add(Connector.getInstance(connectorType, outer));
+			}
 		}
 
 		public RelationshipElementIterable(
-				Set<Connector<?>> connectorTypes) {
-			this.connectorTypes = connectorTypes;
+				Set<Connector<?>> connectors) {
+			this.connectors = connectors;
 		}
 		
 		@Override
 		public Iterator<EdgeElement> iterator() {
-			return new RelationshipElementIterator(connectorTypes);
+			return new RelationshipElementIterator(connectors);
 		}
 		
 	}
@@ -124,7 +129,7 @@ public class EdgeImpl extends VertexImpl implements Edge{
 		public EdgeElement next() {
 			if(hasNext()){
 				String connectorTypeName = getType().getName().substring(getType().getName().indexOf(EDGEROLE_SEPARATOR)+3);
-				Connector<?> connector = getType().getConnector(connectorTypeName);
+				Connector<?> connector = Connector.getInstance(getType().getConnectorType(connectorTypeName), outer);
 				Iterable<Vertex> elems = new ElementIterable(connector.getConnectorType());
 				return new EdgeElement(connector.getConnectorType(), elems);
 			}else{
@@ -162,7 +167,7 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorTypes) {
 		Set<Connector<?>> connectorTypeSet = new HashSet<Connector<?>>();
 		for(ConnectorType<?> connectorType: connectorTypes){
-			Connector<?> er = Connector.getInstance(connectorType, getType());
+			Connector<?> er = Connector.getInstance(connectorType, outer);
 			connectorTypeSet.add(er);
 		}
 		return new RelationshipElementIterable(connectorTypeSet);

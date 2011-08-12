@@ -61,18 +61,6 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 		return rel;
 	}
 
-	@Override
-	public Vertex[] getVertices() {
-		org.neo4j.graphdb.Node[] nodes = rel.getNodes();
-		Vertex[] enodes = new Vertex[nodes.length];
-		int count = 0;
-		for(org.neo4j.graphdb.Node n: nodes){
-			enodes[count] = new VertexImpl(n);
-			count++;
-		}
-		return enodes;
-	}
-
 	
 	@Override
 	protected VertexType getSpecialVertexType(){
@@ -116,18 +104,18 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 	@Override
 	public Iterable<EdgeElement> getEdgeElements(){
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new LeftRestricedEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
-		relements.add(new LeftRestricedEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
+		relements.add(new LeftRestricedEdgeElement(getType().getStartConnectorType(), getStartVertex()));
+		relements.add(new LeftRestricedEdgeElement(getType().getEndConnectorType(), getEndVertex()));
 		return relements;
 	}
 
 	@Override
 	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType) {
 		ArrayList<Vertex> elements = new ArrayList<Vertex>();
-		if(connectorType.getName().equals(getType().getStartConnector().getName())){
+		if(connectorType.getName().equals(getType().getStartConnectorType())){
 			elements.add(getDb().getVertex(rel.getStartNode()));
 			return elements;
-		}else if(connectorType.getName().equals(getType().getEndConnector().getName())){
+		}else if(connectorType.getName().equals(getType().getEndConnectorType().getName())){
 			elements.add(getDb().getVertex(rel.getEndNode()));
 			return elements;
 		}else{
@@ -137,9 +125,9 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 
 	@Override
 	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
-		if(connectorType.getName().equals(getType().getStartConnector().getName())){
+		if(connectorType.getName().equals(getType().getStartConnectorType().getName())){
 			return getDb().getVertex(rel.getStartNode());
-		}else if(connectorType.getName().equals(getType().getEndConnector().getName())){
+		}else if(connectorType.getName().equals(getType().getEndConnectorType().getName())){
 			return getDb().getVertex(rel.getEndNode());
 		}else{
 			throw new RuntimeException("Supplied role is not supported");
@@ -163,9 +151,9 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 		boolean includeStart = false;
 		boolean includeEnd = false;
 		for(ConnectorType<?> connectorType: connectorTypes){
-			if(connectorType.getName().equals(getType().getStartConnector().getName())){
+			if(connectorType.getName().equals(getType().getStartConnectorType().getName())){
 				includeStart = true;
-			}else if(connectorType.getName().equals(getType().getEndConnector().getName())){
+			}else if(connectorType.getName().equals(getType().getEndConnectorType().getName())){
 				includeEnd = true;
 			}else{
 				throw new RuntimeException("Supplied role is not part of this RelationshipType");
@@ -173,10 +161,10 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 		}
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
 		if(includeStart){
-			relements.add(new LeftRestricedEdgeElement(getType().getStartConnector().getConnectorType(), getStartVertex()));
+			relements.add(new LeftRestricedEdgeElement(getType().getStartConnectorType(), getStartVertex()));
 		}
 		if(includeEnd){
-			relements.add(new LeftRestricedEdgeElement(getType().getEndConnector().getConnectorType(), getEndVertex()));
+			relements.add(new LeftRestricedEdgeElement(getType().getEndConnectorType(), getEndVertex()));
 		}
 		return relements;
 	}

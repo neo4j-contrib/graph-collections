@@ -22,30 +22,30 @@ package org.neo4j.collections.graphdb;
 public class Connector<T extends ConnectionMode> {
 	
 	private final ConnectorType<T> connectorType;
-	private final EdgeType edgeType;
+	private final Edge edge;
 	
 	@SuppressWarnings("unchecked")
-	public static Connector<?> getInstance(ConnectorType<?> connectorType, EdgeType edgeType){
+	public static Connector<?> getInstance(ConnectorType<?> connectorType, Edge edge){
 		if(connectorType.getConnectionMode().getName().equals(ConnectionMode.UNRESTRICTED.getName())){
-			return new Connector<UnrestrictedConnectionMode>((ConnectorType<UnrestrictedConnectionMode>) connectorType, edgeType);
+			return new Connector<UnrestrictedConnectionMode>((ConnectorType<UnrestrictedConnectionMode>) connectorType, edge);
 		}else if(connectorType.getConnectionMode().getName().equals(ConnectionMode.INJECTIVE.getName())){
-			return new Connector<InjectiveConnectionMode>((ConnectorType<InjectiveConnectionMode>) connectorType, edgeType);
+			return new Connector<InjectiveConnectionMode>((ConnectorType<InjectiveConnectionMode>) connectorType, edge);
 		}else if(connectorType.getConnectionMode().getName().equals(ConnectionMode.SURJECTIVE.getName())){
-			return new Connector<SurjectiveConnectionMode>((ConnectorType<SurjectiveConnectionMode>) connectorType, edgeType);
+			return new Connector<SurjectiveConnectionMode>((ConnectorType<SurjectiveConnectionMode>) connectorType, edge);
 		}else if(connectorType.getConnectionMode().getName().equals(ConnectionMode.BIJECTIVE.getName())){
-			return new Connector<BijectiveConnectionMode>((ConnectorType<BijectiveConnectionMode>) connectorType, edgeType);
+			return new Connector<BijectiveConnectionMode>((ConnectorType<BijectiveConnectionMode>) connectorType, edge);
 		}else{
 			throw new RuntimeException("Unsupported ConnectionMode "+connectorType.getConnectionMode().getName()+"found");
 		}
 	}
 	
-	public Connector(ConnectorType<T> connectorType, EdgeType edgeType) {
+	public Connector(ConnectorType<T> connectorType, Edge edge) {
 		this.connectorType = connectorType;
-		this.edgeType = edgeType;
+		this.edge = edge;
 	}
 
-	public EdgeType getEdgeType(){
-		return edgeType;
+	public Edge getEdge(){
+		return edge;
 	}
 	
 	public ConnectorType<T> getConnectorType(){

@@ -64,14 +64,14 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		return getNode();
 	}
 
-	public Connector<BijectiveConnectionMode> getPropertyConnector(){
-		return new PropertyConnector(PropertyConnectorType.getOrCreateInstance(getDb()), this);		
+	public ConnectorType<BijectiveConnectionMode> getPropertyConnectorType(){
+		return PropertyConnectorType.getOrCreateInstance(getDb());		
 	}
 	
 	@Override
-	public Set<Connector<?>> getConnectors() {
-		Set<Connector<?>> roles = new HashSet<Connector<?>>();
-		roles.add(getPropertyConnector());
+	public Set<ConnectorType<?>> getConnectorTypes() {
+		Set<ConnectorType<?>> roles = new HashSet<ConnectorType<?>>();
+		roles.add(getPropertyConnectorType());
 		return roles;
 	}
 	
@@ -83,13 +83,6 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 	}
 
-	@Override
-	public <U extends ConnectionMode> Connector<U> getConnector(
-			ConnectorType<U> edgeRoleType) {
-		return new Connector<U>(edgeRoleType, this);
-	}
-	
-	
 	public static PropertyType<?> getPropertyTypeByName(DatabaseService db, String name){
 		return (PropertyType<?>)VertexTypeImpl.getByName(db, name);
 	}

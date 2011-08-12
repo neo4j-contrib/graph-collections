@@ -25,13 +25,55 @@ import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Surjective;
 import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Bijective;
 
 
+/**
+ * Defines the mode of a {@link Connection}.
+ * <p>A connection is defined as going from a {@link Vertex} to an {@link Edge}.</p>
+ * <p>The left hand side (the Vertex side) can either be restricted, 
+ * ie. allowing only one Vertex to connect to an Edge with a {@link Connector}
+ * having a {@link LeftRestrictedConnectionMode}, or it can be unrestricted,
+ * ie. allowing an unlimited number of Vertices to connect to an Edge
+ * with a Connector having a {@link LeftUnrestrictedConnectionMode}.</p>
+ * <p>The right hand side (the Edge side) can also either be restricted,
+ * ie. allowing a Vertex to only connect to one edge with a particular 
+ * {@EdgeType} on a Connector having a {@link RightRestrictedConnectionMode}.
+ * The right hand side can be unrestricted too, ie. allowing a Vertex
+ * to connect to any number of EdgeTypes on a Connectior having a
+ * {@link RightRestrictedConnectionMode}.</p>
+ * The four restrictions lead to four basic ConnectionModes:
+ * <ul>
+ * <li>{@link UnrestrictedConnectionMode}: having both a RightUnrestrictedConnectionMode and a LeftUnrestrictedConnectionMode</li>
+ * <li>{@link InjectiveConnectionMode}: having a RightUnrestrictedConnectionMode and a LeftRestrictedConnectionMode</li>
+ * <li>{@link SurjectiveConnectionMode}: having a RightRestrictedConnectionMode and a LeftUnrestrictedConnectionMode</li>   
+ * <li>{@link BijectiveConnectionMode}: having a RightRestrictedConnectionMode and a LeftRestrictedConnectionMode</li>
+ * </ul> 
+ * A {@link ConnectorType} can only be created with one of these four ConnectionModes.
+ *
+ */
 public interface ConnectionMode {
 
+	/**
+	 * @return the name of the ConnectionMode
+	 */
 	public String getName();
 	
+	/**
+	 * Access method for UnrestricedConnectionMode object 
+	 */
 	public static UnrestrictedConnectionMode UNRESTRICTED = new Unrestricted();
+
+	/**
+	 * Access method for InjectiveConnectionMode object 
+	 */
 	public static InjectiveConnectionMode INJECTIVE = new Injective();
+
+	/**
+	 * Access method for SurjectiveConnectionMode object 
+	 */
 	public static SurjectiveConnectionMode SURJECTIVE = new Surjective();
+	
+	/**
+	 * Access method for BijectiveConnectionMode object 
+	 */
 	public static BijectiveConnectionMode BIJECTIVE = new Bijective();
 	
 }

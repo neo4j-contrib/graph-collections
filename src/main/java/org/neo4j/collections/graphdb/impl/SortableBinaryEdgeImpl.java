@@ -69,14 +69,6 @@ public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements Sortabl
 	}
 
 	@Override
-	public Vertex[] getVertices() {
-		Vertex[] vertices = new Vertex[2];
-		vertices[0] = getStartVertex();
-		vertices[1] = getEndVertex();
-		return vertices;
-	}
-
-	@Override
 	public void delete() {
 		getRelIdx().removeRelationshipTo(getEndVertex().getNode());
 	}
@@ -99,8 +91,8 @@ public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements Sortabl
 	@Override
 	public Iterable<EdgeElement> getEdgeElements(){
 		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new LeftRestricedEdgeElement(getType().getStartConnector().getConnectorType(), getDb().getVertex(rel.getStartNode())));
-		relements.add(new LeftRestricedEdgeElement(getType().getEndConnector().getConnectorType(), getDb().getVertex(rel.getEndNode())));
+		relements.add(new LeftRestricedEdgeElement(getType().getStartConnectorType(), getDb().getVertex(rel.getStartNode())));
+		relements.add(new LeftRestricedEdgeElement(getType().getEndConnectorType(), getDb().getVertex(rel.getEndNode())));
 		return relements;
 	}
 

@@ -19,16 +19,35 @@
  */
 package org.neo4j.collections.graphdb;
 
-public interface BinaryEdge extends Edge{
+/**
+ * A specialized version of an {@link Edge}, where the number of
+ * {@link Connectors} is two, and where those Connectors have a
+ * {@link SurjectiveConnectionMode}. BinaryEdges is a wrapper
+ * {@link Relationship} in the standard Neo4j API.
+ * 
+ */
+public interface BinaryEdge extends Edge {
 
+	/**
+	 * @return the Vertex connected to the EndConnector.
+	 */
 	public Vertex getEndVertex();
-	
-	public Vertex getOtherVertex(Vertex element);
 
+	/**
+	 * @param vertex
+	 * @return the StartVertex if the vertex argument is the EndVertex or the
+	 *         EndVertex if the vertex argument is the StartVertex
+	 */
+	public Vertex getOtherVertex(Vertex vertex);
+
+	/**
+	 * @return the Vertex connected to the StartConnector.
+	 */
 	public Vertex getStartVertex();
-	
-	public Vertex[] getVertices();
-	
+
+	/**
+	 * @return the Neo4j Relationship wrapped by this BinaryEdge
+	 */
 	public org.neo4j.graphdb.Relationship getRelationship();
-	
+
 }

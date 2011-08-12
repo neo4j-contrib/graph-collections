@@ -22,22 +22,74 @@ package org.neo4j.collections.graphdb;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.RelationshipType;
 
+/**
+ * A wrapper around {@link RelationshipType} in the standard Neo4j API.
+ * <p>
+ * BinaryEdgeType is a specialized version of a generalized {@link Edge}.
+ */
 public interface BinaryEdgeType extends EdgeType {
-	
+
+	/**
+	 * @return the {@link RelationshipType} wrapped by this BinaryEdgeType
+	 */
 	public RelationshipType getRelationshipType();
-	
+
+	/**
+	 * @param startVertex
+	 * @param endVertex
+	 * @return a {@link BinaryEdge} created from startVertex to EndVertex with
+	 *         this BinaryEdgeType
+	 */
 	public BinaryEdge createEdge(Vertex startVertex, Vertex endVertex);
-	
+
+	/**
+	 * @param vertex
+	 * @return the {@link BinaryEdge}s connected to vertex with this
+	 *         BinaryEdgeType
+	 */
 	public Iterable<BinaryEdge> getEdges(Vertex vertex);
-	
+
+	/**
+	 * @param vertex
+	 * @param dir
+	 * @return the {@link BinaryEdge}s connected to vertex with this
+	 *         BinaryEdgeType and the given {@link Direction}
+	 */
 	public Iterable<BinaryEdge> getEdges(Vertex vertex, Direction dir);
-	
+
+	/**
+	 * @param vertex
+	 * @return true if the vertex is connected to a {@link BinaryEdge} with this
+	 *         BinaryEdgeType
+	 */
+	public boolean hasEdge(Vertex vertex);
+
+	/**
+	 * @param vertex
+	 * @param dir
+	 * @return true if the vertex is connected to a {@link BinaryEdge} with this
+	 *         BinaryEdgeType and the given direction.
+	 */
 	public boolean hasEdge(Vertex vertex, Direction dir);
-	
+
+	/**
+	 * @param vertex
+	 * @param dir
+	 * @return the single BinaryEdge connected to vertex with this
+	 *         BinaryEdgeType and the given direction. Null is returned if no
+	 *         BinaryEdge is connected. If more than one BinaryEdge is found, an
+	 *         exception will be raised.
+	 */
 	public BinaryEdge getSingleBinaryEdge(Vertex vertex, Direction dir);
-	
-	public Connector<SurjectiveConnectionMode> getStartConnector();
-	
-	public Connector<SurjectiveConnectionMode> getEndConnector();
-	
+
+	/**
+	 * @return the StartConnector associated with this BinaryEdge
+	 */
+	public ConnectorType<SurjectiveConnectionMode> getStartConnectorType();
+
+	/**
+	 * @return the EndConnector associated with this BinaryEdge
+	 */
+	public ConnectorType<SurjectiveConnectionMode> getEndConnectorType();
+
 }

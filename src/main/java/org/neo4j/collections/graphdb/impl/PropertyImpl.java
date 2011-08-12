@@ -136,7 +136,7 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 	@Override
 	public Iterable<EdgeElement> getEdgeElements() {
 		ArrayList<EdgeElement> elems = new ArrayList<EdgeElement>();
-		elems.add(new LeftRestricedEdgeElement(getType().getPropertyConnector().getConnectorType(), getVertex()));
+		elems.add(new LeftRestricedEdgeElement(getType().getPropertyConnectorType(), getVertex()));
 		return elems;
 	}
 

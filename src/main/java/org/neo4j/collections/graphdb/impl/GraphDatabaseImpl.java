@@ -22,7 +22,6 @@ package org.neo4j.collections.graphdb.impl;
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
 import org.neo4j.collections.graphdb.ConnectionMode;
-import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.Edge;
 import org.neo4j.collections.graphdb.PropertyConnectorType;
@@ -202,10 +201,10 @@ public class GraphDatabaseImpl implements DatabaseService {
 	@Override
 	public Edge createEdge(EdgeType edgeType,
 			EdgeElement... edgeElements) {
-		if(edgeElements.length != edgeType.getConnectors().size()){
-			throw new RuntimeException("Number of edge elements provided ("+edgeElements.length+") is different from the number of edge roles required ("+edgeType.getConnectors().size()+")");
+		if(edgeElements.length != edgeType.getConnectorTypes().size()){
+			throw new RuntimeException("Number of edge elements provided ("+edgeElements.length+") is different from the number of edge roles required ("+edgeType.getConnectorTypes().size()+")");
 		}
-		for(Connector<?> connector: edgeType.getConnectors()){
+		for(ConnectorType<?> connector: edgeType.getConnectorTypes()){
 			boolean found = false;
 			for(EdgeElement relement: edgeElements){
 				if(relement.getConnector().getName().equals(connector.getName())){

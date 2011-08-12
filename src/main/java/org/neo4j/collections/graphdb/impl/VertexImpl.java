@@ -54,15 +54,15 @@ public class VertexImpl implements Vertex {
 		private final Iterator<Relationship> connectorRels;
 
 		public EdgeIterator(
-				Connector<?> connector,
+				EdgeType edgeType,
+				ConnectorType<?> connectorType,
 				Vertex vertex) {
 			this.connectorRels = vertex
 					.getNode()
 					.getRelationships(
-							DynamicRelationshipType.withName(connector
-									.getEdgeType().getName()
+							DynamicRelationshipType.withName(edgeType.getName()
 									+ EDGEROLE_SEPARATOR
-									+ connector.getConnectorType().getName()),
+									+ connectorType.getName()),
 							Direction.INCOMING).iterator();
 		}
 
@@ -85,38 +85,44 @@ public class VertexImpl implements Vertex {
 		}
 	}
 
-	static class ConnectorIterable implements Iterable<Edge> {
+	static class ConnectorTypeIterable implements Iterable<Edge> {
 
-		Iterable<Connector<?>> connectors;
+		final Iterable<ConnectorType<?>> connectorTypes;
+		final EdgeType edgeType;
 
 		private final Vertex vertex;
 
-		public ConnectorIterable(
-				Iterable<Connector<?>> connectors,
+		public ConnectorTypeIterable(
+				EdgeType edgeType,
+				Iterable<ConnectorType<?>> connectorTypes,
 				Vertex vertex) {
-			this.connectors = connectors;
+			this.edgeType = edgeType;
+			this.connectorTypes = connectorTypes;
 			this.vertex = vertex;
 		}
 
 		@Override
 		public Iterator<Edge> iterator() {
-			return new ConnectorIterator(connectors, vertex);
+			return new ConnectorTypeIterator(edgeType, connectorTypes.iterator(), vertex);
 		}
 
 	}
 
-	static class ConnectorIterator implements Iterator<Edge> {
+	static class ConnectorTypeIterator implements Iterator<Edge> {
 
-		private final Iterator<Connector<?>> connectors;
+		private final Iterator<ConnectorType<?>> connectorTypes;
 
 		private final Vertex vertex;
+		private final EdgeType edgeType;
 		private EdgeIterator currentEdgeIterator = null;
 		private Boolean hasNext = null;
 
-		public ConnectorIterator(
-				Iterable<Connector<?>> connectors,
+		public ConnectorTypeIterator(
+				EdgeType edgeType,
+				Iterator<ConnectorType<?>> connectorTypes,
 				Vertex vertex) {
-			this.connectors = connectors.iterator();
+			this.edgeType = edgeType;
+			this.connectorTypes = connectorTypes;
 			this.vertex = vertex;
 		}
 
@@ -124,9 +130,9 @@ public class VertexImpl implements Vertex {
 		public boolean hasNext() {
 			if (hasNext == null) {
 				if (currentEdgeIterator == null) {
-					if (connectors.hasNext()) {
-						currentEdgeIterator = new EdgeIterator(
-								connectors.next(), vertex);
+					if (connectorTypes.hasNext()) {
+						currentEdgeIterator = new EdgeIterator(edgeType,
+								connectorTypes.next(), vertex);
 						return hasNext();
 					} else {
 						hasNext = false;
@@ -187,7 +193,7 @@ public class VertexImpl implements Vertex {
 	static class EdgeTypeIterator implements Iterator<Edge> {
 
 		Iterator<EdgeType> edgeTypes;
-		ConnectorIterator currentConnectorIterator = null;
+		ConnectorTypeIterator currentConnectorTypeIterator = null;
 		Boolean hasNext = null;
 		private final Vertex vertex;
 
@@ -199,21 +205,21 @@ public class VertexImpl implements Vertex {
 		@Override
 		public boolean hasNext() {
 			if (hasNext == null) {
-				if (currentConnectorIterator == null) {
+				if (currentConnectorTypeIterator == null) {
 					if (edgeTypes.hasNext()) {
-						currentConnectorIterator = new ConnectorIterator(
-								edgeTypes.next().getConnectors(), vertex);
+						EdgeType edgeType = edgeTypes.next();
+						currentConnectorTypeIterator = new ConnectorTypeIterator(edgeType, edgeType.getConnectorTypes().iterator(), vertex);
 						return hasNext();
 					} else {
 						hasNext = false;
 						return false;
 					}
 				} else {
-					if (currentConnectorIterator.hasNext()) {
+					if (currentConnectorTypeIterator.hasNext()) {
 						hasNext = true;
 						return true;
 					} else {
-						currentConnectorIterator = null;
+						currentConnectorTypeIterator = null;
 						return hasNext();
 					}
 				}
@@ -226,7 +232,7 @@ public class VertexImpl implements Vertex {
 		public Edge next() {
 			if (hasNext()) {
 				hasNext = null;
-				return currentConnectorIterator.next();
+				return currentConnectorTypeIterator.next();
 			} else {
 				throw new NoSuchElementException();
 			}
@@ -651,9 +657,12 @@ public class VertexImpl implements Vertex {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Connection<BijectiveConnectionMode> getSelfConnection() {
-		return new Connection<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), new NullaryEdgeImpl(getNode()), this);
+		ConnectorType<BijectiveConnectionMode> cnt = NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb());
+		Edge edge = new NullaryEdgeImpl(getNode());
+		return new Connection<BijectiveConnectionMode>((Connector<BijectiveConnectionMode>) Connector.getInstance(cnt, edge), this);
 	}
 
 	@Override

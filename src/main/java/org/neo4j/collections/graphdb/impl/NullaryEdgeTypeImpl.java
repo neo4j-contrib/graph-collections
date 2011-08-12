@@ -23,10 +23,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.collections.graphdb.BijectiveConnectionMode;
-import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.NullaryEdgeType;
 import org.neo4j.graphdb.Node;
 
@@ -50,21 +48,15 @@ public class NullaryEdgeTypeImpl extends EdgeTypeImpl implements NullaryEdgeType
 	}
 
 	@Override
-	public Set<Connector<?>> getConnectors() {
-		Set<Connector<?>> roles = new HashSet<Connector<?>>();
-		roles.add(getConnector());
-		return roles;
+	public Set<ConnectorType<?>> getConnectorTypes() {
+		Set<ConnectorType<?>> connectorTypes = new HashSet<ConnectorType<?>>();
+		connectorTypes.add(getConnectorType());
+		return connectorTypes;
 	}
 
 	@Override
-	public <T extends ConnectionMode> Connector<T> getConnector(
-			ConnectorType<T> edgeRoleType) {
-		return new Connector<T>(edgeRoleType, this);
-	}
-
-	@Override
-	public Connector<BijectiveConnectionMode> getConnector() {
-		return new Connector<BijectiveConnectionMode>(NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb()), this);
+	public ConnectorType<BijectiveConnectionMode> getConnectorType() {
+		return NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb());
 	}
 	
 }
