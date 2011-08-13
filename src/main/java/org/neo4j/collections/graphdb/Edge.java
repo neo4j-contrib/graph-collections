@@ -28,12 +28,16 @@ public interface Edge extends Vertex{
 
 	public boolean isType(EdgeType relType);
 
-	public Iterable<EdgeElement> getEdgeElements();
+	public Iterable<Connector<?>> getConnectors();
 
-	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorType);
+	public Iterable<Connector<?>> getConnectors(ConnectorType<?>... connectorType);
+	
+	public <T extends ConnectionMode> Connector<T> getConnector(ConnectorType<T> connectorType);
 	
 	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType);
 	
-	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType);
+	public <T extends ConnectionMode> Iterable<Connection<T>> getConnections(ConnectorType<T> connectorType);
+	
+	public <T extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<T> connectorType);
 
 }

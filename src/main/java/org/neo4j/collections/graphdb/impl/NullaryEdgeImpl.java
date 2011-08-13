@@ -21,20 +21,21 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.ArrayList;
 
+import org.neo4j.collections.graphdb.Connection;
 import org.neo4j.collections.graphdb.ConnectionMode;
+import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.ConnectorType;
-import org.neo4j.collections.graphdb.EdgeElement;
+import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.NullaryEdge;
 import org.neo4j.collections.graphdb.Vertex;
-import org.neo4j.collections.graphdb.impl.NullaryConnectorTypeImpl.NullaryConnectorType;
-import org.neo4j.graphdb.Node;
 
 public class NullaryEdgeImpl extends VertexImpl implements NullaryEdge{
 
-	public NullaryEdgeImpl(Node node) {
-		super(node);
+	
+	public NullaryEdgeImpl(DatabaseService db, Long id) {
+		super(db, id);
 	}
 
 	@Override
@@ -53,19 +54,22 @@ public class NullaryEdgeImpl extends VertexImpl implements NullaryEdge{
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements() {
-		ArrayList<EdgeElement> elems = new ArrayList<EdgeElement>();
-		Vertex[] va = new Vertex[1];
-		va[0] = getDb().getVertex(getNode()); 
-		elems.add(new EdgeElement(NullaryConnectorType.getOrCreateInstance(getDb()), va));
-		return null;
+	public Iterable<Connector<?>> getConnectors() {
+		ArrayList<Connector<?>> connectors = new ArrayList<Connector<?>>();
+		connectors.add(Connector.getInstance(ConnectorTypeImpl.getOrCreateInstance(db, NullaryEdgeTypeImpl.NULLARYCONNECTORNAME, getType().getNode(), ConnectionMode.BIJECTIVE), this));
+		return connectors;
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements(
-			ConnectorType<?>... connectorType) {
-		// TODO Auto-generated method stub
-		return null;
+	public Iterable<Connector<?>> getConnectors(
+			ConnectorType<?>... connectorTypes) {
+		ArrayList<Connector<?>> connectors = new ArrayList<Connector<?>>();
+		for(ConnectorType<?> connectorType: connectorTypes){
+			if(connectorType.getName().equals(NullaryEdgeTypeImpl.NULLARYCONNECTORNAME)){
+				connectors.add(Connector.getInstance(ConnectorTypeImpl.getOrCreateInstance(db, NullaryEdgeTypeImpl.NULLARYCONNECTORNAME, getType().getNode(), ConnectionMode.BIJECTIVE), this));
+			}
+		}
+		return connectors;
 	}
 
 	@Override
@@ -78,6 +82,20 @@ public class NullaryEdgeImpl extends VertexImpl implements NullaryEdge{
 	@Override
 	public <U extends LeftRestrictedConnectionMode> Vertex getVertex(
 			ConnectorType<U> connectorType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <T extends ConnectionMode> Connector<T> getConnector(
+			ConnectorType<T> connectorType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <T extends ConnectionMode> Iterable<Connection<T>> getConnections(
+			ConnectorType<T> connectorType) {
 		// TODO Auto-generated method stub
 		return null;
 	}

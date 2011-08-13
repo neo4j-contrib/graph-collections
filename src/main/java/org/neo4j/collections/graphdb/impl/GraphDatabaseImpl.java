@@ -21,18 +21,18 @@ package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
-import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.ConnectorType;
+import org.neo4j.collections.graphdb.ConnectorTypeDescription;
 import org.neo4j.collections.graphdb.Edge;
-import org.neo4j.collections.graphdb.PropertyConnectorType;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.DatabaseService;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.graphdb.EdgeElement;
+import org.neo4j.collections.graphdb.ConnectorDescription;
 import org.neo4j.collections.graphdb.SortableBinaryEdgeType;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -51,18 +51,56 @@ public class GraphDatabaseImpl implements DatabaseService {
 		this.graphDb = graphDb;
 	}
 
-	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabaseService() {
-		return graphDb;
-	}
-
 	@Override
 	public Transaction beginTx() {
 		return getGraphDatabaseService().beginTx();
 	}
 
 	@Override
+	public Edge createEdge(EdgeType edgeType,
+			ConnectorDescription... edgeElements) {
+		if(edgeElements.length != edgeType.getConnectorTypes().size()){
+			throw new RuntimeException("Number of edge elements provided ("+edgeElements.length+") is different from the number of edge roles required ("+edgeType.getConnectorTypes().size()+")");
+		}
+		for(ConnectorType<?> connector: edgeType.getConnectorTypes()){
+			boolean found = false;
+			for(ConnectorDescription relement: edgeElements){
+				if(relement.getConnectorType().getName().equals(connector.getName())){
+					found = true;
+				}
+			}
+			if(found == false){
+				throw new RuntimeException("To create relationship an element with role "+connector.getName()+" should be provide");
+			}
+		}
+		Node n = graphDb.createNode();
+		n.setProperty(EDGE_TYPE, edgeType.getNode().getId());
+		for(ConnectorDescription relement: edgeElements){
+			for(Vertex elem: relement.getVertices()){
+				n.createRelationshipTo(elem.getNode(), DynamicRelationshipType.withName(edgeType.getName()+VertexImpl.EDGEROLE_SEPARATOR+relement.getConnectorType().getName()));
+			}
+		}
+		return new EdgeImpl(this, n.getId());
+	}
+
+	@Override
+	public EdgeType createEdgeType(String name, ConnectorTypeDescription... connectorTypeDescriptions) {
+		return EdgeTypeImpl.getOrCreateInstance(this, name, connectorTypeDescriptions);
+	}
+
+	@Override
+	public Node createNode() {
+		return graphDb.createNode();
+	}
+
+	@Override
 	public Vertex createVertex() {
-		return new VertexImpl(getGraphDatabaseService().createNode());
+		return new VertexImpl(this, getGraphDatabaseService().createNode().getId());
+	}
+
+	@Override
+	public Iterable<Node> getAllNodes() {
+		return graphDb.getAllNodes();
 	}
 
 	@Override
@@ -70,28 +108,157 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return new NodeIterable(getGraphDatabaseService().getAllNodes());
 	}
 
-/*	
 	@Override
-	public Vertex getVertexById(long id) {
-		return getVertex(getGraphDatabaseService().getNodeById(id));
-	}
-*/
-	
-	@Override
-	public Vertex getReferenceVertex() {
-		return new VertexImpl(getGraphDatabaseService().getReferenceNode());
+	public BinaryEdge getBinaryEdgeById(long id) {
+		return new BinaryEdgeImpl(this, id);
 	}
 
 	@Override
-	public BinaryEdge getBinaryEdgeById(long arg0) {
-		return new BinaryEdgeImpl(getGraphDatabaseService()
-				.getRelationshipById(arg0));
+	public BinaryEdgeType getBinaryEdgeType(RelationshipType relType) {
+		return BinaryEdgeTypeImpl.getOrCreateInstance(this, relType);
+	}
+
+	@Override
+	public BinaryEdgeType getBinaryEdgeType(RelationshipType relType,
+			VertexType domain, VertexType range) {
+		return BinaryEdgeTypeImpl.getOrCreateInstance(this, relType, domain, range);
+	}
+
+	@Override
+	public PropertyType<Boolean[]> getBooleanArrayPropertyType(String name) {
+		return PropertyType.BooleanArrayPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public PropertyType<Boolean> getBooleanPropertyType(String name) {
+		return PropertyType.BooleanPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public PropertyType<Byte[]> getByteArrayPropertyType(String name) {
+		return PropertyType.ByteArrayPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public ComparablePropertyType<Byte> getBytePropertyType(String name) {
+		return PropertyType.BytePropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public PropertyType<Double[]> getDoubleArrayPropertyType(String name) {
+		return PropertyType.DoubleArrayPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public ComparablePropertyType<Double> getDoublePropertyType(String name) {
+		return PropertyType.DoublePropertyType.getOrCreateInstance(this, name);
 	}
 
 	@Override
 	public Iterable<EdgeType> getEdgeTypes() {
 		return new RelationshipTypeIterable(graphDb.getRelationshipTypes(),
 				this);
+	}
+
+	@Override
+	public PropertyType<Float[]> getFloatArrayPropertyType(String name) {
+		return PropertyType.FloatArrayPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public ComparablePropertyType<Float> getFloatPropertyType(String name) {
+		return PropertyType.FloatPropertyType.getOrCreateInstance(this, name);
+	}
+
+	public org.neo4j.graphdb.GraphDatabaseService getGraphDatabaseService() {
+		return graphDb;
+	}
+
+	@Override
+	public PropertyType<Long[]> getLongArrayPropertyType(String name) {
+		return PropertyType.LongArrayPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public ComparablePropertyType<Long> getLongPropertyType(String name) {
+		return PropertyType.LongPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public Node getNodeById(long id) {
+		return graphDb.getNodeById(id);
+	}
+
+	@Override
+	public Node getReferenceNode() {
+		return graphDb.getReferenceNode();
+	}
+
+	@Override
+	public Vertex getReferenceVertex() {
+		return new VertexImpl(this, getGraphDatabaseService().getReferenceNode().getId());
+	}
+
+	@Override
+	public Relationship getRelationshipById(long id) {
+		return graphDb.getRelationshipById(id);
+	}
+
+	@Override
+	public Iterable<RelationshipType> getRelationshipTypes() {
+		return graphDb.getRelationshipTypes();
+	}
+
+	@Override
+	public VertexType getRootType() {
+		return VertexTypeImpl.getOrCreateInstance(this, "Thing");
+	}
+
+
+	@Override
+	public PropertyType<Short[]> getShortArrayPropertyType(String name) {
+		return PropertyType.ShortArrayPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public ComparablePropertyType<Short> getShortPropertyType(String name) {
+		return PropertyType.ShortPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public <T> SortableBinaryEdgeType<T> getSortableRelationshipType(String name, ComparablePropertyType<T> propertyType) {
+		return SortableBinaryEdgeTypeImpl.getOrCreateInstance(this, DynamicRelationshipType.withName(name), propertyType);
+	}
+
+	@Override
+	public PropertyType<String[]> getStringArrayPropertyType(String name) {
+		return PropertyType.StringArrayPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public ComparablePropertyType<String> getStringPropertyType(String name) {
+		return PropertyType.StringPropertyType.getOrCreateInstance(this, name);
+	}
+
+	@Override
+	public Vertex getVertex(Node node) {
+		if(node.hasProperty(VertexTypeImpl.CLASS_NAME)){
+			try{
+				@SuppressWarnings("unchecked")
+				Class<Vertex> claz = (Class<Vertex>)Class.forName((String)node.getProperty(VertexTypeImpl.CLASS_NAME));
+				@SuppressWarnings("unchecked")
+				Class<Node> dbclaz = (Class<Node>)Class.forName("org.neo4j.collections.graphdb.DatabaseService");
+				@SuppressWarnings("unchecked")
+				Class<Node> idclaz = (Class<Node>)Class.forName("java.lang.Long");
+				return claz.getConstructor(dbclaz, idclaz).newInstance(this, node.getId());
+			}catch (Exception e){
+				throw new RuntimeException(e);
+			}
+		}else if(node.hasProperty(BinaryEdgeImpl.REL_ID)){
+			return new BinaryEdgeImpl(this, graphDb.getRelationshipById((Long)node.getProperty(BinaryEdgeImpl.REL_ID)).getId());
+		}else{
+			return new VertexImpl(this, node.getId());
+		}
 	}
 
 	@Override
@@ -109,6 +276,7 @@ public class GraphDatabaseImpl implements DatabaseService {
 			TransactionEventHandler<T> arg0) {
 		return graphDb.registerTransactionEventHandler(arg0);
 	}
+
 
 	@Override
 	public void shutdown() {
@@ -128,176 +296,4 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return graphDb.unregisterTransactionEventHandler(arg0);
 	}
 
-	@Override
-	public PropertyType<Boolean> getBooleanPropertyType(String name) {
-		return PropertyType.BooleanPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public PropertyType<Boolean[]> getBooleanArrayPropertyType(String name) {
-		return PropertyType.BooleanArrayPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public ComparablePropertyType<Byte> getBytePropertyType(String name) {
-		return PropertyType.BytePropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public PropertyType<Byte[]> getByteArrayPropertyType(String name) {
-		return PropertyType.ByteArrayPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public ComparablePropertyType<Double> getDoublePropertyType(String name) {
-		return PropertyType.DoublePropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public PropertyType<Double[]> getDoubleArrayPropertyType(String name) {
-		return PropertyType.DoubleArrayPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public ComparablePropertyType<Float> getFloatPropertyType(String name) {
-		return PropertyType.FloatPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public PropertyType<Float[]> getFloatArrayPropertyType(String name) {
-		return PropertyType.FloatArrayPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public ComparablePropertyType<Long> getLongPropertyType(String name) {
-		return PropertyType.LongPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public PropertyType<Long[]> getLongArrayPropertyType(String name) {
-		return PropertyType.LongArrayPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public ComparablePropertyType<Short> getShortPropertyType(String name) {
-		return PropertyType.ShortPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public PropertyType<Short[]> getShortArrayPropertyType(String name) {
-		return PropertyType.ShortArrayPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public ComparablePropertyType<String> getStringPropertyType(String name) {
-		return PropertyType.StringPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public PropertyType<String[]> getStringArrayPropertyType(String name) {
-		return PropertyType.StringArrayPropertyType.getOrCreateInstance(this, name);
-	}
-
-	@Override
-	public Edge createEdge(EdgeType edgeType,
-			EdgeElement... edgeElements) {
-		if(edgeElements.length != edgeType.getConnectorTypes().size()){
-			throw new RuntimeException("Number of edge elements provided ("+edgeElements.length+") is different from the number of edge roles required ("+edgeType.getConnectorTypes().size()+")");
-		}
-		for(ConnectorType<?> connector: edgeType.getConnectorTypes()){
-			boolean found = false;
-			for(EdgeElement relement: edgeElements){
-				if(relement.getConnector().getName().equals(connector.getName())){
-					found = true;
-				}
-			}
-			if(found == false){
-				throw new RuntimeException("To create relationship an element with role "+connector.getName()+" should be provide");
-			}
-		}
-		Node n = graphDb.createNode();
-		n.setProperty(EDGE_TYPE, edgeType.getNode().getId());
-		for(EdgeElement relement: edgeElements){
-			for(Vertex elem: relement.getVertices()){
-				n.createRelationshipTo(elem.getNode(), DynamicRelationshipType.withName(edgeType.getName()+VertexImpl.EDGEROLE_SEPARATOR+relement.getConnector().getName()));
-			}
-		}
-		return new EdgeImpl(n);
-	}
-
-
-	@Override
-	public Vertex getVertex(Node node) {
-		if(node.hasProperty(VertexTypeImpl.CLASS_NAME)){
-			try{
-				@SuppressWarnings("unchecked")
-				Class<Vertex> claz = (Class<Vertex>)Class.forName((String)node.getProperty(VertexTypeImpl.CLASS_NAME));
-				@SuppressWarnings("unchecked")
-				Class<Node> nclaz = (Class<Node>)Class.forName("org.neo4j.graphdb.Node");
-				return claz.getConstructor(nclaz).newInstance(node);
-			}catch (Exception e){
-				throw new RuntimeException(e);
-			}
-		}else if(node.hasProperty(BinaryEdgeImpl.REL_ID)){
-			return new BinaryEdgeImpl(graphDb.getRelationshipById((Long)node.getProperty(BinaryEdgeImpl.REL_ID)));
-		}else{
-			return new VertexImpl(node);
-		}
-	}
-
-	@Override
-	public <T> SortableBinaryEdgeType<T> getSortableRelationshipType(String name, ComparablePropertyType<T> propertyType) {
-		return SortableBinaryEdgeTypeImpl.getOrCreateInstance(this, DynamicRelationshipType.withName(name), propertyType);
-	}
-
-	@Override
-	public Node createNode() {
-		return graphDb.createNode();
-	}
-
-	@Override
-	public Node getNodeById(long id) {
-		return graphDb.getNodeById(id);
-	}
-
-	@Override
-	public Relationship getRelationshipById(long id) {
-		return graphDb.getRelationshipById(id);
-	}
-
-	@Override
-	public Node getReferenceNode() {
-		return graphDb.getReferenceNode();
-	}
-
-	@Override
-	public Iterable<Node> getAllNodes() {
-		return graphDb.getAllNodes();
-	}
-
-	@Override
-	public Iterable<RelationshipType> getRelationshipTypes() {
-		return graphDb.getRelationshipTypes();
-	}
-
-	@Override
-	public BinaryEdgeType getBinaryEdgeType(RelationshipType relType) {
-		return BinaryEdgeTypeImpl.getOrCreateInstance(this, relType);
-	}
-
-
-	@Override
-	public <U extends ConnectionMode> ConnectorType<U> getConnectorType(String name, U connectionMode) {
-		return ConnectorTypeImpl.getOrCreateInstance(this, name, connectionMode);
-	}
-
-	@Override
-	public EdgeType getEdgeType(String name, ConnectorType<?>... connectorTypes) {
-		return EdgeTypeImpl.getOrCreateInstance(this, name, connectorTypes);
-	}
-
-	@Override
-	public PropertyConnectorType getPropertyRoleType() {
-		return PropertyConnectorType.getOrCreateInstance(this);
-	}
 }

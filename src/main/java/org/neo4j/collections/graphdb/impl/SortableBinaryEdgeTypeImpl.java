@@ -36,8 +36,8 @@ public class SortableBinaryEdgeTypeImpl<T> extends BinaryEdgeTypeImpl implements
 
 	public static String PROPERTY_TYPE = "org.neo4j.collections.graphdb.property_type";
 	
-	public SortableBinaryEdgeTypeImpl(Node node) {
-		super(node);
+	public SortableBinaryEdgeTypeImpl(DatabaseService db, Long id) {
+		super(db, id);
 	}
 
 	protected static Class<?> getImplementationClass(){
@@ -67,8 +67,8 @@ public class SortableBinaryEdgeTypeImpl<T> extends BinaryEdgeTypeImpl implements
 	
 	public static <T> SortableBinaryEdgeType<T> getOrCreateInstance(DatabaseService db,
 			RelationshipType relType, PropertyType.ComparablePropertyType<T> propertyType) {
-		VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new SortableTypeNodeDescriptor<T>(db, relType.name(), getImplementationClass(), propertyType)));
-		return new SortableBinaryEdgeTypeImpl<T>(vertexType.getNode());
+		VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new SortableTypeNodeDescriptor<T>(db, relType.name(), getImplementationClass(), propertyType)).getId());
+		return new SortableBinaryEdgeTypeImpl<T>(db, vertexType.getNode().getId());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -84,7 +84,7 @@ public class SortableBinaryEdgeTypeImpl<T> extends BinaryEdgeTypeImpl implements
 				Direction.OUTGOING, this.getPropertyType(), true, startVertex.getNode(),
 				getDb().getGraphDatabaseService());
 		Relationship rel = idxRel.createRelationshipTo(endVertex.getNode());
-		return new SortableBinaryEdgeImpl<T>(rel, idxRel);
+		return new SortableBinaryEdgeImpl<T>(db, rel.getId(), idxRel);
 	}
 
 }

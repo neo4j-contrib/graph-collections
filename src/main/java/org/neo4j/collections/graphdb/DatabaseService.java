@@ -28,24 +28,23 @@ public interface DatabaseService extends GraphDatabaseService{
 
 	public Vertex createVertex();
 	
-	public Edge createEdge(EdgeType relType, EdgeElement... edgeElements);
+	public Edge createEdge(EdgeType relType, ConnectorDescription... edgeElements);
 
 	public Iterable<Vertex> getAllVertices();
 
 	public Vertex getReferenceVertex();
 	
 	public Vertex getVertex(Node node);
+	
+	public VertexType getRootType();
 
 	public BinaryEdge getBinaryEdgeById(long arg0);
 	
 	public BinaryEdgeType getBinaryEdgeType(RelationshipType relType);
+	
+	public BinaryEdgeType getBinaryEdgeType(RelationshipType relType, VertexType domain, VertexType range);
 
-	
-	public PropertyConnectorType getPropertyRoleType();
-	
-	public <U extends ConnectionMode> ConnectorType<U> getConnectorType(String name, U connectionMode);
-	
-	public EdgeType getEdgeType(String name, ConnectorType<?>... connectorTypes);
+	public EdgeType createEdgeType(String name, ConnectorTypeDescription... connectorTypeDescriptions);
 	
 	public Iterable<EdgeType> getEdgeTypes();
 

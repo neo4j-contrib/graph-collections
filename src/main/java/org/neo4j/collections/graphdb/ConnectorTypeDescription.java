@@ -19,17 +19,35 @@
  */
 package org.neo4j.collections.graphdb;
 
-/**
- * <p>The {@link ConnectorType} of a {@link BinaryEdge}.</p>
- * A BinaryEdge knows two ConnectorTypes:
- * <ul>
- * <li>StartConnector</li>
- * <li>EndConnector</li>
- * </ul>
- * These two ConnectorTypes are predefined and only used to 
- * allow BinaryEdges to be treated as generalized {@link Edges}.
- *
- */
-public interface BinaryConnectorType  extends ConnectorType<SurjectiveConnectionMode>{
+public class ConnectorTypeDescription {
 
+	private final String name;
+	private final ConnectionMode connectionMode;
+	private final VertexType domain;
+	
+	public ConnectorTypeDescription(String name, ConnectionMode connectionMode, VertexType domain) {
+		this.name = name;
+		this.connectionMode = connectionMode;
+		this.domain = domain;
+	}
+	
+	public ConnectorTypeDescription(String name, ConnectionMode connectionMode) {
+		this.name = name;
+		this.connectionMode = connectionMode;
+		this.domain = null;
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
+	public ConnectionMode getConnectionMode() {
+		return connectionMode;
+	}
+
+	public VertexType getDomain() {
+		return domain;
+	}
+	
+	
 }

@@ -39,7 +39,8 @@ class NodeIterator implements Iterator<Vertex>{
 
 	@Override
 	public Vertex next() {
-		return new VertexImpl(nodes.next());
+		Node node = nodes.next();
+		return new VertexImpl(new GraphDatabaseImpl(node.getGraphDatabase()), node.getId());
 	}
 
 	@Override

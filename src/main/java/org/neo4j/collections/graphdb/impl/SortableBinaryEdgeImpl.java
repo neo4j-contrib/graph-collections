@@ -19,25 +19,20 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import java.util.ArrayList;
-
 import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.Vertex;
-import org.neo4j.collections.graphdb.LeftRestricedEdgeElement;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
-import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.SortableBinaryEdge;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.collections.indexedrelationship.IndexedRelationship;
 
 public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements SortableBinaryEdge<T>{
 
-	
-	SortableBinaryEdgeImpl(Relationship rel, IndexedRelationship relIdx) {
-		super(rel);
+	SortableBinaryEdgeImpl(DatabaseService db, Long id, IndexedRelationship relIdx) {
+		super(db, id);
 		this.relIdx = relIdx;
 	}
 
@@ -55,12 +50,12 @@ public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements Sortabl
 	
 	@Override
 	public Vertex getEndVertex() {
-		return getDb().getVertex(rel.getEndNode());
+		return getDb().getVertex(getRelationship().getEndNode());
 	}
 
 	@Override
 	public Vertex getOtherVertex(Vertex element) {
-		return getDb().getVertex(rel.getOtherNode(element.getNode()));
+		return getDb().getVertex(getRelationship().getOtherNode(element.getNode()));
 	}
 
 	@Override
@@ -80,20 +75,12 @@ public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements Sortabl
 	
 	@Override
 	public BinaryEdgeType getType() {
-		return SortableBinaryEdgeTypeImpl.getOrCreateInstance(getDb(), rel.getType());
+		return SortableBinaryEdgeTypeImpl.getOrCreateInstance(getDb(), getRelationship().getType());
 	}
 
 	@Override
 	public boolean isType(EdgeType relType) {
-		return rel.isType(DynamicRelationshipType.withName(relType.getName()));
-	}
-
-	@Override
-	public Iterable<EdgeElement> getEdgeElements(){
-		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new LeftRestricedEdgeElement(getType().getStartConnectorType(), getDb().getVertex(rel.getStartNode())));
-		relements.add(new LeftRestricedEdgeElement(getType().getEndConnectorType(), getDb().getVertex(rel.getEndNode())));
-		return relements;
+		return getRelationship().isType(DynamicRelationshipType.withName(relType.getName()));
 	}
 
 	@Override

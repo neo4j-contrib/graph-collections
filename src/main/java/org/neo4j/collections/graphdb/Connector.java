@@ -19,11 +19,15 @@
  */
 package org.neo4j.collections.graphdb;
 
+import java.util.Iterator;
+
 public class Connector<T extends ConnectionMode> {
+	
+	Connector<T> outer = this;
 	
 	private final ConnectorType<T> connectorType;
 	private final Edge edge;
-	
+
 	@SuppressWarnings("unchecked")
 	public static Connector<?> getInstance(ConnectorType<?> connectorType, Edge edge){
 		if(connectorType.getConnectionMode().getName().equals(ConnectionMode.UNRESTRICTED.getName())){
@@ -56,4 +60,37 @@ public class Connector<T extends ConnectionMode> {
 		return connectorType.getName();
 	}
 	
+	public Iterable<Vertex> getVertices(){
+		return edge.getVertices(connectorType);
+	}
+
+	
+	public Iterable<Connection<T>> getConnections(){
+		return new Iterable<Connection<T>>(){
+
+			@Override
+			public Iterator<Connection<T>> iterator() {
+				return new Iterator<Connection<T>>(){
+
+					Iterator<Vertex> vertices = getVertices().iterator();
+					
+					@Override
+					public boolean hasNext() {
+						return vertices.hasNext();
+					}
+
+					@Override
+					public Connection<T> next() {
+						return new Connection<T>(outer, vertices.next());
+					}
+
+					@Override
+					public void remove() {
+					}
+					
+				};
+			}
+			
+		};
+	}
 }

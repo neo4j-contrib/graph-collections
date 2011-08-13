@@ -29,7 +29,7 @@ public interface TraversalDescription extends Iterable<TraversalDescription>{
 	TraversalDescription set(BranchSelector selector);
 	TraversalDescription add(BinaryEdgeType edgeType);
 	TraversalDescription add(BinaryEdgeType edgeType, Direction dir);
-	TraversalDescription add(Connector<?>[] connectors);
+	TraversalDescription add(Connector<?> connector);
 	TraversalDescription add(TraversalDescription description);
 	TraversalDescription insert(TraversalDescription description, int position);
 	Traversal traverse(Traversal traversal);

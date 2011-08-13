@@ -21,13 +21,6 @@ package org.neo4j.collections.graphdb;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -122,11 +115,15 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		assertTrue(rel1.getVertex(graphDbExt().getEndElementRoleType()).getNode().getId() == v2.getNode().getId());
 */		
 		
-		ConnectorType<?> giver = graphDbExt().getConnectorType("giver", ConnectionMode.UNRESTRICTED);
-		ConnectorType<?> recipient = graphDbExt().getConnectorType("recipient", ConnectionMode.UNRESTRICTED);
-		ConnectorType<?> gift = graphDbExt().getConnectorType("gift", ConnectionMode.UNRESTRICTED);
+		ConnectorTypeDescription giverDescr = new ConnectorTypeDescription("giver", ConnectionMode.UNRESTRICTED);
+		ConnectorTypeDescription recipientDescr = new ConnectorTypeDescription("recipient", ConnectionMode.UNRESTRICTED);
+		ConnectorTypeDescription giftDescr = new ConnectorTypeDescription("gift", ConnectionMode.UNRESTRICTED);
 
-		EdgeType hrelType = db.getEdgeType("GIVES", giver, recipient, gift);
+		EdgeType edgeType = db.createEdgeType("GIVES", giverDescr, recipientDescr, giftDescr);
+		
+		ConnectorType<?> giver = edgeType.getConnectorType("giver");
+		ConnectorType<?> recipient = edgeType.getConnectorType("recipient");
+		ConnectorType<?> gift = edgeType.getConnectorType("gift");
 		
 		Vertex flo = graphDbExt().createVertex();
 		Vertex eddie = graphDbExt().createVertex();
@@ -136,25 +133,25 @@ public class TestEnhancedAPI extends Neo4jTestCase
 		Vertex book = graphDbExt().createVertex();
 		Vertex spatula = graphDbExt().createVertex();
 
-		EdgeElement givers = new EdgeElement(giver, flo, eddie);
-		EdgeElement recipients = new EdgeElement(recipient, tom, dick, harry);
-		EdgeElement gifts = new EdgeElement(gift, book, spatula);
+		ConnectorDescription givers = new ConnectorDescription(giver, flo, eddie);
+		ConnectorDescription recipients = new ConnectorDescription(recipient, tom, dick, harry);
+		ConnectorDescription gifts = new ConnectorDescription(gift, book, spatula);
 
-		Edge hrel = graphDbExt().createEdge(hrelType, givers, recipients, gifts);
+		Edge edge = graphDbExt().createEdge(edgeType, givers, recipients, gifts);
 		int count = 0;
-		for(Vertex element: hrel.getVertices(giver)){
+		for(Vertex element: edge.getVertices(giver)){
 			assertTrue(element.getNode().getId() == flo.getNode().getId() || element.getNode().getId() == eddie.getNode().getId());
 			count++;
 		}
 		assertTrue(count == 2);
 		count = 0;
-		for(Vertex element: hrel.getVertices(recipient)){
+		for(Vertex element: edge.getVertices(recipient)){
 			assertTrue(element.getNode().getId() == tom.getNode().getId() || element.getNode().getId() == dick.getNode().getId()  || element.getNode().getId() == harry.getNode().getId());
 			count++;
 		}
 		assertTrue(count == 3);
 		count = 0;
-		for(Vertex element: hrel.getVertices(gift)){
+		for(Vertex element: edge.getVertices(gift)){
 			assertTrue(element.getNode().getId() == book.getNode().getId() || element.getNode().getId() == spatula.getNode().getId());
 			count++;
 		}

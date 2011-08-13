@@ -24,41 +24,37 @@ import java.util.ArrayList;
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
 import org.neo4j.collections.graphdb.ConnectionMode;
+import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
-import org.neo4j.collections.graphdb.LeftRestricedEdgeElement;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
 public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 
 	private Node node;
 	
-	protected final Relationship rel;
 	public static String NODE_ID = "org.neo4j.collections.graphdb.node_id";
 	public static String REL_ID = "org.neo4j.collections.graphdb.rel_id";
 	
-	BinaryEdgeImpl(Relationship rel){
-		super(null);
-		this.rel = rel;
+	BinaryEdgeImpl(DatabaseService db, Long id){
+		super(db, id);
 	}
 
 	@Override
 	public void delete() {
-		rel.delete();
+		getRelationship().delete();
 		if(node != null){
 			node.delete();
 		}
 	}
 	@Override
 	public org.neo4j.graphdb.Relationship getRelationship() {
-		return rel;
+		return db.getRelationshipById(id);
 	}
 
 	
@@ -69,28 +65,28 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 
 	@Override
 	public BinaryEdgeType getType() {
-		return BinaryEdgeTypeImpl.getOrCreateInstance(getDb(), rel.getType());
+		return BinaryEdgeTypeImpl.getOrCreateInstance(getDb(), getRelationship().getType());
 	}
 
 	@Override
 	public boolean isType(EdgeType relType) {
-		return rel.isType(DynamicRelationshipType.withName(relType.getName()));
+		return getRelationship().isType(DynamicRelationshipType.withName(relType.getName()));
 	}
 
 	@Override
 	public DatabaseService getDb() {
-		return new GraphDatabaseImpl(rel.getGraphDatabase());
+		return new GraphDatabaseImpl(getRelationship().getGraphDatabase());
 	}
 
 	@Override
 	public Node getNode() {
 		if(node == null){
-			if(rel.hasProperty(NODE_ID)){
-				node = getDb().getGraphDatabaseService().getNodeById((Long)rel.getProperty(NODE_ID));
+			if(getRelationship().hasProperty(NODE_ID)){
+				node = getDb().getGraphDatabaseService().getNodeById((Long)getRelationship().getProperty(NODE_ID));
 			}else{
 				node = getDb().getGraphDatabaseService().createNode();
-				node.setProperty(REL_ID, rel.getId());
-				rel.setProperty(NODE_ID, node.getId());
+				node.setProperty(REL_ID, getRelationship().getId());
+				getRelationship().setProperty(NODE_ID, node.getId());
 			}
 		}
 		return node;
@@ -98,55 +94,55 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 
 	@Override
 	public org.neo4j.graphdb.PropertyContainer getPropertyContainer() {
-		return rel;
+		return getRelationship();
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements(){
-		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
-		relements.add(new LeftRestricedEdgeElement(getType().getStartConnectorType(), getStartVertex()));
-		relements.add(new LeftRestricedEdgeElement(getType().getEndConnectorType(), getEndVertex()));
-		return relements;
+	public Iterable<Connector<?>> getConnectors(){
+		ArrayList<Connector<?>> connectors = new ArrayList<Connector<?>>();
+		connectors.add(Connector.getInstance(getType().getStartConnectorType(), this));
+		connectors.add(Connector.getInstance(getType().getEndConnectorType(), this));
+		return connectors;
 	}
 
 	@Override
 	public <T extends ConnectionMode> Iterable<Vertex> getVertices(ConnectorType<T> connectorType) {
 		ArrayList<Vertex> elements = new ArrayList<Vertex>();
 		if(connectorType.getName().equals(getType().getStartConnectorType())){
-			elements.add(getDb().getVertex(rel.getStartNode()));
+			elements.add(getDb().getVertex(getRelationship().getStartNode()));
 			return elements;
 		}else if(connectorType.getName().equals(getType().getEndConnectorType().getName())){
-			elements.add(getDb().getVertex(rel.getEndNode()));
+			elements.add(getDb().getVertex(getRelationship().getEndNode()));
 			return elements;
 		}else{
-			throw new RuntimeException("Supplied role is not supported");
+			return elements;
 		}
 	}
 
 	@Override
 	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
 		if(connectorType.getName().equals(getType().getStartConnectorType().getName())){
-			return getDb().getVertex(rel.getStartNode());
+			return getDb().getVertex(getRelationship().getStartNode());
 		}else if(connectorType.getName().equals(getType().getEndConnectorType().getName())){
-			return getDb().getVertex(rel.getEndNode());
+			return getDb().getVertex(getRelationship().getEndNode());
 		}else{
-			throw new RuntimeException("Supplied role is not supported");
+			return null;
 		}
 	}
 	
 	
 	@Override
 	public Vertex getEndVertex() {
-		return getDb().getVertex(rel.getEndNode());
+		return getDb().getVertex(getRelationship().getEndNode());
 	}
 
 	@Override
 	public Vertex getStartVertex() {
-		return getDb().getVertex(rel.getStartNode());
+		return getDb().getVertex(getRelationship().getStartNode());
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements(
+	public Iterable<Connector<?>> getConnectors(
 			ConnectorType<?>... connectorTypes) {
 		boolean includeStart = false;
 		boolean includeEnd = false;
@@ -155,23 +151,21 @@ public class BinaryEdgeImpl extends EdgeImpl implements BinaryEdge{
 				includeStart = true;
 			}else if(connectorType.getName().equals(getType().getEndConnectorType().getName())){
 				includeEnd = true;
-			}else{
-				throw new RuntimeException("Supplied role is not part of this RelationshipType");
 			}
 		}
-		ArrayList<EdgeElement> relements = new ArrayList<EdgeElement>();
+		ArrayList<Connector<?>> connectors = new ArrayList<Connector<?>>();
 		if(includeStart){
-			relements.add(new LeftRestricedEdgeElement(getType().getStartConnectorType(), getStartVertex()));
+			connectors.add(Connector.getInstance(getType().getStartConnectorType(), this));
 		}
 		if(includeEnd){
-			relements.add(new LeftRestricedEdgeElement(getType().getEndConnectorType(), getEndVertex()));
+			connectors.add(Connector.getInstance(getType().getEndConnectorType(), this));
 		}
-		return relements;
+		return connectors;
 	}
 
 	@Override
 	public Vertex getOtherVertex(Vertex vertex) {
-		return getDb().getVertex(rel.getOtherNode(vertex.getNode()));
+		return getDb().getVertex(getRelationship().getOtherNode(vertex.getNode()));
 	}
 	
 }

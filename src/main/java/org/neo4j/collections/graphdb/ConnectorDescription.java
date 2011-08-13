@@ -19,24 +19,33 @@
  */
 package org.neo4j.collections.graphdb;
 
-import org.neo4j.collections.graphdb.impl.ConnectorTypeImpl;
-import org.neo4j.graphdb.Node;
+import java.util.ArrayList;
 
-public class PropertyConnectorType extends ConnectorTypeImpl<BijectiveConnectionMode>{
+public class ConnectorDescription{
+
+	private final ConnectorType<?> connectorType;
+	private final Iterable<Vertex> vertices;
 	
-	private static final String propertyRoleTypeName = "PropertyRoleType";
+	public ConnectorDescription(ConnectorType<?> connectorType, Iterable<Vertex> elements) {
+		this.connectorType = connectorType;
+		this.vertices = elements;
+	}
+
+	public ConnectorDescription(ConnectorType<?> connector, Vertex... elements) {
+		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
+		for(Vertex vertex: elements){
+			vertices.add(vertex);
+		}
+		this.connectorType = connector;
+		this.vertices = vertices;
+	}
 	
-	public PropertyConnectorType(Node node) {
-		super(node);
+	public Iterable<Vertex> getVertices(){
+		return vertices;
 	}
-
-	public static PropertyConnectorType getOrCreateInstance(DatabaseService db) {
-		return new PropertyConnectorType(ConnectorTypeImpl.getOrCreateInstance(db, propertyRoleTypeName, ConnectionMode.BIJECTIVE).getNode());
-		
+	
+	public ConnectorType<?> getConnectorType(){
+		return connectorType;
 	}
-
-	@Override
-	public String getName() {
-		return propertyRoleTypeName;
-	}
+	
 }

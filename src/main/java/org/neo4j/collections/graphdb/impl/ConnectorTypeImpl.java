@@ -19,46 +19,56 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
+import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.ConnectorType;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 
 public class ConnectorTypeImpl<T extends ConnectionMode> extends VertexImpl implements ConnectorType<T>{
 
 	public final static String CONNECTOR_TYPE_NAME = "org.neo4j.collections.graphdb.connector_type_name";
 	public final static String CONNECTOR_MODE = "org.neo4j.collections.graphdb.connector_mode";
-	
-	public ConnectorTypeImpl(Node node) {
-		super(node);
-	}
+
 	public enum RelTypes implements RelationshipType{
-		ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE_SUBREF 
+		ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_TYPE, ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_DOMAIN  
 	}
 
-	private static Node getRolesSubRef(DatabaseService db){
-		if(db.getReferenceNode().hasRelationship(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE_SUBREF, Direction.OUTGOING)){
-			return db.getReferenceNode().getSingleRelationship(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE_SUBREF, Direction.OUTGOING).getEndNode();
-		}else{
-			Node n = db.createNode();
-			db.getReferenceNode().createRelationshipTo(n, RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_EGDE_ROLE_SUBREF);
-			return n;
-		}
+	public ConnectorTypeImpl(DatabaseService db, Long id) {
+		super(db, id);
 	}
-	
-	public static <U extends ConnectionMode> ConnectorType<U> getOrCreateInstance(DatabaseService db, String name, U connectionMode) {
-		Node subRef = getRolesSubRef(db);
-		if(getRolesSubRef(db).hasRelationship(DynamicRelationshipType.withName(name), Direction.OUTGOING)){
-			return new ConnectorTypeImpl<U>(getRolesSubRef(db).getSingleRelationship(DynamicRelationshipType.withName(name), Direction.OUTGOING).getEndNode());
+
+	private static <U extends ConnectionMode> ConnectorType<U> create(DatabaseService db, String name, Node edgeTypeNode, U connectionMode, VertexType domain){
+		Node n = db.createNode();
+		edgeTypeNode.createRelationshipTo(n, RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_TYPE);
+		n.setProperty(CONNECTOR_TYPE_NAME, name);
+		n.setProperty(CONNECTOR_MODE, connectionMode.getName());
+		if(domain == null){
+			n.createRelationshipTo(db.getRootType().getNode(), RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_DOMAIN);
 		}else{
-			Node n = db.createNode();
-			subRef.createRelationshipTo(n, DynamicRelationshipType.withName(name));
-			n.setProperty(CONNECTOR_TYPE_NAME, name);
-			n.setProperty(CONNECTOR_MODE, connectionMode.getName());
-			return new ConnectorTypeImpl<U>(n);
+			n.createRelationshipTo(domain.getNode(), RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_DOMAIN);
+		}
+		return new ConnectorTypeImpl<U>(db, n.getId());
+	}
+
+	public static <U extends ConnectionMode> ConnectorType<U> getOrCreateInstance(DatabaseService db, String name, Node edgeTypeNode, U connectionMode) {
+		return getOrCreateInstance(db, name, edgeTypeNode, connectionMode, db.getRootType());
+	}
+
+	public static <U extends ConnectionMode> ConnectorType<U> getOrCreateInstance(DatabaseService db, String name, Node edgeTypeNode, U connectionMode, VertexType domain) {
+		if(edgeTypeNode.hasRelationship(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_TYPE, Direction.OUTGOING)){
+			for(Relationship rel: edgeTypeNode.getRelationships(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_TYPE, Direction.OUTGOING)){
+				if(rel.getEndNode().getProperty(CONNECTOR_TYPE_NAME).equals(name))
+					return new ConnectorTypeImpl<U>(db, rel.getEndNode().getId());				
+			}
+			return create(db, name, edgeTypeNode, connectionMode, domain);
+		}else{
+			return create(db, name, edgeTypeNode, connectionMode, domain);
 		}
 	}
 
@@ -90,5 +100,13 @@ public class ConnectorTypeImpl<T extends ConnectionMode> extends VertexImpl impl
 		return getConnectionMode(connectionModeName);
 	}
 
-	
+	@Override
+	public EdgeType getEdgeType() {
+		return (EdgeType)db.getVertex(getNode().getSingleRelationship(DynamicRelationshipType.withName(getName()), Direction.INCOMING).getStartNode());
+	}
+
+	@Override
+	public VertexType getDomain() {
+		return (VertexType)db.getVertex(getNode().getSingleRelationship(RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_CONNECTOR_DOMAIN, Direction.OUTGOING).getEndNode());
+	}
 }

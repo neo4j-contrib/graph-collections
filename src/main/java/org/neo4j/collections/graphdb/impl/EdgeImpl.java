@@ -22,20 +22,18 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.collections.graphdb.Connection;
 import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.Edge;
-import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.Vertex;
@@ -86,66 +84,33 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	}
 
 	
-	private class RelationshipElementIterable implements Iterable<EdgeElement>{
+	private class ConnectorIterable implements Iterable<Connector<?>>{
 
 		private final Set<Connector<?>> connectors;
 		
-		public RelationshipElementIterable() {
+		public ConnectorIterable() {
 			this.connectors = new HashSet<Connector<?>>();
 			for(ConnectorType<?> connectorType: getType().getConnectorTypes()){
 				connectors.add(Connector.getInstance(connectorType, outer));
 			}
 		}
 
-		public RelationshipElementIterable(
+		public ConnectorIterable(
 				Set<Connector<?>> connectors) {
 			this.connectors = connectors;
 		}
 		
 		@Override
-		public Iterator<EdgeElement> iterator() {
-			return new RelationshipElementIterator(connectors);
+		public Iterator<Connector<?>> iterator() {
+			return connectors.iterator();
 		}
 		
 	}
 	
-	private class RelationshipElementIterator implements Iterator<EdgeElement>{
-
-		private final Set<Connector<?>> connectorTypes;
-		private int index = 0;
-		
-		
-		RelationshipElementIterator(
-				Set<Connector<?>> connectorTypes) {
-			this.connectorTypes = connectorTypes;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return index < connectorTypes.size();
-		}
-
-		@Override
-		public EdgeElement next() {
-			if(hasNext()){
-				String connectorTypeName = getType().getName().substring(getType().getName().indexOf(EDGEROLE_SEPARATOR)+3);
-				Connector<?> connector = Connector.getInstance(getType().getConnectorType(connectorTypeName), outer);
-				Iterable<Vertex> elems = new ElementIterable(connector.getConnectorType());
-				return new EdgeElement(connector.getConnectorType(), elems);
-			}else{
-				throw new NoSuchElementException();
-			}
-		}
-
-		@Override
-		public void remove() {
-		}
-	}
-
 	private EdgeType relType;
 
-	EdgeImpl(Node node){
-		super(node);
+	EdgeImpl(DatabaseService db, Long id){
+		super(db, id);
 	}
 
 	@Override
@@ -154,23 +119,18 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	}
 
 	@Override
-	public DatabaseService getDb() {
-		return new GraphDatabaseImpl(getNode().getGraphDatabase());
+	public Iterable<Connector<?>> getConnectors() {
+		return new ConnectorIterable();
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements() {
-		return new RelationshipElementIterable();
-	}
-
-	@Override
-	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorTypes) {
-		Set<Connector<?>> connectorTypeSet = new HashSet<Connector<?>>();
+	public Iterable<Connector<?>> getConnectors(ConnectorType<?>... connectorTypes) {
+		Set<Connector<?>> connectorSet = new HashSet<Connector<?>>();
 		for(ConnectorType<?> connectorType: connectorTypes){
 			Connector<?> er = Connector.getInstance(connectorType, outer);
-			connectorTypeSet.add(er);
+			connectorSet.add(er);
 		}
-		return new RelationshipElementIterable(connectorTypeSet);
+		return new ConnectorIterable(connectorSet);
 	}
 
 	@Override
@@ -194,7 +154,8 @@ public class EdgeImpl extends VertexImpl implements Edge{
 
 	@Override
 	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
-		return getDb().getVertex(getNode().getSingleRelationship(DynamicRelationshipType.withName(getType().getName()+EDGEROLE_SEPARATOR+connectorType.getName()), Direction.OUTGOING).getEndNode());
+		Relationship rel = getNode().getSingleRelationship(DynamicRelationshipType.withName(getType().getName()+EDGEROLE_SEPARATOR+connectorType.getName()), Direction.OUTGOING); 
+		return getDb().getVertex(rel.getEndNode());
 	}
 
 	@Override
@@ -205,6 +166,22 @@ public class EdgeImpl extends VertexImpl implements Edge{
 	@Override
 	public boolean isType(EdgeType relType) {
 		return (relType.getNode().getId() == getType().getNode().getId());
+	}
+
+	@Override
+	public <T extends ConnectionMode> Iterable<Connection<T>> getConnections(
+			ConnectorType<T> connectorType) {
+		Connector<T> connector = getConnector(connectorType); 
+		return connector.getConnections();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T extends ConnectionMode> Connector<T> getConnector(ConnectorType<T> connectorType) {
+		for(Connector<?> connector: getConnectors(connectorType)){
+			return (Connector<T>) connector;
+		}
+		return null;
 	}
 
 

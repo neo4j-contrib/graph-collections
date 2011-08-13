@@ -52,12 +52,14 @@ public class VertexImpl implements Vertex {
 
 	static class EdgeIterator implements Iterator<Edge> {
 
+		private final Vertex vertex;
 		private final Iterator<Relationship> connectorRels;
 
 		public EdgeIterator(
 				EdgeType edgeType,
 				ConnectorType<?> connectorType,
 				Vertex vertex) {
+			this.vertex = vertex;
 			this.connectorRels = vertex
 					.getNode()
 					.getRelationships(
@@ -75,7 +77,7 @@ public class VertexImpl implements Vertex {
 		@Override
 		public Edge next() {
 			if (connectorRels.hasNext()) {
-				return new EdgeImpl(connectorRels.next().getStartNode());
+				return new EdgeImpl(vertex.getDb(), connectorRels.next().getStartNode().getId());
 			} else {
 				throw new NoSuchElementException();
 			}
@@ -293,7 +295,7 @@ public class VertexImpl implements Vertex {
 
 		@Override
 		public PropertyType<?> next() {
-			return PropertyType.getPropertyTypeByName(getDb(), keys.next());
+			return PropertyType.getPropertyTypeByName(db, keys.next());
 		}
 
 		@Override
@@ -321,7 +323,7 @@ public class VertexImpl implements Vertex {
 			ArrayList<Node> nodes = new ArrayList<Node>();
 			Long[] nodeIds = (Long[]) getNode().getProperty(TYPE_IDS);
 			for (Long id : nodeIds) {
-				nodes.add(getDb().getNodeById(id));
+				nodes.add(db.getNodeById(id));
 			}
 			this.nodes = nodes.iterator();
 		}
@@ -343,7 +345,7 @@ public class VertexImpl implements Vertex {
 		public VertexType next() {
 			if (hasNext()) {
 				if (nodes.hasNext()) {
-					VertexType vertexType = (VertexType) getDb().getVertex(
+					VertexType vertexType = (VertexType) db.getVertex(
 							nodes.next());
 					if (special.getName().equals(vertexType.getName())) {
 						foundSpecial = true;
@@ -367,10 +369,12 @@ public class VertexImpl implements Vertex {
 
 	public static final String TYPE_IDS = "org.neo4j.collections.graphdb.type_ids";
 
-	private Node node;
+	final protected long id;
+	final protected DatabaseService db;
 
-	public VertexImpl(Node node) {
-		this.node = node;
+	public VertexImpl(DatabaseService db, Long id) {
+		this.id = id;
+		this.db = db;
 	}
 
 	@Override
@@ -406,7 +410,7 @@ public class VertexImpl implements Vertex {
 
 	@Override
 	public BinaryEdge createEdgeTo(Vertex vertex, RelationshipType type) {
-		return getDb().getBinaryEdgeType(type).createEdge(this, vertex);
+		return db.getBinaryEdgeType(type).createEdge(this, vertex);
 	}
 
 	@Override
@@ -421,7 +425,7 @@ public class VertexImpl implements Vertex {
 	 */
 	@Override
 	public Iterable<BinaryEdge> getBinaryEdges() {
-		return new RelationshipIterable(node.getRelationships());
+		return new RelationshipIterable(getNode().getRelationships());
 	}
 
 	/**
@@ -454,7 +458,7 @@ public class VertexImpl implements Vertex {
 	 */
 	@Override
 	public Iterable<BinaryEdge> getBinaryEdges(RelationshipType... relTypes) {
-		return new RelationshipIterable(node.getRelationships(relTypes));
+		return new RelationshipIterable(getNode().getRelationships(relTypes));
 	}
 
 	/**
@@ -464,12 +468,12 @@ public class VertexImpl implements Vertex {
 	@Override
 	public Iterable<BinaryEdge> getBinaryEdges(RelationshipType relType,
 			Direction dir) {
-		return getDb().getBinaryEdgeType(relType).getEdges(this, dir);
+		return db.getBinaryEdgeType(relType).getEdges(this, dir);
 	}
 
 	@Override
 	public DatabaseService getDb() {
-		return new GraphDatabaseImpl(getPropertyContainer().getGraphDatabase());
+		return db;
 	}
 
 	/**
@@ -491,7 +495,7 @@ public class VertexImpl implements Vertex {
 
 	@Override
 	public Node getNode() {
-		return node;
+		return db.getNodeById(id);
 	}
 
 	@Override
@@ -501,7 +505,7 @@ public class VertexImpl implements Vertex {
 
 	@Override
 	public PropertyContainer getPropertyContainer() {
-		return node;
+		return getNode();
 	}
 
 	@Override
@@ -516,7 +520,7 @@ public class VertexImpl implements Vertex {
 
 	@Override
 	public BinaryEdge getSingleBinaryEdge(RelationshipType type, Direction dir) {
-		return getDb().getBinaryEdgeType(type).getSingleBinaryEdge(this, dir);
+		return db.getBinaryEdgeType(type).getSingleBinaryEdge(this, dir);
 	}
 
 	protected VertexType getSpecialVertexType() {
@@ -550,7 +554,7 @@ public class VertexImpl implements Vertex {
 
 	@Override
 	public boolean hasBinaryEdge(RelationshipType relType, Direction dir) {
-		return getDb().getBinaryEdgeType(relType).hasEdge(this, dir);
+		return db.getBinaryEdgeType(relType).hasEdge(this, dir);
 	}
 
 	@Override
@@ -661,9 +665,8 @@ public class VertexImpl implements Vertex {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Connection<BijectiveConnectionMode> getSelfConnection() {
-		ConnectorType<BijectiveConnectionMode> cnt = NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb());
-		Edge edge = new NullaryEdgeImpl(getNode());
-		return new Connection<BijectiveConnectionMode>((Connector<BijectiveConnectionMode>) Connector.getInstance(cnt, edge), this);
+		Edge edge = new NullaryEdgeImpl(db, getNode().getId());
+		return new Connection<BijectiveConnectionMode>((Connector<BijectiveConnectionMode>) Connector.getInstance(edge.getType().getConnectorType(NullaryEdgeTypeImpl.NULLARYCONNECTORNAME), edge), this);
 	}
 
 	@Override
@@ -684,7 +687,7 @@ public class VertexImpl implements Vertex {
 		if(rel == null){
 			return null;
 		}else{
-			return new EdgeImpl(rel.getStartNode());
+			return new EdgeImpl(db, rel.getStartNode().getId());
 		}
 		 
 	}

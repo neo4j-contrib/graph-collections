@@ -25,14 +25,17 @@ import java.util.Set;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.collections.graphdb.impl.ConnectorTypeImpl;
 import org.neo4j.collections.graphdb.impl.EdgeTypeImpl;
 import org.neo4j.collections.graphdb.impl.PropertyImpl;
 import org.neo4j.collections.graphdb.impl.VertexTypeImpl;
 
 public abstract class PropertyType<T> extends EdgeTypeImpl{
 
-	private PropertyType(Node node) {
-		super(node);
+	public final static String PROPERTYCONNECTORNAME = "PropertyConnector";
+	
+	private PropertyType(DatabaseService db, Long id) {
+		super(db, id);
 	}
 
 	public boolean hasProperty(Vertex vertex){
@@ -65,7 +68,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 	}
 
 	public ConnectorType<BijectiveConnectionMode> getPropertyConnectorType(){
-		return PropertyConnectorType.getOrCreateInstance(getDb());		
+		return ConnectorTypeImpl.getOrCreateInstance(getDb(), PROPERTYCONNECTORNAME, getNode(), ConnectionMode.BIJECTIVE);		
 	}
 	
 	@Override
@@ -75,33 +78,25 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		return roles;
 	}
 	
-	public PropertyConnectorType getRole(String name) {
-		if(name.equals(PropertyConnectorType.getOrCreateInstance(getDb()).getName())){
-			return PropertyConnectorType.getOrCreateInstance(getDb());
-		}else{
-			return null;
-		}
-	}
-
 	public static PropertyType<?> getPropertyTypeByName(DatabaseService db, String name){
 		return (PropertyType<?>)VertexTypeImpl.getByName(db, name);
 	}
 	
 	public static abstract class ComparablePropertyType<T> extends PropertyType<T> implements Comparator<org.neo4j.graphdb.Node>, PropertyComparator<T>{
 
-		ComparablePropertyType(Node node) {
-			super(node);
+		ComparablePropertyType(DatabaseService db, Long id) {
+			super(db, id);
 		}
 		
-		public abstract int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2);
+		public abstract int compare(Node node1, Node node2);
 		
-		public abstract int compare(T value, org.neo4j.graphdb.Node node);
+		public abstract int compare(T value, Node node);
 	}
 
 	public static class BooleanArrayPropertyType extends PropertyType<Boolean[]>{
 
-		public BooleanArrayPropertyType(Node node){
-			super(node);
+		public BooleanArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -113,16 +108,16 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		public static BooleanArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new BooleanArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new BooleanArrayPropertyType(db, vertexType.getNode().getId());
 		}
 
 	}
 	
 	public static class BooleanPropertyType extends PropertyType<Boolean>{
 
-		public BooleanPropertyType(Node node){
-			super(node);
+		public BooleanPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -134,15 +129,15 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		public static BooleanPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new BooleanPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new BooleanPropertyType(db, vertexType.getNode().getId());
 		}
 	}
 	
 	public static class ByteArrayPropertyType extends PropertyType<Byte[]>{
 
-		public ByteArrayPropertyType(Node node){
-			super(node);
+		public ByteArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -154,16 +149,16 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static ByteArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new ByteArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new ByteArrayPropertyType(db, vertexType.getNode().getId());
 		}
 		
 	}
 
 	public static class BytePropertyType extends ComparablePropertyType<Byte>{
 
-		public BytePropertyType(Node node){
-			super(node);
+		public BytePropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -175,12 +170,12 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		public static BytePropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new BytePropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new BytePropertyType(db, vertexType.getNode().getId());
 		}
 
 		@Override
-		public int compare(Byte value, org.neo4j.graphdb.Node node) {
+		public int compare(Byte value, Node node) {
 			if(node.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -189,7 +184,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 			return value.compareTo(propertyValue);
 		}
 
-		public int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2) {
+		public int compare(Node node1, Node node2) {
 			if(node1.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -206,8 +201,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 
 	public static class DoubleArrayPropertyType extends PropertyType<Double[]>{
 
-		public DoubleArrayPropertyType(Node node){
-			super(node);
+		public DoubleArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -219,16 +214,16 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		public static DoubleArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new DoubleArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new DoubleArrayPropertyType(db, vertexType.getNode().getId());
 		}
 		
 	}
 
 	public static class DoublePropertyType extends ComparablePropertyType<Double>{
 
-		public DoublePropertyType(Node node){
-			super(node);
+		public DoublePropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -240,12 +235,12 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static DoublePropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new DoublePropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new DoublePropertyType(db, vertexType.getNode().getId());
 		}
 
 		@Override
-		public int compare(Double value, org.neo4j.graphdb.Node node) {
+		public int compare(Double value, Node node) {
 			if(node.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -254,7 +249,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 			return value.compareTo(propertyValue);
 		}
 
-		public int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2) {
+		public int compare(Node node1, Node node2) {
 			if(node1.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -271,8 +266,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 
 	public static class FloatArrayPropertyType extends PropertyType<Float[]>{
 
-		public FloatArrayPropertyType(Node node){
-			super(node);
+		public FloatArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -284,16 +279,16 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		public static FloatArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new FloatArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new FloatArrayPropertyType(db, vertexType.getNode().getId());
 		}
 		
 	}
 
 	public static class FloatPropertyType extends ComparablePropertyType<Float>{
 
-		public FloatPropertyType(Node node){
-			super(node);
+		public FloatPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -305,12 +300,12 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static FloatPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new FloatPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new FloatPropertyType(db, vertexType.getNode().getId());
 		}
 
 		@Override
-		public int compare(Float value, org.neo4j.graphdb.Node node) {
+		public int compare(Float value, Node node) {
 			if(node.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -319,7 +314,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 			return value.compareTo(propertyValue);
 		}
 
-		public int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2) {
+		public int compare(Node node1, Node node2) {
 			if(node1.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -336,8 +331,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 
 	public static class IntegerArrayPropertyType extends PropertyType<Integer[]>{
 
-		public IntegerArrayPropertyType(Node node){
-			super(node);
+		public IntegerArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 		
 		private static Class<?> getImplementationClass(){
@@ -349,8 +344,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static IntegerArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new IntegerArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new IntegerArrayPropertyType(db, vertexType.getNode().getId());
 		}
 		
 	}
@@ -358,8 +353,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 	public static class IntegerPropertyType extends ComparablePropertyType<Integer>{
 
 
-		public IntegerPropertyType(Node node){
-			super(node);
+		public IntegerPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -371,12 +366,12 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static IntegerPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new IntegerPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new IntegerPropertyType(db, vertexType.getNode().getId());
 		}
 
 		@Override
-		public int compare(Integer value, org.neo4j.graphdb.Node node) {
+		public int compare(Integer value, Node node) {
 			if(node.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -385,7 +380,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 			return value.compareTo(propertyValue);
 		}
 
-		public int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2) {
+		public int compare(Node node1, Node node2) {
 			if(node1.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -402,8 +397,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 
 	public static class LongArrayPropertyType extends PropertyType<Long[]>{
 
-		public LongArrayPropertyType(Node node){
-			super(node);
+		public LongArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 		
 		private static Class<?> getImplementationClass(){
@@ -415,20 +410,20 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static LongArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new LongArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new LongArrayPropertyType(db, vertexType.getNode().getId());
 		}
 	}
 
 	public static class LongPropertyType extends ComparablePropertyType<Long>{
 
-		public LongPropertyType(Node node){
-			super(node);
+		public LongPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 		
 		public static LongPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new LongPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new LongPropertyType(db, vertexType.getNode().getId());
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -440,7 +435,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		@Override
-		public int compare(Long value, org.neo4j.graphdb.Node node) {
+		public int compare(Long value, Node node) {
 			if(node.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -449,7 +444,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 			return value.compareTo(propertyValue);
 		}
 
-		public int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2) {
+		public int compare(Node node1, Node node2) {
 			if(node1.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -466,8 +461,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 
 	public static class ShortArrayPropertyType extends PropertyType<Short[]>{
 
-		public ShortArrayPropertyType(Node node){
-			super(node);
+		public ShortArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 		
 		private static Class<?> getImplementationClass(){
@@ -479,21 +474,21 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static ShortArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new ShortArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new ShortArrayPropertyType(db, vertexType.getNode().getId());
 		}
 
 	}
 
 	public static class ShortPropertyType extends ComparablePropertyType<Short>{
 
-		public ShortPropertyType(Node node){
-			super(node);
+		public ShortPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 		
 		public static ShortPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new ShortPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new ShortPropertyType(db, vertexType.getNode().getId());
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -505,7 +500,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		@Override
-		public int compare(Short value, org.neo4j.graphdb.Node node) {
+		public int compare(Short value, Node node) {
 			if(node.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -514,7 +509,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 			return value.compareTo(propertyValue);
 		}
 
-		public int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2) {
+		public int compare(Node node1, Node node2) {
 			if(node1.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -531,8 +526,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 
 	public static class StringArrayPropertyType extends PropertyType<String[]>{
 
-		public StringArrayPropertyType(Node node){
-			super(node);
+		public StringArrayPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 		
 		private static Class<?> getImplementationClass(){
@@ -544,20 +539,20 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static StringArrayPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new StringArrayPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new StringArrayPropertyType(db, vertexType.getNode().getId());
 		}
 	}
 
 	public static class StringPropertyType extends ComparablePropertyType<String>{
 
-		public StringPropertyType(Node node){
-			super(node);
+		public StringPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 
 		public static StringPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new StringPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new StringPropertyType(db, vertexType.getNode().getId());
 		}
 
 		private static Class<?> getImplementationClass(){
@@ -569,7 +564,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		@Override
-		public int compare(String value, org.neo4j.graphdb.Node node) {
+		public int compare(String value, Node node) {
 			if(node.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -579,7 +574,7 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 		
 		@Override
-		public int compare(org.neo4j.graphdb.Node node1, org.neo4j.graphdb.Node node2) {
+		public int compare(Node node1, Node node2) {
 			if(node1.hasProperty(getName()))
 				throw new RuntimeException("Node does not have property "+getName());
 
@@ -596,8 +591,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 	
 	public static class VertexPropertyType extends PropertyType<Vertex>{
 
-		public VertexPropertyType(Node node){
-			super(node);
+		public VertexPropertyType(DatabaseService db, Long id){
+			super(db, id);
 		}
 		
 		private static Class<?> getImplementationClass(){
@@ -609,8 +604,8 @@ public abstract class PropertyType<T> extends EdgeTypeImpl{
 		}
 
 		public static VertexPropertyType getOrCreateInstance(DatabaseService db, String name) {
-			VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())));
-			return new VertexPropertyType(vertexType.getNode());
+			VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, name, getImplementationClass())).getId());
+			return new VertexPropertyType(db, vertexType.getNode().getId());
 		}
 		
 		public boolean hasProperty(Vertex vertex){

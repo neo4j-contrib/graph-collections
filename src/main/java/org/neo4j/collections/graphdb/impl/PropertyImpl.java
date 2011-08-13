@@ -23,11 +23,10 @@ import java.util.ArrayList;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.ConnectionMode;
+import org.neo4j.collections.graphdb.Connector;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.EdgeElement;
 import org.neo4j.collections.graphdb.EdgeType;
-import org.neo4j.collections.graphdb.LeftRestricedEdgeElement;
 import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Node;
@@ -47,14 +46,12 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 	
 	private final Vertex vertex;
 	private final PropertyType<T> propertyType;
-	private final DatabaseService graphDb;
 	private Node node;
 
-	public PropertyImpl(DatabaseService graphDb, Vertex vertex, PropertyType<T> propertyType){
-		super(null);
+	public PropertyImpl(DatabaseService db, Vertex vertex, PropertyType<T> propertyType){
+		super(db, 0l);
 		this.vertex = vertex;
 		this.propertyType = propertyType;
-		this.graphDb = graphDb;
 	}
 	
 	public long getId(){
@@ -77,11 +74,6 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 	}
 
 	@Override
-	public DatabaseService getDb() {
-		return graphDb;
-	}
-
-	@Override
 	public Iterable<PropertyType<?>> getPropertyTypes() {
 		return null;
 	}
@@ -94,7 +86,7 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 			if(vertex.getPropertyContainer().hasProperty(propertyType.getName()+".node_id")){
 				return getDb().getGraphDatabaseService().getNodeById((Long)vertex.getPropertyContainer().getProperty(propertyType.getName()+".node_id"));
 			}else{
-				Node n = graphDb.createNode();
+				Node n = db.createNode();
 				n.setProperty(PROPERTYCONTAINER_ID, vertex.getNode().getId());
 				n.setProperty(PROPERTY_NAME, propertyType.getName());
 				if(vertex instanceof BinaryEdge){
@@ -110,7 +102,7 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 
 	@Override
 	public Vertex getVertex() {
-		return new VertexImpl(getNode());
+		return new VertexImpl(db, getNode().getId());
 	}
 
 	@Override
@@ -134,15 +126,15 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements() {
-		ArrayList<EdgeElement> elems = new ArrayList<EdgeElement>();
-		elems.add(new LeftRestricedEdgeElement(getType().getPropertyConnectorType(), getVertex()));
-		return elems;
+	public Iterable<Connector<?>> getConnectors() {
+		ArrayList<Connector<?>> connectors = new ArrayList<Connector<?>>();
+		connectors.add(Connector.getInstance(getType().getPropertyConnectorType(), this));
+		return connectors;
 	}
 
 	@Override
 	public <U extends LeftRestrictedConnectionMode>Vertex getVertex(ConnectorType<U> connectorType) {
-		if(connectorType.getName().equals(getDb().getPropertyRoleType().getName())){
+		if(connectorType.getName().equals(PropertyType.PROPERTYCONNECTORNAME)){
 			return getVertex();
 		}else{
 			return null;
@@ -150,8 +142,14 @@ public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 	}
 
 	@Override
-	public Iterable<EdgeElement> getEdgeElements(ConnectorType<?>... connectorType) {
-		return getEdgeElements();
+	public Iterable<Connector<?>> getConnectors(ConnectorType<?>... connectorTypes) {
+		ArrayList<Connector<?>> connectors = new ArrayList<Connector<?>>();
+		for(ConnectorType<?> connectorType: connectorTypes){
+			if(connectorType.getName().equals(PropertyType.PROPERTYCONNECTORNAME)){
+				connectors.add(Connector.getInstance(ConnectorTypeImpl.getOrCreateInstance(db, NullaryEdgeTypeImpl.NULLARYCONNECTORNAME, getType().getNode(), ConnectionMode.BIJECTIVE), this));
+			}
+		}
+		return connectors;
 	}
 
 	@Override

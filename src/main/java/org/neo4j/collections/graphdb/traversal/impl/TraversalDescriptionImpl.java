@@ -36,18 +36,18 @@ public class TraversalDescriptionImpl implements TraversalDescription{
 
 	final Evaluator evaluator;
 	final BranchSelector selector;
-	final Connector<?>[] connectors;
+	final Connector<?> connector;
 	final List<TraversalDescription> descriptions;
 	
 	
 	
 	public TraversalDescriptionImpl(Evaluator evaluator,
-			BranchSelector selector, Connector<?>[] connectors,
+			BranchSelector selector, Connector<?> connector,
 			List<TraversalDescription> descriptions) {
 		super();
 		this.evaluator = evaluator;
 		this.selector = selector;
-		this.connectors = connectors;
+		this.connector = connector;
 		this.descriptions = descriptions;
 	}
 
@@ -58,12 +58,12 @@ public class TraversalDescriptionImpl implements TraversalDescription{
 
 	@Override
 	public TraversalDescription set(Evaluator evaluator) {
-		return new TraversalDescriptionImpl(evaluator, selector, connectors, descriptions);
+		return new TraversalDescriptionImpl(evaluator, selector, connector, descriptions);
 	}
 
 	@Override
 	public TraversalDescription set(BranchSelector selector) {
-		return new TraversalDescriptionImpl(evaluator, selector, connectors, descriptions);	}
+		return new TraversalDescriptionImpl(evaluator, selector, connector, descriptions);	}
 
 	@Override
 	public TraversalDescription add(BinaryEdgeType edgeType) {
@@ -78,15 +78,15 @@ public class TraversalDescriptionImpl implements TraversalDescription{
 	}
 
 	@Override
-	public TraversalDescription add(Connector<?>[] connectors) {
-		return new TraversalDescriptionImpl(evaluator, selector, connectors, descriptions);	}
+	public TraversalDescription add(Connector<?> connector) {
+		return new TraversalDescriptionImpl(evaluator, selector, connector, descriptions);	}
 
 	@Override
 	public TraversalDescription add(TraversalDescription description) {
 		List<TraversalDescription> descriptions = new ArrayList<TraversalDescription>();
 		descriptions.addAll(this.descriptions);
 		descriptions.add(description);
-		return new TraversalDescriptionImpl(evaluator, selector, connectors, descriptions);	
+		return new TraversalDescriptionImpl(evaluator, selector, connector, descriptions);	
 	}
 
 	@Override
@@ -95,7 +95,7 @@ public class TraversalDescriptionImpl implements TraversalDescription{
 		List<TraversalDescription> descriptions = new ArrayList<TraversalDescription>();
 		descriptions.addAll(this.descriptions);
 		descriptions.add(position, description);
-		return new TraversalDescriptionImpl(evaluator, selector, connectors, descriptions);	
+		return new TraversalDescriptionImpl(evaluator, selector, connector, descriptions);	
 	}
 
 	@Override

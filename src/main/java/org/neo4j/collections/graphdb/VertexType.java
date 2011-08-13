@@ -20,7 +20,7 @@
 package org.neo4j.collections.graphdb;
 
 public interface VertexType extends Vertex{
-	
+
 	public String getName();
 
 }

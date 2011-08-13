@@ -23,15 +23,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.collections.graphdb.BijectiveConnectionMode;
+import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.NullaryEdgeType;
-import org.neo4j.graphdb.Node;
 
 public class NullaryEdgeTypeImpl extends EdgeTypeImpl implements NullaryEdgeType{
 
-	public NullaryEdgeTypeImpl(Node node) {
-		super(node);
+	public final static String NULLARYCONNECTORNAME = "NullaryConnector";
+	
+	public NullaryEdgeTypeImpl(DatabaseService db, Long id) {
+		super(db, id);
 	}
 
 	protected static Class<?> getImplementationClass(){
@@ -43,8 +45,8 @@ public class NullaryEdgeTypeImpl extends EdgeTypeImpl implements NullaryEdgeType
 	}
 
 	public static NullaryEdgeTypeImpl getOrCreateInstance(DatabaseService db){
-		VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, "NullaryEdgeType", getImplementationClass())));
-		return new NullaryEdgeTypeImpl(vertexType.getNode());
+		VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, "NullaryEdgeType", getImplementationClass())).getId());
+		return new NullaryEdgeTypeImpl(db, vertexType.getNode().getId());
 	}
 
 	@Override
@@ -56,7 +58,7 @@ public class NullaryEdgeTypeImpl extends EdgeTypeImpl implements NullaryEdgeType
 
 	@Override
 	public ConnectorType<BijectiveConnectionMode> getConnectorType() {
-		return NullaryConnectorTypeImpl.NullaryConnectorType.getOrCreateInstance(getDb());
+		return ConnectorTypeImpl.getOrCreateInstance(getDb(), NULLARYCONNECTORNAME, getNode(), ConnectionMode.BIJECTIVE);
 	}
 	
 }

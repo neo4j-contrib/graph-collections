@@ -23,5 +23,9 @@ public interface ConnectorType<T extends ConnectionMode> extends Vertex{
 	public String getName();
 	
 	public ConnectionMode getConnectionMode();
+	
+	public EdgeType getEdgeType();
+	
+	public VertexType getDomain();
 }
 

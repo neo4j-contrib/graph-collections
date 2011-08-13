@@ -39,7 +39,8 @@ class RelationshipIterator implements Iterator<BinaryEdge>{
 
 	@Override
 	public BinaryEdge next() {
-		return new BinaryEdgeImpl(rels.next());
+		Relationship rel = rels.next();
+		return new BinaryEdgeImpl(new GraphDatabaseImpl(rel.getGraphDatabase()),rel.getId());
 	}
 
 	@Override

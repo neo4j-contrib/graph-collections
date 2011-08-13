@@ -21,7 +21,7 @@ package org.neo4j.collections.graphdb;
 
 import java.util.ArrayList;
 
-public class LeftRestricedEdgeElement extends EdgeElement{
+public class LeftRestricedEdgeElement extends ConnectorDescription{
 
 	private static Iterable<Vertex> toElements(Vertex vertex){
 		ArrayList<Vertex> elements = new ArrayList<Vertex>();

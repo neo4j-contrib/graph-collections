@@ -24,10 +24,12 @@ import java.util.Set;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.SurjectiveConnectionMode;
 import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
@@ -36,8 +38,11 @@ import org.neo4j.graphdb.RelationshipType;
 
 public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 
-	public BinaryEdgeTypeImpl(Node node) {
-		super(node);
+	static final public String STARTCONNECTORNAME = "StartConnector";
+	static final public String ENDCONNECTORNAME = "EndConnector";
+	
+	public BinaryEdgeTypeImpl(DatabaseService db, Long id) {
+		super(db, id);
 	}
 
 	protected static Class<?> getImplementationClass(){
@@ -48,9 +53,36 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 		}
 	}
 
+	public static class BinaryEdgeTypeNodeDescriptor extends TypeNodeDescriptor{
+
+		private final VertexType domain;
+		private final VertexType range;
+		
+		public BinaryEdgeTypeNodeDescriptor(DatabaseService db, String name,
+				Class<?> claz, VertexType domain, VertexType range) {
+			super(db, name, claz);
+			this.domain = domain;
+			this.range = range;
+		}
+		
+		@Override
+		public void initialize(Node n){
+			super.initialize(n);
+			ConnectorTypeImpl.getOrCreateInstance(db, STARTCONNECTORNAME, n, ConnectionMode.BIJECTIVE, domain);
+			ConnectorTypeImpl.getOrCreateInstance(db, ENDCONNECTORNAME, n, ConnectionMode.BIJECTIVE, range);
+		}
+	}
+	
+	
+	public static BinaryEdgeTypeImpl getOrCreateInstance(DatabaseService db, RelationshipType relType, VertexType domain, VertexType range){
+		VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new BinaryEdgeTypeNodeDescriptor(db, relType.name(), getImplementationClass(), domain, range)).getId());
+		return new BinaryEdgeTypeImpl(db, vertexType.getNode().getId());
+	}
+
+	
 	public static BinaryEdgeTypeImpl getOrCreateInstance(DatabaseService db, RelationshipType relType){
-		VertexTypeImpl vertexType = new VertexTypeImpl(getOrCreateByDescriptor(new TypeNodeDescriptor(db, relType.name(), getImplementationClass())));
-		return new BinaryEdgeTypeImpl(vertexType.getNode());
+		VertexTypeImpl vertexType = new VertexTypeImpl(db, getOrCreateByDescriptor(new TypeNodeDescriptor(db, relType.name(), getImplementationClass())).getId());
+		return new BinaryEdgeTypeImpl(db, vertexType.getNode().getId());
 	}
 
 	public RelationshipType getRelationshipType() {
@@ -68,8 +100,8 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 
 	@Override
 	public BinaryEdge createEdge(Vertex startVertex, Vertex endVertex) {
-		return new BinaryEdgeImpl(startVertex.getNode().createRelationshipTo(endVertex.getNode(),
-				this.getRelationshipType()));
+		return new BinaryEdgeImpl(db, startVertex.getNode().createRelationshipTo(endVertex.getNode(),
+				this.getRelationshipType()).getId());
 	}
 
 	@Override
@@ -88,7 +120,7 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 		if (rel == null) {
 			return null;
 		} else {
-			return new BinaryEdgeImpl(rel);
+			return new BinaryEdgeImpl(db, rel.getId());
 		}
 	}
 
@@ -99,12 +131,12 @@ public class BinaryEdgeTypeImpl extends EdgeTypeImpl implements BinaryEdgeType{
 
 	@Override
 	public ConnectorType<SurjectiveConnectionMode> getStartConnectorType() {
-		return BinaryConnectorTypeImpl.StartConnector.getOrCreateInstance(getDb());
+		return ConnectorTypeImpl.getOrCreateInstance(db, STARTCONNECTORNAME, this.getNode(), ConnectionMode.SURJECTIVE);
 	}
 
 	@Override
 	public ConnectorType<SurjectiveConnectionMode> getEndConnectorType() {
-		return BinaryConnectorTypeImpl.EndConnector.getOrCreateInstance(getDb());
+		return ConnectorTypeImpl.getOrCreateInstance(db, ENDCONNECTORNAME, this.getNode(), ConnectionMode.SURJECTIVE);
 	}
 
 	@Override
