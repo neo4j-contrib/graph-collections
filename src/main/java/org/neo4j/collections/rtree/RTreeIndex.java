@@ -598,9 +598,9 @@ public class RTreeIndex {
 		Iterator<Relationship> iterator = indexNode.getRelationships(relationshipType, Direction.OUTGOING).iterator();
 		while (iterator.hasNext()) {
 			Node childNode = iterator.next().getEndNode();
-			if (bbox == null) bbox = getLeafNodeEnvelope(childNode);
-			else bbox.expandToInclude(getLeafNodeEnvelope(childNode));
+			bbox.expandToInclude(getLeafNodeEnvelope(childNode));
 		}
+		
 		indexNode.setProperty(PROP_BBOX, new double[] { bbox.getMinX(), bbox.getMinY(), bbox.getMaxX(), bbox.getMaxY() });
 	}
 		
