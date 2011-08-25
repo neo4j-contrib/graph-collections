@@ -76,7 +76,11 @@ public class Envelope {
 	public double getWidth() {
 		return xmax - xmin;
 	}
-	
+
+	public double getArea() {
+		return getWidth() * getHeight();
+	}
+
 	
 	// Attributes
 	

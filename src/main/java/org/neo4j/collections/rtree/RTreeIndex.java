@@ -51,9 +51,9 @@ public class RTreeIndex {
 		this.envelopeEncoder = envelopeEncoder;
 		this.maxNodeReferences = maxNodeReferences;
 		this.minNodeReferences = minNodeReferences;
-		
-		initIndexMetadata();
+
 		initIndexRoot();
+		initIndexMetadata();		
 	}
 	
 	
@@ -77,6 +77,9 @@ public class RTreeIndex {
 				adjustPathBoundingBox(parent);							
 			}
 		}
+		
+		countSaved = false;
+		totalGeometryCount++;
 	}
 	
 	public void remove(long geomNodeId, boolean deleteGeomNode) {
@@ -123,6 +126,9 @@ public class RTreeIndex {
 			adjustParentBoundingBox(indexNode, RTreeRelationshipTypes.RTREE_REFERENCE);
 			adjustPathBoundingBox(indexNode);
 		}
+		
+		countSaved = false;
+		totalGeometryCount--;		
 	}
 	
 	public void removeAll(final boolean deleteGeomNodes, final Listener monitor) {
@@ -165,14 +171,17 @@ public class RTreeIndex {
 		} finally {
 			tx.finish();
 		}		
+		
+		countSaved = false;
+		totalGeometryCount = 0;				
 	}
 	
     public void clear(final Listener monitor) {
         removeAll(false, new NullListener());
         Transaction tx = database.beginTx();
         try {
-            initIndexMetadata();
             initIndexRoot();
+            initIndexMetadata();            
             tx.success();
         } finally {
             tx.finish();
@@ -184,9 +193,8 @@ public class RTreeIndex {
 	}
 	
 	public int count() {
-		RecordCounter counter = new RecordCounter();
-		visit(counter, getIndexRoot());
-		return counter.getResult();
+		saveCount();
+		return totalGeometryCount;
 	}
 
 	public boolean isEmpty() {
@@ -202,6 +210,8 @@ public class RTreeIndex {
 
 	public void executeSearch(SearchQuery search) {
 		if (isEmpty()) return;
+		
+		saveCount();
 		
 		visit(search, getIndexRoot());
 	}
@@ -298,18 +308,20 @@ public class RTreeIndex {
 		Node layerNode = getRootNode();
 		if (layerNode.hasRelationship(RTreeRelationshipTypes.RTREE_METADATA, Direction.OUTGOING)) {
 			// metadata already present
-			Node metadataNode = layerNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_METADATA, Direction.OUTGOING).getEndNode();
+			metadataNode = layerNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_METADATA, Direction.OUTGOING).getEndNode();
 			
 			maxNodeReferences = (Integer) metadataNode.getProperty("maxNodeReferences");
 			minNodeReferences = (Integer) metadataNode.getProperty("minNodeReferences");
 		} else {
 			// metadata initialization
-			Node metadataNode = database.createNode();
+			metadataNode = database.createNode();
 			layerNode.createRelationshipTo(metadataNode, RTreeRelationshipTypes.RTREE_METADATA);
 			
 			metadataNode.setProperty("maxNodeReferences", maxNodeReferences);
 			metadataNode.setProperty("minNodeReferences", minNodeReferences);
 		}
+		
+		saveCount();
 	}
 
 	private void initIndexRoot() {
@@ -321,9 +333,42 @@ public class RTreeIndex {
 		}
 	}
 	
-	public Node getIndexRoot() {
+	private Node getIndexRoot() {
 		return getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_ROOT, Direction.OUTGOING).getEndNode();
 	}
+	
+	private Node getMetadataNode() {
+		if (metadataNode == null) {
+			metadataNode = getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_METADATA, Direction.OUTGOING).getEndNode();
+		}
+		
+		return metadataNode;
+	}
+	
+	/**
+	 * Save the geometry count to the database if it has not been saved yet.
+	 * However, if the count is zero, first do an exhaustive search of the tree
+	 * and count everything before saving it.
+	 */
+	private void saveCount() {
+		if (totalGeometryCount == 0) {
+			RecordCounter counter = new RecordCounter();
+			visit(counter, getIndexRoot());
+			totalGeometryCount = counter.getResult();
+			countSaved = false;
+		}
+	 	
+		if (!countSaved) {
+			Transaction tx = database.beginTx();
+			try {
+				getMetadataNode().setProperty("totalGeometryCount", totalGeometryCount);
+				countSaved = true;
+				tx.success();
+			} finally {
+				tx.finish();
+			}
+		}
+	}	
 	
 	private boolean nodeIsLeaf(Node node) {
 		return !node.hasRelationship(RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING);
@@ -683,17 +728,21 @@ public class RTreeIndex {
 		if (relationshipWithFather != null) {
 			relationshipWithFather.delete();
 		}
+		
 		indexNode.delete();
 	}
 	
 	private Node findLeafContainingGeometryNode(Node geomNode, boolean throwExceptionIfNotFound) {
 		if (!geomNode.hasRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING)) {
-			throw new RuntimeException("GeometryNode not indexed with an RTree: " + geomNode.getId());
+			if (throwExceptionIfNotFound) {
+				throw new RuntimeException("GeometryNode not indexed with an RTree: " + geomNode.getId());
+			} else {
+				return null;
+			}
 		}
 
 		Node indexNodeLeaf = geomNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING).getStartNode();		
 		
-		// check if geometryNode is indexed in this rtre
 		Node root = null;
 		Node child = indexNodeLeaf;
 		while (root == null) {
@@ -737,10 +786,16 @@ public class RTreeIndex {
 	// Attributes
 	
 	private GraphDatabaseService database;
+	
 	private Node rootNode;
 	private EnvelopeEncoder envelopeEncoder;	
 	private int maxNodeReferences;
 	private int minNodeReferences;
+	
+	private Node metadataNode;
+	private int totalGeometryCount = 0;
+	private boolean countSaved = false;	
+	
 	private static final String PROP_BBOX = "bbox";
 	
 	
