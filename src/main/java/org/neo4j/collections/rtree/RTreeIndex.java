@@ -37,18 +37,18 @@ import org.neo4j.graphdb.Traverser.Order;
 /**
  * 
  */
-public class RTreeIndex {
+public class RTreeIndex implements SpatialIndexWriter {
 
 	// Constructor
 	
-	public RTreeIndex(GraphDatabaseService database, Node rootNode, EnvelopeEncoder envelopeEncoder) {
+	public RTreeIndex(GraphDatabaseService database, Node rootNode, EnvelopeDecoder envelopeEncoder) {
 		this(database, rootNode, envelopeEncoder, 100, 51);
 	}
 	
-	public RTreeIndex(GraphDatabaseService database, Node rootNode, EnvelopeEncoder envelopeEncoder, int maxNodeReferences, int minNodeReferences) {
+	public RTreeIndex(GraphDatabaseService database, Node rootNode, EnvelopeDecoder envelopeDecoder, int maxNodeReferences, int minNodeReferences) {
 		this.database = database;
 		this.rootNode = rootNode;
-		this.envelopeEncoder = envelopeEncoder;
+		this.envelopeDecoder = envelopeDecoder;
 		this.maxNodeReferences = maxNodeReferences;
 		this.minNodeReferences = minNodeReferences;
 
@@ -58,6 +58,10 @@ public class RTreeIndex {
 	
 	
 	// Public methods
+	
+	public EnvelopeDecoder getEnvelopeDecoder() {
+		return this.envelopeDecoder;
+	}
 	
 	public void add(Node geomNode) {
 		// initialize the search with root
@@ -188,7 +192,7 @@ public class RTreeIndex {
         }
     }
 	
-	public Envelope getLayerBoundingBox() {
+	public Envelope getBoundingBox() {
 		return getIndexNodeEnvelope(getIndexRoot());
 	}
 	
@@ -208,7 +212,7 @@ public class RTreeIndex {
 		return findLeafContainingGeometryNode(geomNode, false) != null;
 	}
 
-	public void executeSearch(SearchQuery search) {
+	public void executeSearch(Search search) {
 		if (isEmpty()) return;
 		
 		saveCount();
@@ -220,13 +224,13 @@ public class RTreeIndex {
 		visit(new WarmUpVisitor(), getIndexRoot());
 	}
 	
-	public Iterable<Node> getAllIndexNodes() {
+	public Iterable<Node> getAllIndexInternalNodes() {
 		return getIndexRoot().traverse(Order.BREADTH_FIRST, StopEvaluator.END_OF_GRAPH, ReturnableEvaluator.ALL_BUT_START_NODE,
 		        RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING);
 	}
 
-	public Iterable<Node> getAllGeometryNodes() {
-		return new IndexNodeToGeometryNodeIterable(getAllIndexNodes());
+	public Iterable<Node> getAllIndexedNodes() {
+		return new IndexNodeToGeometryNodeIterable(getAllIndexInternalNodes());
 	}
 	
 	
@@ -237,7 +241,7 @@ public class RTreeIndex {
 	 * layers domain-specific GeometryEncoder for decoding the envelope.
 	 */
 	private Envelope getLeafNodeEnvelope(Node geomNode) {
-		return envelopeEncoder.decodeEnvelope(geomNode);
+		return envelopeDecoder.decodeEnvelope(geomNode);
 	}
 	
 	/**
@@ -254,7 +258,7 @@ public class RTreeIndex {
 		return bboxToEnvelope((double[]) indexNode.getProperty(PROP_BBOX));
 	}
 	
-	public void visit(SpatialIndexVisitor visitor, Node indexNode) {
+	private void visit(SpatialIndexVisitor visitor, Node indexNode) {
 		if (!visitor.needsToVisit(getIndexNodeEnvelope(indexNode))) return;
 		
 		if (indexNode.hasRelationship(RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING)) {
@@ -614,7 +618,7 @@ public class RTreeIndex {
 	private boolean addChild(Node parent, RelationshipType type, Node newChild) {
 	    double[] childBBox = null;
 	    if(type == RTreeRelationshipTypes.RTREE_REFERENCE) {
-	        childBBox = envelopeToBBox(envelopeEncoder.decodeEnvelope(newChild));
+	        childBBox = envelopeToBBox(envelopeDecoder.decodeEnvelope(newChild));
 	    } else {
 	        childBBox = (double[]) newChild.getProperty(PROP_BBOX);
 	    }
@@ -637,13 +641,21 @@ public class RTreeIndex {
 	 * @param indexNode
 	 */
 	private void adjustParentBoundingBox(Node indexNode, RelationshipType relationshipType) {
-	    // make a default null bounding box
-		Envelope bbox = new Envelope();
+		Envelope bbox = null;
 		
 		Iterator<Relationship> iterator = indexNode.getRelationships(relationshipType, Direction.OUTGOING).iterator();
 		while (iterator.hasNext()) {
 			Node childNode = iterator.next().getEndNode();
-			bbox.expandToInclude(getLeafNodeEnvelope(childNode));
+			
+			if (bbox == null) {
+				bbox = new Envelope(getLeafNodeEnvelope(childNode));
+			} else {
+				bbox.expandToInclude(getLeafNodeEnvelope(childNode));
+			}
+		}
+
+		if (bbox == null) {
+			bbox = new Envelope();
 		}
 		
 		indexNode.setProperty(PROP_BBOX, new double[] { bbox.getMinX(), bbox.getMinY(), bbox.getMaxX(), bbox.getMaxY() });
@@ -788,7 +800,7 @@ public class RTreeIndex {
 	private GraphDatabaseService database;
 	
 	private Node rootNode;
-	private EnvelopeEncoder envelopeEncoder;	
+	private EnvelopeDecoder envelopeDecoder;	
 	private int maxNodeReferences;
 	private int minNodeReferences;
 	

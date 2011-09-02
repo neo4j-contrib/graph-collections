@@ -19,40 +19,23 @@
  */
 package org.neo4j.collections.rtree;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.neo4j.graphdb.Node;
 
 
-public abstract class AbstractSearch implements Search {
-	
-	// Constructor
-	
-	public AbstractSearch() {
-		this.results = new ArrayList<Node>();
-	}
-	
-	
-	// Public methods
-	
-	public List<Node> getResults() {
-		return results;
-	}
-	
-	
-	// Private methods
-	
-	protected void add(Node geomNode) {
-		results.add(geomNode);
-	}
-		
-	protected void clearResults() {
-		results.clear();
-	}
-	
-	
-	// Attributes
+public interface SpatialIndexReader {
 
-	private List<Node> results;
+	EnvelopeDecoder getEnvelopeDecoder();
+	
+	boolean isEmpty();	
+
+	int count();
+		
+	Envelope getBoundingBox();
+
+	boolean isNodeIndexed(Long nodeId);
+	
+    Iterable<Node> getAllIndexedNodes();
+
+	void executeSearch(Search search);    
+    
 }

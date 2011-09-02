@@ -1,32 +1,40 @@
+/**
+ * Copyright (c) 2002-2011 "Neo Technology,"
+ * Network Engine for Objects in Lund AB [http://neotechnology.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.neo4j.collections.rtree;
 
 import org.junit.Test;
-import org.neo4j.collections.Neo4jTestCase;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.Relationship;
 
 
-public class TestRemove extends Neo4jTestCase {
+public class TestRemove extends SpatialTestCase {
 
 	@Test
 	public void testAddMoreThanMaxNodeRefThenDeleteAll() throws Exception {
 		int rtreeMaxNodeReferences = 100;
 		
 		RTreeIndex index = new RTreeIndex(graphDb(), graphDb().getReferenceNode(), 
-				new EnvelopeEncoder() {
-					@Override
-					public Envelope decodeEnvelope(PropertyContainer c) {
-						double[] bbox = (double[]) c.getProperty("bbox");
-						return new Envelope(bbox[0], bbox[1], bbox[2], bbox[3]);
-					}
-		}, rtreeMaxNodeReferences, 51);
+				new EnvelopeDecoderFromDoubleArray("bbox"), rtreeMaxNodeReferences, 51);
 		
         long[] ids = new long[rtreeMaxNodeReferences + 1];
         for (int i = 0; i < ids.length; i++) {
-        	Node node = graphDb().createNode();
-        	node.setProperty("bbox", new double[] { i, i + 1, i, i + 1 });
+        	Node node = createGeomNode(i, i, i + 1, i + 1);
         	ids[i] = node.getId();
         	index.add(node);
         }
@@ -38,63 +46,6 @@ public class TestRemove extends Neo4jTestCase {
         }
         
         debugIndexTree(index, graphDb().getReferenceNode());
-    }		
-	
-	private Node getIndexRoot(Node rootNode) {
-		return rootNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_ROOT, Direction.OUTGOING).getEndNode();
-	}
-	
-	private void debugIndexTree(RTreeIndex index, Node rootNode) {
-		printTree(getIndexRoot(rootNode), 0);
-	}
-
-	private static String arrayString(double[] test) {
-		StringBuffer sb = new StringBuffer();
-		for (double d : test) {
-			addToArrayString(sb, d);
-		}
-		sb.append("]");
-		return sb.toString();
-	}	
-	
-	private static void addToArrayString(StringBuffer sb, Object obj) {
-		if (sb.length() == 0) {
-			sb.append("[");
-		} else {
-			sb.append(",");
-		}
-		sb.append(obj);
-	}
-	
-	private void printTree(Node root, int depth) {
-		StringBuffer tab = new StringBuffer();
-		for (int i = 0; i < depth; i++) {
-			tab.append("  ");
-		}
-		
-		if (root.hasProperty("bbox")) {
-			System.out.println(tab.toString() + "INDEX: " + root + " BBOX[" + arrayString((double[]) root.getProperty("bbox")) + "]");
-		} else {
-			System.out.println(tab.toString() + "INDEX: " + root);
-		}
-		
-		StringBuffer data = new StringBuffer();
-		for (Relationship rel : root.getRelationships(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.OUTGOING)) {
-			if (data.length() > 0) {
-				data.append(", ");
-			} else {
-				data.append("DATA: ");
-			}
-			data.append(rel.getEndNode().toString());
-		}
-		
-		if (data.length() > 0) {
-			System.out.println("  " + tab + data);
-		}
-		
-		for (Relationship rel : root.getRelationships(RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING)) {
-			printTree(rel.getEndNode(), depth + 1);
-		}
-	}
+    }
 	
 }

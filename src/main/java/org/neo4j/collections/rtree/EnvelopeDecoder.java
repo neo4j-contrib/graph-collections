@@ -22,7 +22,7 @@ package org.neo4j.collections.rtree;
 import org.neo4j.graphdb.PropertyContainer;
 
 
-public interface EnvelopeEncoder {
+public interface EnvelopeDecoder {
 
     Envelope decodeEnvelope(PropertyContainer container);
 

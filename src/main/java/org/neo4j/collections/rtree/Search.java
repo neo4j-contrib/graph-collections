@@ -24,7 +24,7 @@ import java.util.List;
 import org.neo4j.graphdb.Node;
 
 
-public interface SearchQuery extends SpatialIndexVisitor {
+public interface Search extends SpatialIndexVisitor {
 	
 	List<Node> getResults();
 	

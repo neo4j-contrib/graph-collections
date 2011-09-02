@@ -34,8 +34,12 @@ public class Envelope {
 		this.ymin = ymin;
 		this.ymax = ymax;
 	}
-
+	
 	public Envelope() {
+		this.xmin = 0;
+		this.xmax = -1;
+		this.ymin = 0;
+		this.ymax = -1;
 	}
 
 	
@@ -55,34 +59,62 @@ public class Envelope {
 		
 	public double getMaxY() {
 		return ymax;
-	}	
+	}
 	
-	public boolean contains(Envelope e) {
-		return e.xmin >= xmin && e.xmax <= xmax 
-			&& e.ymin >= ymin && e.ymax <= ymax;
+	public boolean contains(Envelope other) {
+		if (!isValid() || !other.isValid()) {
+            return false;
+        }
+		
+		return other.xmin >= xmin && other.xmax <= xmax 
+			&& other.ymin >= ymin && other.ymax <= ymax;
 	}
 
-	public void expandToInclude(Envelope e) {
-		if (e.xmin < xmin) xmin = e.xmin;
-		if (e.xmax > xmax) xmax = e.xmax;
-		if (e.ymin < ymin) ymin = e.ymin;
-		if (e.ymax > ymax) ymax = e.ymax;
+	public boolean intersects(Envelope other) {
+		if (!isValid() || !other.isValid()) {
+            return false;
+        }
+		
+		return !(other.xmin > xmax || other.xmax < xmin
+                || other.ymin > ymax || other.ymax < ymin);
+	}	
+	
+	public void expandToInclude(Envelope other) {
+		if (!other.isValid()) {
+			return;
+		}
+		
+		if (!isValid()) {
+			xmin = other.xmin;
+			xmax = other.xmax;
+			ymin = other.ymin;
+			ymax = other.ymax;
+		} else {
+			if (other.xmin < xmin) xmin = other.xmin;
+			if (other.xmax > xmax) xmax = other.xmax;
+			if (other.ymin < ymin) ymin = other.ymin;
+			if (other.ymax > ymax) ymax = other.ymax;
+		}
 	}
 
 	public double getHeight() {
-		return ymax - ymin;
+		return isValid() ? ymax - ymin : 0;
 	}
 
 	public double getWidth() {
-		return xmax - xmin;
+		return isValid() ? xmax - xmin : 0;
 	}
 
 	public double getArea() {
 		return getWidth() * getHeight();
 	}
-
+	
+	public boolean isValid() {
+		return xmin <= xmax && ymin <= ymax;
+	}
+	
 	
 	// Attributes
 	
-	private double xmin, xmax, ymin, ymax = 0;
+	private double xmin, xmax, ymin, ymax;
 }

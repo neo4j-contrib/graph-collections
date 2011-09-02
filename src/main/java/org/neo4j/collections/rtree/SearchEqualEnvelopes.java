@@ -19,40 +19,21 @@
  */
 package org.neo4j.collections.rtree;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.neo4j.graphdb.Node;
 
 
-public abstract class AbstractSearch implements Search {
-	
-	// Constructor
-	
-	public AbstractSearch() {
-		this.results = new ArrayList<Node>();
-	}
-	
-	
-	// Public methods
-	
-	public List<Node> getResults() {
-		return results;
-	}
-	
-	
-	// Private methods
-	
-	protected void add(Node geomNode) {
-		results.add(geomNode);
-	}
-		
-	protected void clearResults() {
-		results.clear();
-	}
-	
-	
-	// Attributes
+public class SearchEqualEnvelopes extends AbstractSearchEnvelopeIntersection {
 
-	private List<Node> results;
+	public SearchEqualEnvelopes(EnvelopeDecoder decoder, Envelope referenceEnvelope) {
+		super(decoder, referenceEnvelope);
+	}
+
+	protected void onEnvelopeIntersection(Node geomNode, Envelope geomEnvelope) {
+		if (referenceEnvelope.contains(geomEnvelope) &&
+			geomEnvelope.contains(referenceEnvelope)) 
+		{
+			add(geomNode);
+	    }
+	}
+
 }

@@ -19,40 +19,29 @@
  */
 package org.neo4j.collections.rtree;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.neo4j.graphdb.Node;
 
 
-public abstract class AbstractSearch implements Search {
+/**
+ * Find empty Envelopes
+ */
+public class SearchInvalidEnvelopes extends AbstractSearch {
 	
-	// Constructor
-	
-	public AbstractSearch() {
-		this.results = new ArrayList<Node>();
+	public SearchInvalidEnvelopes(EnvelopeDecoder decoder) {
+		this.decoder = decoder;
 	}
 	
-	
-	// Public methods
-	
-	public List<Node> getResults() {
-		return results;
+	public boolean needsToVisit(Envelope indexNodeEnvelope) {
+		return true;
 	}
-	
-	
-	// Private methods
-	
-	protected void add(Node geomNode) {
-		results.add(geomNode);
-	}
-		
-	protected void clearResults() {
-		results.clear();
-	}
-	
-	
-	// Attributes
 
-	private List<Node> results;
+	public void onIndexReference(Node geomNode) {
+		Envelope envelope = decoder.decodeEnvelope(geomNode);
+		if (!envelope.isValid()) {
+			add(geomNode);
+		}
+	}
+
+	
+	private EnvelopeDecoder decoder;
 }
