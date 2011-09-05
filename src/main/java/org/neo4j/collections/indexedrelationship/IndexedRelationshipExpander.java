@@ -31,7 +31,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipExpander;
 import org.neo4j.graphdb.RelationshipType;
 
-class IndexedRelationshipExpander implements RelationshipExpander {
+public class IndexedRelationshipExpander implements RelationshipExpander {
     private final Direction direction;
     private final RelationshipType relType;
     private final GraphDatabaseService graphDb;
