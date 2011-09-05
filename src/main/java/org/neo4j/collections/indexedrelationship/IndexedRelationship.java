@@ -220,8 +220,11 @@ public class IndexedRelationship implements Iterable<Relationship>{
 	}
 
 	/**
+     * Create an IndexedRelationship around all the relationships of a given type from a given node.
+     * 
   	 * @param relType {@link RelationshipType} of the relationships maintained in the index.
-	 * @param nodeComparator the {@link Comparator} to use to sort the nodes.
+	 * @param direction the {@link Direction} of the relationship.
+	 * @param propertyType the {@link ComparablePropertyType} to use to sort the nodes.
 	 * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
 	 * @param node the start node of the relationship. 
 	 * @param graphDb the {@link GraphDatabaseService} instance.
@@ -239,7 +242,12 @@ public class IndexedRelationship implements Iterable<Relationship>{
 	
 	
 	/**
+     * Create an IndexedRelationship around all the relationships of a given type from a given node.
+     * <p>
+     * <b>Note:</b> The comparator that is used for sorting the relationships cannot be an anonymous inner class.
+     *
   	 * @param relType {@link RelationshipType} of the relationships maintained in the index.
+     * @param direction the {@link Direction} of the relationship.
 	 * @param nodeComparator the {@link Comparator} to use to sort the nodes.
 	 * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
 	 * @param node the start node of the relationship. 
