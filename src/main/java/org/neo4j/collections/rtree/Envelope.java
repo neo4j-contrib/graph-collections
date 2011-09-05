@@ -61,7 +61,15 @@ public class Envelope {
 		return ymax;
 	}
 	
+	/**
+     * Note that this doesn't exclude the envelope boundary.
+     * See JTS Envelope.
+	 */
 	public boolean contains(Envelope other) {
+		return covers(other);
+	}
+
+	public boolean covers(Envelope other) {
 		if (!isValid() || !other.isValid()) {
             return false;
         }
@@ -69,7 +77,7 @@ public class Envelope {
 		return other.xmin >= xmin && other.xmax <= xmax 
 			&& other.ymin >= ymin && other.ymax <= ymax;
 	}
-
+	
 	public boolean intersects(Envelope other) {
 		if (!isValid() || !other.isValid()) {
             return false;
@@ -97,6 +105,67 @@ public class Envelope {
 		}
 	}
 
+	public double[] centre() {
+	    if (!isValid()) {
+	    	return null;
+	    }
+	    
+	    return new double[] {
+	        (getMinX() + getMaxX()) / 2.0,
+	        (getMinY() + getMaxY()) / 2.0 };
+	}
+
+	public double distance(Envelope other) {
+	    if (intersects(other)) {
+	    	return 0;
+	    }
+	    
+	    double dx = 0.0;
+	    if (xmax < other.xmin) dx = other.xmin - xmax;
+	    if (xmin > other.xmax) dx = xmin - other.xmax;
+	    
+	    double dy = 0.0;
+	    if (ymax < other.ymin) dy = other.ymin - ymax;
+	    if (ymin > other.ymax) dy = ymin - other.ymax;
+
+	    // if either is zero, the envelopes overlap either vertically or horizontally
+	    
+	    if (dx == 0.0) {
+	    	return dy;
+	    }
+	    
+	    if (dy == 0.0) {
+	    	return dx;
+	    }
+	    
+	    return Math.sqrt(dx * dx + dy * dy);
+	}
+
+	public void expandToInclude(double x, double y) {
+		if (!isValid()) {
+			xmin = x;
+			xmax = x;
+			ymin = y;
+			ymax = y;
+		} else {
+			if (x < xmin) {
+	          xmin = x;
+			}
+			
+	        if (x > xmax) {
+	        	xmax = x;
+	        }
+	        
+	        if (y < ymin) {
+	          ymin = y;
+	        }
+	        
+	        if (y > ymax) {
+	          ymax = y;
+	        }
+		}
+	}
+	
 	public double getHeight() {
 		return isValid() ? ymax - ymin : 0;
 	}

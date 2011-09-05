@@ -59,10 +59,12 @@ public class RTreeIndex implements SpatialIndexWriter {
 	
 	// Public methods
 	
+	@Override
 	public EnvelopeDecoder getEnvelopeDecoder() {
 		return this.envelopeDecoder;
 	}
 	
+	@Override
 	public void add(Node geomNode) {
 		// initialize the search with root
 		Node parent = getIndexRoot();
@@ -86,6 +88,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 		totalGeometryCount++;
 	}
 	
+	@Override
 	public void remove(long geomNodeId, boolean deleteGeomNode) {
 		Node geomNode = database.getNodeById(geomNodeId);
 		
@@ -135,6 +138,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 		totalGeometryCount--;		
 	}
 	
+	@Override
 	public void removeAll(final boolean deleteGeomNodes, final Listener monitor) {
 		Node indexRoot = getIndexRoot();
 		
@@ -180,6 +184,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 		totalGeometryCount = 0;				
 	}
 	
+	@Override
     public void clear(final Listener monitor) {
         removeAll(false, new NullListener());
         Transaction tx = database.beginTx();
@@ -192,26 +197,31 @@ public class RTreeIndex implements SpatialIndexWriter {
         }
     }
 	
+	@Override
 	public Envelope getBoundingBox() {
 		return getIndexNodeEnvelope(getIndexRoot());
 	}
 	
+	@Override
 	public int count() {
 		saveCount();
 		return totalGeometryCount;
 	}
 
+	@Override
 	public boolean isEmpty() {
 		Node indexRoot = getIndexRoot();
 		return !indexRoot.hasProperty(PROP_BBOX);
 	}
 	
+	@Override
 	public boolean isNodeIndexed(Long geomNodeId) {
 		Node geomNode = database.getNodeById(geomNodeId);			
 		// be sure geomNode is inside this RTree
 		return findLeafContainingGeometryNode(geomNode, false) != null;
 	}
 
+	@Override
 	public void executeSearch(Search search) {
 		if (isEmpty()) return;
 		
@@ -229,36 +239,12 @@ public class RTreeIndex implements SpatialIndexWriter {
 		        RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING);
 	}
 
+	@Override
 	public Iterable<Node> getAllIndexedNodes() {
 		return new IndexNodeToGeometryNodeIterable(getAllIndexInternalNodes());
 	}
 	
-	
-	// Private methods
-
-	/**
-	 * The leaf nodes belong to the domain model, and as such need to use the
-	 * layers domain-specific GeometryEncoder for decoding the envelope.
-	 */
-	private Envelope getLeafNodeEnvelope(Node geomNode) {
-		return envelopeDecoder.decodeEnvelope(geomNode);
-	}
-	
-	/**
-	 * The index nodes do NOT belong to the domain model, and as such need to
-	 * use the indexes internal knowledge of the index tree and node structure
-	 * for decoding the envelope.
-	 */
-	private Envelope getIndexNodeEnvelope(Node indexNode) {
-		if (indexNode == null) indexNode = getIndexRoot();
-		if (!indexNode.hasProperty(PROP_BBOX)) {
-			System.err.println("node[" + indexNode + "] has no bounding box property '" + PROP_BBOX + "'");
-			return null;
-		}
-		return bboxToEnvelope((double[]) indexNode.getProperty(PROP_BBOX));
-	}
-	
-	private void visit(SpatialIndexVisitor visitor, Node indexNode) {
+	public void visit(SpatialIndexVisitor visitor, Node indexNode) {
 		if (!visitor.needsToVisit(getIndexNodeEnvelope(indexNode))) return;
 		
 		if (indexNode.hasRelationship(RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING)) {
@@ -276,6 +262,35 @@ public class RTreeIndex implements SpatialIndexWriter {
 		}
 	}
 	
+	public Node getIndexRoot() {
+		return getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_ROOT, Direction.OUTGOING).getEndNode();
+	}
+	
+		
+	// Private methods
+
+	/**
+	 * The leaf nodes belong to the domain model, and as such need to use the
+	 * layers domain-specific GeometryEncoder for decoding the envelope.
+	 */
+	private Envelope getLeafNodeEnvelope(Node geomNode) {
+		return envelopeDecoder.decodeEnvelope(geomNode);
+	}
+	
+	/**
+	 * The index nodes do NOT belong to the domain model, and as such need to
+	 * use the indexes internal knowledge of the index tree and node structure
+	 * for decoding the envelope.
+	 */
+	protected Envelope getIndexNodeEnvelope(Node indexNode) {
+		if (indexNode == null) indexNode = getIndexRoot();
+		if (!indexNode.hasProperty(PROP_BBOX)) {
+			System.err.println("node[" + indexNode + "] has no bounding box property '" + PROP_BBOX + "'");
+			return null;
+		}
+		return bboxToEnvelope((double[]) indexNode.getProperty(PROP_BBOX));
+	}
+		
 	private void visitInTx(SpatialIndexVisitor visitor, Long indexNodeId) {
         Node indexNode = database.getNodeById(indexNodeId);
         if(!visitor.needsToVisit(getIndexNodeEnvelope(indexNode))) return;
@@ -336,11 +351,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 			layerNode.createRelationshipTo(root, RTreeRelationshipTypes.RTREE_ROOT);
 		}
 	}
-	
-	private Node getIndexRoot() {
-		return getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_ROOT, Direction.OUTGOING).getEndNode();
-	}
-	
+		
 	private Node getMetadataNode() {
 		if (metadataNode == null) {
 			metadataNode = getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_METADATA, Direction.OUTGOING).getEndNode();
@@ -356,7 +367,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 	 */
 	private void saveCount() {
 		if (totalGeometryCount == 0) {
-			RecordCounter counter = new RecordCounter();
+			SpatialIndexRecordCounter counter = new SpatialIndexRecordCounter();
 			visit(counter, getIndexRoot());
 			totalGeometryCount = counter.getResult();
 			countSaved = false;
@@ -610,7 +621,7 @@ public class RTreeIndex implements SpatialIndexWriter {
         return new double[]{ bounds.getMinX(), bounds.getMinY(), bounds.getMaxX(), bounds.getMaxY() };
     }
 
-    private Envelope bboxToEnvelope(double[] bbox) {
+    protected Envelope bboxToEnvelope(double[] bbox) {
     	// Envelope parameters: xmin, xmax, ymin, ymax
         return new Envelope(bbox[0], bbox[2], bbox[1], bbox[3]);
     }
@@ -744,7 +755,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 		indexNode.delete();
 	}
 	
-	private Node findLeafContainingGeometryNode(Node geomNode, boolean throwExceptionIfNotFound) {
+	protected Node findLeafContainingGeometryNode(Node geomNode, boolean throwExceptionIfNotFound) {
 		if (!geomNode.hasRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING)) {
 			if (throwExceptionIfNotFound) {
 				throw new RuntimeException("GeometryNode not indexed with an RTree: " + geomNode.getId());
@@ -812,17 +823,6 @@ public class RTreeIndex implements SpatialIndexWriter {
 	
 	
 	// Private classes
-
-	private class RecordCounter implements SpatialIndexVisitor {
-		
-		public boolean needsToVisit(Envelope indexNodeEnvelope) { return true; }	
-		
-		public void onIndexReference(Node geomNode) { count++; }
-		
-		public int getResult() { return count; }
-		
-		private int count = 0;
-	}
 
 	private class WarmUpVisitor implements SpatialIndexVisitor {
 		

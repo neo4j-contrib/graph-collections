@@ -28,6 +28,7 @@ public class SearchEqualEnvelopes extends AbstractSearchEnvelopeIntersection {
 		super(decoder, referenceEnvelope);
 	}
 
+	@Override
 	protected void onEnvelopeIntersection(Node geomNode, Envelope geomEnvelope) {
 		if (referenceEnvelope.contains(geomEnvelope) &&
 			geomEnvelope.contains(referenceEnvelope)) 

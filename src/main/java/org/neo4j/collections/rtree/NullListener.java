@@ -27,12 +27,15 @@ public class NullListener implements Listener {
 
     // Public methods
 
+	@Override
     public void begin(int unitsOfWork) {
     }
-
+	
+	@Override
     public void worked(int workedSinceLastNotification) {
     }
-
+	
+	@Override
     public void done() {
     }
 

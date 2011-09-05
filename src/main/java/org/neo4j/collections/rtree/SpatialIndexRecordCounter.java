@@ -19,34 +19,25 @@
  */
 package org.neo4j.collections.rtree;
 
-import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Node;
 
 
-/**
- * 
- * The property must contain an array of double: xmin, ymin, xmax, ymax.
- */
-public class EnvelopeDecoderFromDoubleArray implements EnvelopeDecoder {
+public class SpatialIndexRecordCounter implements SpatialIndexVisitor {
 
-	public EnvelopeDecoderFromDoubleArray(String propertyName) {
-		this.propertyName = propertyName;
+	@Override
+	public boolean needsToVisit(Envelope indexNodeEnvelope) { 
+		return true; 
+	}	
+	
+	@Override
+	public void onIndexReference(Node geomNode) { 
+		count++; 
 	}
 	
-	@Override	
-	public Envelope decodeEnvelope(PropertyContainer container) {
-	    Object propValue = container.getProperty(propertyName);
-	    
-	    if (propValue instanceof Double[]) {
-	    	Double[] bbox = (Double[]) propValue;
-			return new Envelope(bbox[0], bbox[2], bbox[1], bbox[3]);
-		} else if (propValue instanceof double[]) {
-			double[] bbox = (double[]) propValue;
-			return new Envelope(bbox[0], bbox[2], bbox[1], bbox[3]);
-	    } else {
-	    	// invalid content
-	    	return new Envelope();
-	    }
+	public int getResult() { 
+		return count; 
 	}
-
-	private String propertyName;
+	
+	
+	private int count = 0;
 }

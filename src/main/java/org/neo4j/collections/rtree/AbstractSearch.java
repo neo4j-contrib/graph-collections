@@ -36,6 +36,7 @@ public abstract class AbstractSearch implements Search {
 	
 	// Public methods
 	
+	@Override
 	public List<Node> getResults() {
 		return results;
 	}

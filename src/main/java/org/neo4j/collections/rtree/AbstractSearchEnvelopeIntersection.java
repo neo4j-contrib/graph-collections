@@ -33,18 +33,21 @@ public abstract class AbstractSearchEnvelopeIntersection extends AbstractSearch 
 
 	
 	// Public methods
-	
+
+	@Override
 	public boolean needsToVisit(Envelope indexNodeEnvelope) {
 		return indexNodeEnvelope.intersects(referenceEnvelope);
 	}
 	
+	@Override	
 	public final void onIndexReference(Node geomNode) {	
 		Envelope geomEnvelope = decoder.decodeEnvelope(geomNode);
 		if (geomEnvelope.intersects(referenceEnvelope)) {
 			onEnvelopeIntersection(geomNode, geomEnvelope);
 		}
 	}
-
+	
+	@Override
 	public String toString() {
 		return "SearchEnvelopeIntersection[" + referenceEnvelope + "]";
 	}

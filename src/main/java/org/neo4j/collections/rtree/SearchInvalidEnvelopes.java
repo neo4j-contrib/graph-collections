@@ -31,10 +31,12 @@ public class SearchInvalidEnvelopes extends AbstractSearch {
 		this.decoder = decoder;
 	}
 	
+	@Override
 	public boolean needsToVisit(Envelope indexNodeEnvelope) {
 		return true;
 	}
 
+	@Override
 	public void onIndexReference(Node geomNode) {
 		Envelope envelope = decoder.decodeEnvelope(geomNode);
 		if (!envelope.isValid()) {
