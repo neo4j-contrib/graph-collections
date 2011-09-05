@@ -49,7 +49,8 @@ public class TestIndexedRelationship extends Neo4jTestCase
 	{
 		DIRECT_RELATIONSHIP,
 		INDEXED_RELATIONSHIP,
-	};
+		INDEXED_RELATIONSHIP_TWO
+	}
 
 	@Test
 	public void testIndexRelationshipBasic()
@@ -97,4 +98,51 @@ public class TestIndexedRelationship extends Neo4jTestCase
 		}
 		assertTrue(count == 2);
 	}
+
+    @Test
+    public void testTwoIndexRelationshipsOnSingleNode() {
+        Node indexedNode = graphDb().createNode();
+        IndexedRelationship ir = new IndexedRelationship(RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, new IdComparator(), true, indexedNode, graphDb());
+        IndexedRelationship ir2 = new IndexedRelationship(RelTypes.INDEXED_RELATIONSHIP_TWO, Direction.OUTGOING, new IdComparator(), true, indexedNode, graphDb());
+
+        Node n1 = graphDb().createNode();
+        n1.setProperty("name", "n1");
+        Node n2 = graphDb().createNode();
+        n2.setProperty("name", "n2");
+        Node n3 = graphDb().createNode();
+        n3.setProperty("name", "n3");
+        Node n4 = graphDb().createNode();
+        n4.setProperty("name", "n4");
+
+        ir.createRelationshipTo(n2);
+        ir.createRelationshipTo(n4);
+        ir2.createRelationshipTo(n1);
+        ir2.createRelationshipTo(n3);
+		
+        IndexedRelationshipExpander re1 = new IndexedRelationshipExpander(graphDb(), Direction.OUTGOING, RelTypes.INDEXED_RELATIONSHIP_TWO);
+        IndexedRelationshipExpander re2 = new IndexedRelationshipExpander(graphDb(), Direction.OUTGOING, RelTypes.INDEXED_RELATIONSHIP);
+
+        int count = 0;
+        for(Relationship rel: re1.expand(indexedNode)){
+            if(count == 0){
+                assertTrue( rel.getEndNode().equals(n1) || rel.getEndNode().equals(n3));
+            }
+            if(count == 1){
+                assertTrue( rel.getEndNode().equals(n1) || rel.getEndNode().equals(n3));
+            }
+            count++;
+        }
+        assertTrue(count == 2);
+        count = 0;
+        for(Relationship rel: re2.expand(indexedNode)){
+            if(count == 0){
+                assertTrue( rel.getEndNode().equals(n2) );
+            }
+            if(count == 1){
+                assertTrue( rel.getEndNode().equals(n4) );
+            }
+            count++;
+        }
+        assertTrue(count == 2);
+    }
 }

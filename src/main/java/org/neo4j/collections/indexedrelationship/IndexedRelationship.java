@@ -234,7 +234,7 @@ public class IndexedRelationship implements Iterable<Relationship>{
 		this.relType = relType;
 		this.graphDb = graphDb;
 		this.direction = direction;
-		Relationship rel = node.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
+		Relationship rel = getIndexedRootRelationship();
 		rel.setProperty(PROPERTY_TYPE, propertyType.getName());
 		Node treeNode = ( rel == null ) ? createTreeRoot(node) : rel.getEndNode();
 		bTree = new PropertySortedTree<T>(graphDb, treeNode, propertyType, isUniqueIndex, relType.name());
@@ -258,7 +258,7 @@ public class IndexedRelationship implements Iterable<Relationship>{
 		this.relType = relType;
 		this.graphDb = graphDb;
 		this.direction = direction;
-		Relationship rel = node.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
+		Relationship rel = getIndexedRootRelationship();
 		Node treeNode = ( rel == null ) ? createTreeRoot(node) : rel.getEndNode();
 		bTree = new SortedTree(graphDb, treeNode, nodeComparator, isUniqueIndex, relType.name());
 	}
@@ -302,7 +302,19 @@ public class IndexedRelationship implements Iterable<Relationship>{
 	 * @return the {@link Relationship} pointing to the root of the index tree.  
 	 */
 	public Relationship getIndexedRootRelationship(){
-		return indexedNode.getSingleRelationship(SortedTree.RelTypes.TREE_ROOT, Direction.OUTGOING);
+        Iterable<Relationship> indexRelationships = this.indexedNode.getRelationships(SortedTree.RelTypes.TREE_ROOT);
+        for(Relationship indexRelationship: indexRelationships){
+            String relName = (String)indexRelationship.getProperty(SortedTree.TREE_NAME);
+            if(relName.equals(relType.name())){
+                if(indexRelationship.hasProperty(IndexedRelationship.directionPropertyName)){
+                    String dir = (String)indexRelationship.getProperty(IndexedRelationship.directionPropertyName);
+                    if(dir.equals(direction.name())){
+                        return indexRelationship;
+                    }
+                }
+            }
+        }
+		return null;
 	}
 
 	
