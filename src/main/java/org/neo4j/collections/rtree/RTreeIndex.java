@@ -52,6 +52,10 @@ public class RTreeIndex implements SpatialIndexWriter {
 		this.maxNodeReferences = maxNodeReferences;
 		this.minNodeReferences = minNodeReferences;
 
+		if (envelopeDecoder == null) {
+			throw new NullPointerException("envelopeDecoder is NULL");
+		}
+		
 		initIndexRoot();
 		initIndexMetadata();		
 	}
@@ -628,7 +632,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 
 	private boolean addChild(Node parent, RelationshipType type, Node newChild) {
 	    double[] childBBox = null;
-	    if(type == RTreeRelationshipTypes.RTREE_REFERENCE) {
+	    if (type == RTreeRelationshipTypes.RTREE_REFERENCE) {
 	        childBBox = envelopeToBBox(envelopeDecoder.decodeEnvelope(newChild));
 	    } else {
 	        childBBox = (double[]) newChild.getProperty(PROP_BBOX);
@@ -819,7 +823,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 	private int totalGeometryCount = 0;
 	private boolean countSaved = false;	
 	
-	private static final String PROP_BBOX = "bbox";
+	public static final String PROP_BBOX = "bbox";
 	
 	
 	// Private classes
