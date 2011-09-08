@@ -30,10 +30,10 @@ import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
 class NodeEntry
 {
 	static final String NODE_ID = "node_id";
-	
+
 	private Relationship entryRelationship;
 	private TreeNode treeNode;
-	
+
 	NodeEntry( TreeNode treeNode, Relationship underlyingRelationship )
 	{
 		assert treeNode != null;
@@ -41,49 +41,49 @@ class NodeEntry
 		this.treeNode = treeNode;
 		this.entryRelationship = underlyingRelationship;
 	}
-	
+
 	Relationship getUnderlyingRelationship()
 	{
 		return entryRelationship;
 	}
-	
+
 	TreeNode getTreeNode()
 	{
 		return treeNode;
 	}
-	
+
 	private SortedTree getBTree()
 	{
 		return treeNode.getBTree();
 	}
-	
+
 	TreeNode getBeforeSubTree()
 	{
-		Relationship subTreeRel = getStartNode().getSingleRelationship( 
+		Relationship subTreeRel = getStartNode().getSingleRelationship(
 			RelTypes.SUB_TREE, Direction.OUTGOING );
 		if ( subTreeRel != null )
 		{
-			return new TreeNode( getBTree(), 
+			return new TreeNode( getBTree(),
 				subTreeRel.getEndNode() );
 		}
 		return null;
 	}
-	
+
 	TreeNode getAfterSubTree()
 	{
-		Relationship subTreeRel = getEndNode().getSingleRelationship( 
+		Relationship subTreeRel = getEndNode().getSingleRelationship(
 			RelTypes.SUB_TREE, Direction.OUTGOING );
 		if ( subTreeRel != null )
 		{
-			return new TreeNode( getBTree(), 
+			return new TreeNode( getBTree(),
 				subTreeRel.getEndNode() );
 		}
 		return null;
 	}
-	
+
 	NodeEntry getNextKey()
 	{
-		Relationship nextKeyRel = getEndNode().getSingleRelationship( 
+		Relationship nextKeyRel = getEndNode().getSingleRelationship(
 			RelTypes.KEY_ENTRY, Direction.OUTGOING );
 		if ( nextKeyRel != null )
 		{
@@ -91,10 +91,10 @@ class NodeEntry
 		}
 		return null;
 	}
-	
+
 	NodeEntry getPreviousKey()
 	{
-		Relationship prevKeyRel = getStartNode().getSingleRelationship( 
+		Relationship prevKeyRel = getStartNode().getSingleRelationship(
 			RelTypes.KEY_ENTRY, Direction.INCOMING );
 		if ( prevKeyRel != null )
 		{
@@ -109,16 +109,16 @@ class NodeEntry
         treeNode.removeEntry( this.getTheNode() );
 	}
 */
-    
+
 	@Override
 	public String toString()
 	{
 		return "Entry[" + getNodes() + "]";
 	}
-	
+
 	boolean isLeaf()
 	{
-		if ( getUnderlyingRelationship().getStartNode().getSingleRelationship( 
+		if ( getUnderlyingRelationship().getStartNode().getSingleRelationship(
 			RelTypes.SUB_TREE, Direction.OUTGOING ) != null )
 		{
 			assert getUnderlyingRelationship().getEndNode().
@@ -126,11 +126,11 @@ class NodeEntry
 				!= null;
 			return false;
 		}
-		assert getUnderlyingRelationship().getEndNode().getSingleRelationship( 
+		assert getUnderlyingRelationship().getEndNode().getSingleRelationship(
 			RelTypes.SUB_TREE, Direction.OUTGOING ) == null;
 		return true;
 	}
-	
+
 	Node getANode()
 	{
 			Iterable<Relationship> rels = getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING);
@@ -139,11 +139,11 @@ class NodeEntry
 			}
 			throw new RuntimeException("Key entry is empty");
 	}
-	
+
 	class NodeIterator implements Iterator<Node>{
-		
+
 		Iterator<Relationship> rels;
-		
+
 		NodeIterator(Iterator<Relationship> rels){
 			this.rels = rels;
 		}
@@ -171,18 +171,32 @@ class NodeEntry
 			Iterable<Relationship> rels = getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING);
 			return new NodeIterator(rels.iterator());
 		}
-		
+
 	}
-	
+
     Iterable<Node> getNodes()
     {
     	return new NodeIterable();
-    	
-    	
+
+
 //        return getBTree().getGraphDb().getNodeById( 
 //            (Long) getUnderlyingRelationship().getProperty( NODE_ID ) ); 
     }
-    
+
+	class RelationshipIterable implements Iterable<Relationship>{
+
+		@Override
+		public Iterator<Relationship> iterator() {
+            return getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING).iterator();
+		}
+
+	}
+
+    Iterable<Relationship> getRelationships()
+    {
+    	return new RelationshipIterable();
+    }
+
     void setNode( Node node )
     {
     	Relationship rel = getEndNode().createRelationshipTo(node, RelTypes.KEY_VALUE);
@@ -191,13 +205,13 @@ class NodeEntry
     		rel.setProperty(SortedTree.TREE_NAME, treeName);
     	}
     }
-    
-    
+
+
 	Node getStartNode()
 	{
 		return entryRelationship.getStartNode();
 	}
-	
+
 	Node getEndNode()
 	{
 		return entryRelationship.getEndNode();
@@ -213,10 +227,10 @@ class NodeEntry
 			rel.delete();
 		}
 		entryRelationship.delete();
-		entryRelationship = startNode.createRelationshipTo( endNode, 
+		entryRelationship = startNode.createRelationshipTo( endNode,
 			RelTypes.KEY_ENTRY );
 		for(TempRelationship trl: trls){
-			Relationship rel = getEndNode().createRelationshipTo(trl.getEndNode(), RelTypes.KEY_VALUE);	
+			Relationship rel = getEndNode().createRelationshipTo(trl.getEndNode(), RelTypes.KEY_VALUE);
 			for(String key: trl.getProperties().keySet()){
 				rel.setProperty(key, trl.getProperties().get(key));
 			}

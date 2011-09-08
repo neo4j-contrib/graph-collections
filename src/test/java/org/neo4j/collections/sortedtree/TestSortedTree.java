@@ -19,19 +19,14 @@
  */
 package org.neo4j.collections.sortedtree;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.Iterator;
-import java.util.LinkedList;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.graphdb.Node;
 import org.neo4j.collections.Neo4jTestCase;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+
+import static org.junit.Assert.assertTrue;
 
 public class TestSortedTree extends Neo4jTestCase
 {
@@ -205,7 +200,7 @@ public class TestSortedTree extends Neo4jTestCase
 
 		assertTrue( longTree.iterator().hasNext() );
 		int count = 0;
-		for(Node n: longTree){
+		for( Relationship r: longTree){
 			count++;
 		}
 		assertTrue( count == 39);
@@ -254,12 +249,13 @@ public class TestSortedTree extends Neo4jTestCase
 		
 		assertTrue( stringTree.iterator().hasNext() );
 		count = 0;
-		for(Node n: stringTree){
+		for(Relationship r: stringTree){
 			count++;
 		}
 		assertTrue( count == 39);		
 		count = 0;
-		for(Node n: stringTree){
+		for(Relationship r: stringTree){
+            Node n = r.getEndNode();
 			count++;
 			if(count == 1){
 				assertTrue(n.getProperty("name").equals("nodeaaaaa"));
@@ -291,7 +287,7 @@ public class TestSortedTree extends Neo4jTestCase
 		stringTree.removeNode(node36);
 		stringTree.removeNode(node38);
 		count = 0;
-		for(Node n: stringTree){
+		for(Relationship r: stringTree){
 			count++;
 		}
 		assertTrue( count == 20);
@@ -317,7 +313,7 @@ public class TestSortedTree extends Neo4jTestCase
 		stringTree.removeNode(node37);
 		stringTree.removeNode(node39);
 		count = 0;
-		for(Node n: stringTree){
+		for(Relationship r: stringTree){
 			count++;
 		}
 		assertTrue( count == 0);		

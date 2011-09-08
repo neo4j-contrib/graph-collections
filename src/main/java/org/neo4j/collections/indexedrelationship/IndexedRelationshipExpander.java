@@ -19,17 +19,21 @@
  */
 package org.neo4j.collections.indexedrelationship;
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-
 import org.neo4j.collections.sortedtree.SortedTree;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipExpander;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.traversal.Evaluation;
+import org.neo4j.graphdb.traversal.Evaluator;
+import org.neo4j.kernel.Traversal;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class IndexedRelationshipExpander implements RelationshipExpander
 {
@@ -64,10 +68,11 @@ public class IndexedRelationshipExpander implements RelationshipExpander
     {
         final Iterator<Relationship> directRelationshipIterator;
         final Iterator<Relationship> indexedRelationshipIterator;
+        final Iterator<Path> indexedRelationshipDestinationIterator;
 
         boolean inIndexedRelationshipIterator = false;
 
-        RelationshipIterator( Node node, RelationshipType relType, Direction direction )
+        RelationshipIterator( Node node, final RelationshipType relType, final Direction direction )
         {
             if ( node.hasRelationship( relType, direction ) )
             {
@@ -77,34 +82,19 @@ public class IndexedRelationshipExpander implements RelationshipExpander
             {
                 directRelationshipIterator = null;
             }
-            Iterable<Relationship> indexRels = node.getRelationships( SortedTree.RelTypes.TREE_ROOT );
-            Relationship ir = null;
-            for ( Relationship indexRel : indexRels )
-            {
-                String relName = (String) indexRel.getProperty( SortedTree.TREE_NAME );
-                if ( relName.equals( relType.name() ) )
-                {
-                    if ( indexRel.hasProperty( IndexedRelationship.directionPropertyName ) )
-                    {
-                        String dir = (String) indexRel.getProperty( IndexedRelationship.directionPropertyName );
-                        if ( dir.equals( direction.name() ) )
-                        {
-                            ir = indexRel;
-                            break;
-                        }
-                    }
-                }
-            }
-            if ( ir == null )
+
+            Relationship startingIndexedRelationship = getStartingIndexedRelationship( node, relType, direction );
+            if ( startingIndexedRelationship == null )
             {
                 indexedRelationshipIterator = null;
             }
             else
             {
-                boolean isUniqueIndex = (Boolean) ir.getProperty( SortedTree.IS_UNIQUE_INDEX );
+                boolean isUniqueIndex = (Boolean) startingIndexedRelationship.getProperty( SortedTree.IS_UNIQUE_INDEX );
                 try
                 {
-                    Class<?> comparatorClass = Class.forName( (String) ir.getProperty( SortedTree.COMPARATOR_CLASS ) );
+                    Class<?> comparatorClass = Class.forName( (String) startingIndexedRelationship.getProperty(
+                        SortedTree.COMPARATOR_CLASS ) );
                     Comparator<Node> comparator = (Comparator<Node>) comparatorClass.newInstance();
                     indexedRelationshipIterator = new IndexedRelationship( relType, direction, comparator,
                         isUniqueIndex, node, graphDb ).iterator();
@@ -114,90 +104,122 @@ public class IndexedRelationshipExpander implements RelationshipExpander
                     throw new RuntimeException( "Comparator class cannot be instantiated" );
                 }
             }
+
+            indexedRelationshipDestinationIterator = Traversal.description().depthFirst()
+                .relationships( SortedTree.RelTypes.KEY_VALUE, Direction.INCOMING )
+                .relationships( SortedTree.RelTypes.KEY_ENTRY, Direction.INCOMING )
+                .relationships( SortedTree.RelTypes.SUB_TREE, Direction.INCOMING )
+                .relationships( SortedTree.RelTypes.TREE_ROOT, Direction.INCOMING )
+                .evaluator( new Evaluator()
+                {
+                    @Override
+                    public Evaluation evaluate( Path path )
+                    {
+                        if ( path.length() == 0 )
+                        {
+                            return Evaluation.EXCLUDE_AND_CONTINUE;
+                        }
+
+                        Relationship relationship = path.lastRelationship();
+                        if ( path.length() == 1 )
+                        {
+                            String relationshipName = (String) relationship.getProperty( SortedTree.TREE_NAME, null );
+                            String relationshipDirection = (String) relationship.getProperty(
+                                IndexedRelationship.DIRECTION_PROPERTY_NAME, null );
+                            if ( relType.name().equals( relationshipName ) &&
+                                direction.reverse().name().equals( relationshipDirection ) )
+                            {
+                                return Evaluation.EXCLUDE_AND_CONTINUE;
+                            }
+                            else
+                            {
+                                return Evaluation.EXCLUDE_AND_PRUNE;
+                            }
+                        }
+
+
+                        if ( relationship.getType().equals( SortedTree.RelTypes.TREE_ROOT ) )
+                        {
+                            return Evaluation.INCLUDE_AND_PRUNE;
+                        }
+                        return Evaluation.EXCLUDE_AND_CONTINUE;
+                    }
+                } ).traverse( node ).iterator();
+        }
+
+        private Relationship getStartingIndexedRelationship( Node node, RelationshipType relType, Direction direction )
+        {
+            Iterable<Relationship> indexRels = node.getRelationships( SortedTree.RelTypes.TREE_ROOT );
+            Relationship ir = null;
+            for ( Relationship indexRel : indexRels )
+            {
+                String relName = (String) indexRel.getProperty( SortedTree.TREE_NAME );
+                if ( relName.equals( relType.name() ) )
+                {
+                    if ( indexRel.hasProperty( IndexedRelationship.DIRECTION_PROPERTY_NAME ) )
+                    {
+                        String dir = (String) indexRel.getProperty( IndexedRelationship.DIRECTION_PROPERTY_NAME );
+                        if ( dir.equals( direction.name() ) )
+                        {
+                            ir = indexRel;
+                            break;
+                        }
+                    }
+                }
+            }
+            return ir;
         }
 
         @Override
         public boolean hasNext()
         {
-            if ( directRelationshipIterator != null )
+            if ( directRelationshipIterator != null && directRelationshipIterator.hasNext() )
             {
-                if ( directRelationshipIterator.hasNext() )
-                {
-                    return true;
-                }
-                else
-                {
-                    if ( indexedRelationshipIterator != null )
-                    {
-                        return indexedRelationshipIterator.hasNext();
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
+                return true;
             }
-            else
+            if ( indexedRelationshipIterator != null && indexedRelationshipIterator.hasNext() )
             {
-                if ( indexedRelationshipIterator != null )
-                {
-                    return indexedRelationshipIterator.hasNext();
-                }
-                else
-                {
-                    return false;
-                }
+                return true;
             }
+            if ( indexedRelationshipDestinationIterator != null && indexedRelationshipDestinationIterator.hasNext() )
+            {
+                return true;
+            }
+            return false;
         }
 
         @Override
         public Relationship next()
         {
-            if ( directRelationshipIterator != null )
+            if ( directRelationshipIterator != null && directRelationshipIterator.hasNext() )
             {
-                if ( directRelationshipIterator.hasNext() )
+                return directRelationshipIterator.next();
+            }
+            if ( indexedRelationshipIterator != null && indexedRelationshipIterator.hasNext() )
+            {
+                return indexedRelationshipIterator.next();
+            }
+            if ( indexedRelationshipDestinationIterator != null && indexedRelationshipDestinationIterator.hasNext() )
+            {
+                Path path = indexedRelationshipDestinationIterator.next();
+                boolean isUniqueIndex = (Boolean) path.lastRelationship().getProperty( SortedTree.IS_UNIQUE_INDEX );
+                String direction = (String) path.lastRelationship().getProperty(
+                    IndexedRelationship.DIRECTION_PROPERTY_NAME );
+                try
                 {
-                    return directRelationshipIterator.next();
+                    Class<?> comparatorClass = Class.forName( (String) path.lastRelationship().getProperty(
+                        SortedTree.COMPARATOR_CLASS ) );
+                    Comparator<Node> comparator = (Comparator<Node>) comparatorClass.newInstance();
+                    IndexedRelationship indexedRelationship = new IndexedRelationship( relType,
+                        Direction.valueOf( direction ), comparator, isUniqueIndex, path.endNode(), graphDb );
+                    return indexedRelationship.getRelationship( path.relationships().iterator().next() );
                 }
-                else
+                catch ( Exception e )
                 {
-                    if ( indexedRelationshipIterator != null )
-                    {
-                        inIndexedRelationshipIterator = true;
-                        if ( indexedRelationshipIterator.hasNext() )
-                        {
-                            return indexedRelationshipIterator.next();
-                        }
-                        else
-                        {
-                            throw new NoSuchElementException();
-                        }
-                    }
-                    else
-                    {
-                        throw new NoSuchElementException();
-                    }
+                    throw new RuntimeException( "Comparator class cannot be instantiated" );
                 }
             }
-            else
-            {
-                if ( indexedRelationshipIterator != null )
-                {
-                    inIndexedRelationshipIterator = true;
-                    if ( indexedRelationshipIterator.hasNext() )
-                    {
-                        return indexedRelationshipIterator.next();
-                    }
-                    else
-                    {
-                        throw new NoSuchElementException();
-                    }
-                }
-                else
-                {
-                    throw new NoSuchElementException();
-                }
-            }
+            throw new NoSuchElementException();
         }
 
         @Override
