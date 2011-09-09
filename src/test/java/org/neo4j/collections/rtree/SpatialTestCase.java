@@ -47,6 +47,16 @@ public abstract class SpatialTestCase extends Neo4jTestCase {
 	
 	protected Node createGeomNode(double xmin, double ymin, double xmax, double ymax) {
     	Node node = graphDb().createNode();
+//		if (xmin > xmax) {
+//			double nx = xmin;
+//			xmin = xmax;
+//			xmax = nx;
+//		}
+//		if (ymin > ymax) {
+//			double ny = ymin;
+//			ymin = ymax;
+//			ymax = ny;
+//		}
     	node.setProperty("bbox", new double[] { xmin, ymin, xmax, ymax });		
     	return node;
 	}

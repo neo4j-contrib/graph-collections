@@ -22,43 +22,81 @@ package org.neo4j.collections.rtree;
 
 public class Envelope {
 
-	// Constructor
-	
+	/**
+	 * Copy constructor
+	 */
 	public Envelope(Envelope e) {
-		this(e.xmin, e.xmax, e.ymin, e.ymax);
+		this(e.min, e.max);
 	}
 
-	public Envelope(double xmin, double xmax, double ymin, double ymax) {
-		this.xmin = xmin;
-		this.xmax = xmax;
-		this.ymin = ymin;
-		this.ymax = ymax;
+	/**
+	 * General constructor for the n-dimensional case
+	 * @param min
+	 * @param max
+	 */
+	public Envelope(double[] min, double[] max) {
+		this.min = min.clone();
+		this.max = max.clone();
+		if (!isValid()) {
+			throw new RuntimeException("Invalid envelope created " + toString());
+		}
 	}
 	
-	public Envelope() {
-		this.xmin = 0;
-		this.xmax = -1;
-		this.ymin = 0;
-		this.ymax = -1;
+	/**
+	 * General constructor for the n-dimensional case starting with a single point
+	 * @param min
+	 * @param max
+	 */
+	public Envelope(double[] p) {
+		this.min = p.clone();
+		this.max = p.clone();
 	}
-
+	
+	/**
+	 * Special constructor for the 2D case
+	 * @param xmin
+	 * @param xmax
+	 * @param ymin
+	 * @param ymax
+	 */
+	public Envelope(double xmin, double xmax, double ymin, double ymax) {
+		this(new double[] { xmin, ymin }, new double[] { xmax, ymax });
+	}
+	
+	/**
+	 * Creates an empty envelope with unknown dimension. Be sure to add something to this before attempting to access the contents. 
+	 */
+	public Envelope() {
+	}
 	
 	// Public methods
 
+	public double getMin(int dimension) {
+		return min[dimension];
+	}
+
+	public double getMax(int dimension) {
+		return max[dimension];
+	}
+
 	public double getMinX() {
-		return xmin;
+		return getMin(0);
 	}
 
 	public double getMaxX() {
-		return xmax;
+		return getMax(0);
 	}	
 	
 	public double getMinY() {
-		return ymin;
+		return getMin(1);
 	}
 		
 	public double getMaxY() {
-		return ymax;
+		return getMax(1);
+	}
+	
+	public int getDimension() {
+		return isValid() ? min.length : 0;
 	}
 	
 	/**
@@ -70,120 +108,195 @@ public class Envelope {
 	}
 
 	public boolean covers(Envelope other) {
-		if (!isValid() || !other.isValid()) {
-            return false;
-        }
-		
-		return other.xmin >= xmin && other.xmax <= xmax 
-			&& other.ymin >= ymin && other.ymax <= ymax;
+		boolean ans = isValid() && other.isValid() && getDimension() == other.getDimension();
+		for (int i = 0; i < min.length; i++) {
+			if (!ans)
+				return ans;
+			ans = ans && other.min[i] >= min[i] && other.max[i] <= max[i];
+		}
+		return ans;
 	}
+
+	public boolean disjoint(Envelope other) {
+		if (isValid() && other.isValid() && getDimension() == other.getDimension()) {
+			for (int i = 0; i < min.length; i++) {
+				if (other.min[i] > max[i] && other.max[i] > max[i])
+					return true;
+			}
+		}
+		return false;
+	}	
 	
+
 	public boolean intersects(Envelope other) {
-		if (!isValid() || !other.isValid()) {
-            return false;
-        }
-		
-		return !(other.xmin > xmax || other.xmax < xmin
-                || other.ymin > ymax || other.ymax < ymin);
+		if (isValid() && other.isValid() && getDimension() == other.getDimension()) {
+			return !disjoint(other);
+		}
+		return false;
 	}	
 	
 	public void expandToInclude(Envelope other) {
-		if (!other.isValid()) {
-			return;
-		}
-		
 		if (!isValid()) {
-			xmin = other.xmin;
-			xmax = other.xmax;
-			ymin = other.ymin;
-			ymax = other.ymax;
+			min = other.min.clone();
+			max = other.max.clone();
 		} else {
-			if (other.xmin < xmin) xmin = other.xmin;
-			if (other.xmax > xmax) xmax = other.xmax;
-			if (other.ymin < ymin) ymin = other.ymin;
-			if (other.ymax > ymax) ymax = other.ymax;
+			for (int i = 0; i < min.length; i++) {
+				if (other.min[i] < min[i])
+					min[i] = other.min[i];
+				if (other.max[i] > max[i])
+					max[i] = other.max[i];
+			}
+		}
+	}
+
+	public void expandBy(double[] padding) {
+		for(int i=0;i<min.length;i++) {
+			min[i] -= padding[i];
+			max[i] += padding[i];
 		}
 	}
 
 	public double[] centre() {
-	    if (!isValid()) {
-	    	return null;
-	    }
-	    
-	    return new double[] {
-	        (getMinX() + getMaxX()) / 2.0,
-	        (getMinY() + getMaxY()) / 2.0 };
+		if (!isValid()) {
+			return null;
+		}
+		double[] center = new double[min.length];
+		for (int i = 0; i < min.length; i++) {
+			center[i] = (min[i] + max[i]) / 2.0;
+		}
+		return center;
 	}
 
-	public double distance(Envelope other) {
-	    if (intersects(other)) {
-	    	return 0;
-	    }
-	    
-	    double dx = 0.0;
-	    if (xmax < other.xmin) dx = other.xmin - xmax;
-	    if (xmin > other.xmax) dx = xmin - other.xmax;
-	    
-	    double dy = 0.0;
-	    if (ymax < other.ymin) dy = other.ymin - ymax;
-	    if (ymin > other.ymax) dy = ymin - other.ymax;
+	/**
+	 * Return the distance between the two envelopes on one dimension. This can return negative values if the envelopes intersect on this dimension.
+	 * @param other
+	 * @param dimension
+	 * @return distance between envelopes
+	 */
+	public double distance(Envelope other, int dimension) {
+		if(min[dimension] < other.min[dimension]){
+			return other.min[dimension] - max[dimension];
+		}else{
+			return min[dimension] - other.max[dimension];
+		}
+	}
 
-	    // if either is zero, the envelopes overlap either vertically or horizontally
-	    
-	    if (dx == 0.0) {
-	    	return dy;
-	    }
-	    
-	    if (dy == 0.0) {
-	    	return dx;
-	    }
-	    
-	    return Math.sqrt(dx * dx + dy * dy);
+	/**
+	 * Find the pythagorean distance between two envelopes
+	 * @param other
+	 * @return
+	 */
+	public double distance(Envelope other) {
+		if (intersects(other)) {
+			return 0;
+		}
+
+		double distance = 0.0;
+		for (int i = 0; i < min.length; i++) {
+			double dist = distance(other, i);
+			if (dist > 0) {
+				distance += dist * dist;
+			}
+		}
+		return Math.sqrt(distance);
+	}
+
+	public void expandToInclude(double[] p) {
+		if(!isValid()) {
+			min = p.clone();
+			max = p.clone();
+		} else {
+			for (int i = 0; i < min.length; i++) {
+				if (p[i] < min[i])
+					min[i] = p[i];
+				if (p[i] > max[i])
+					max[i] = p[i];
+			}
+		}
 	}
 
 	public void expandToInclude(double x, double y) {
-		if (!isValid()) {
-			xmin = x;
-			xmax = x;
-			ymin = y;
-			ymax = y;
-		} else {
-			if (x < xmin) {
-	          xmin = x;
-			}
-			
-	        if (x > xmax) {
-	        	xmax = x;
-	        }
-	        
-	        if (y < ymin) {
-	          ymin = y;
-	        }
-	        
-	        if (y > ymax) {
-	          ymax = y;
-	        }
-		}
-	}
-	
-	public double getHeight() {
-		return isValid() ? ymax - ymin : 0;
+		expandToInclude(new double[] { x, y });
 	}
 
+	/**
+	 * @return getWidth(1) for special 2D case with the second dimension being y (height)
+	 */
+	public double getHeight() {
+		return getWidth(1);
+	}
+
+	/**
+	 * @return getWidth(0) for special 2D case with the first dimension being x (width)
+	 */
 	public double getWidth() {
-		return isValid() ? xmax - xmin : 0;
+		return getWidth(0);
+	}
+
+	/**
+	 * Return the width of the envelope at the specified dimension
+	 * @param dimension
+	 * @return with of that dimension, ie. max[d] - min[d]
+	 */
+	public double getWidth(int dimension) {
+		return isValid() ? max[dimension] - min[dimension] : 0;
 	}
 
 	public double getArea() {
-		return getWidth() * getHeight();
+		double area = 1.0;
+		for (int i = 0; i < min.length; i++) {
+			area *= (max[i] - min[i]);
+		}
+		return area;
 	}
 	
 	public boolean isValid() {
-		return xmin <= xmax && ymin <= ymax;
-	}
-	
+		boolean ans = min != null && max != null && min.length == max.length;
+		if (!ans)
+			return ans;
+		for (int i = 0; i < min.length; i++) {
+			ans = ans && min[i] <= max[i];
+			if (!ans)
+				return ans;
+		}
+		return ans;
+	}	
 	
 	// Attributes
 	
-	private double xmin, xmax, ymin, ymax;
+	private double[] min;
+	private double[] max;
+
+	/**
+	 * Move this Envelope by the specified offsets
+	 * @param offset array of offsets
+	 */
+	public void translate(double[] offset) {
+		for (int i = 0; i < offset.length; i++) {
+			min[i] += offset[i];
+			max[i] += offset[i];
+		}
+	}
+
+	public String toString() {
+		return "Envelope: min=" + makeString(min) + ", max=" + makeString(max);
+	}
+	
+	public static String makeString(double[] vals) {
+		StringBuffer sb = new StringBuffer();
+		if (vals == null) {
+			sb.append("null");
+		} else {
+			for (int i = 0; i < vals.length; i++) {
+				if (sb.length() > 0)
+					sb.append(",");
+				else
+					sb.append("(");
+				sb.append(vals[i]);
+			}
+			if (sb.length() > 0)
+				sb.append(")");
+		}
+		return sb.toString();
+	}
 }

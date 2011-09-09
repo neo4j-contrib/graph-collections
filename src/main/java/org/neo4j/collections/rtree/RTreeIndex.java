@@ -126,7 +126,6 @@ public class RTreeIndex implements SpatialIndexWriter {
 
 			// adjust tree
 			adjustParentBoundingBox(deletedNodeParent, RTreeRelationshipTypes.RTREE_CHILD);
-			adjustPathBoundingBox(deletedNodeParent);
 			
 			// add orphaned geomNodes
 			for (Node orphan : orphanedGeometryNodes) {
@@ -634,6 +633,9 @@ public class RTreeIndex implements SpatialIndexWriter {
 	    double[] childBBox = null;
 	    if (type == RTreeRelationshipTypes.RTREE_REFERENCE) {
 	        childBBox = envelopeToBBox(envelopeDecoder.decodeEnvelope(newChild));
+			if (newChild.hasRelationship(type, Direction.INCOMING)) {
+				throw new RuntimeException("Leaf node already has incoming index relationship: " + newChild);
+			}
 	    } else {
 	        childBBox = (double[]) newChild.getProperty(PROP_BBOX);
 	    }
@@ -670,10 +672,18 @@ public class RTreeIndex implements SpatialIndexWriter {
 		}
 
 		if (bbox == null) {
-			bbox = new Envelope();
+			// We have no more data in this node, delete it and adjust it's parent node
+			Relationship relationship = indexNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_CHILD, Direction.INCOMING);
+			if (relationship != null) {
+				Node parentNode = relationship.getStartNode();
+				relationship.delete();
+				indexNode.delete();
+				adjustParentBoundingBox(parentNode, RTreeRelationshipTypes.RTREE_CHILD);
+			}
+		}else{
+			indexNode.setProperty(PROP_BBOX, new double[] { bbox.getMinX(), bbox.getMinY(), bbox.getMaxX(), bbox.getMaxY() });
+			adjustPathBoundingBox(indexNode);
 		}
-		
-		indexNode.setProperty(PROP_BBOX, new double[] { bbox.getMinX(), bbox.getMinY(), bbox.getMaxX(), bbox.getMaxY() });
 	}
 		
 	/**

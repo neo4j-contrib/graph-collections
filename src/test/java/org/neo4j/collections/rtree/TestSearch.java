@@ -37,8 +37,8 @@ public class TestSearch extends SpatialTestCase {
 		assertTrue(index.isEmpty());
 		assertEquals(0, index.count());		
 		
-		// invalid bbox test
-		index.add(createGeomNode(0, 0, -2, -3));
+//		// invalid bbox test
+//		index.add(createGeomNode(0, 0, -2, -3));
 		
 		// equal bbox test
 		index.add(createGeomNode(0, 0, 2, 3));
@@ -52,23 +52,23 @@ public class TestSearch extends SpatialTestCase {
 		index.add(geomNode);
 
 		assertFalse(index.isEmpty());
-		assertEquals(7, index.count());		
+		assertEquals(6, index.count());		
 		
 		assertTrue(index.isNodeIndexed(geomNode.getId()));
 		index.remove(geomNode.getId(), false);
 		assertFalse(index.isNodeIndexed(geomNode.getId()));		
 		
-		assertEquals(6, index.count());
+		assertEquals(5, index.count());
 		
 		Envelope bbox = index.getBoundingBox();
 		Envelope expectedBbox = new Envelope(0, 25, 0, 32);
 		assertEnvelopeEquals(bbox, expectedBbox);
 		
-		Search search = new SearchInvalidEnvelopes(index.getEnvelopeDecoder());
-		index.executeSearch(search);
-		assertEquals(1, search.getResults().size());
+//		Search search = new SearchInvalidEnvelopes(index.getEnvelopeDecoder());
+//		index.executeSearch(search);
+//		assertEquals(1, search.getResults().size());
 
-		search = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), 
+		Search search = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), 
 				new Envelope(0, 2, 0, 3));
 		index.executeSearch(search);
 		assertEquals(1, search.getResults().size());
