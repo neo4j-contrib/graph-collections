@@ -197,13 +197,14 @@ class NodeEntry
     	return new RelationshipIterable();
     }
 
-    void setNode( Node node )
+    Relationship addNode( Node node )
     {
     	Relationship rel = getEndNode().createRelationshipTo(node, RelTypes.KEY_VALUE);
     	String treeName = treeNode.getBTree().getTreeName();
     	if(treeName != null){
     		rel.setProperty(SortedTree.TREE_NAME, treeName);
     	}
+        return rel;
     }
 
 

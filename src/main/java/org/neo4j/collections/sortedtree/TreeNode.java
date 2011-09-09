@@ -212,8 +212,7 @@ class TreeNode {
 								+ theNode);
 					}
 				}
-				keyEntry.setNode(theNode);
-				return keyEntry.getUnderlyingRelationship();
+				return keyEntry.addNode(theNode);
 			}
 			entryCount++;
 			if (bTree.getComparator().compare(theNode, currentNode) < 0) {
@@ -231,7 +230,8 @@ class TreeNode {
 				}
 				// create new blank node for key entry relationship
 				Node blankNode = bTree.getGraphDb().createNode();
-				NodeEntry nodeEntry = createEntry(keyEntry.getStartNode(), blankNode, theNode);
+				NodeEntry nodeEntry = createEntry(keyEntry.getStartNode(), blankNode);
+                Relationship keyValueRelationship = nodeEntry.addNode( theNode );
 				// move previous keyEntry to start at blank node
 				keyEntry.move(this, blankNode, keyEntry.getEndNode());
 				entryCount++;
@@ -239,7 +239,7 @@ class TreeNode {
 				if (bTree.getOrder() == entryCount) {
 					moveMiddleUp();
 				}
-				return nodeEntry.getUnderlyingRelationship();
+				return keyValueRelationship;
 			}
 			// else if last entry, check for sub tree or add last
 			if (keyEntry.getNextKey() == null) {
@@ -250,13 +250,14 @@ class TreeNode {
 				}
 				// ok just append the element
 				Node blankNode = bTree.getGraphDb().createNode();
-				NodeEntry nodeEntry = createEntry(keyEntry.getEndNode(), blankNode, theNode);
+				NodeEntry nodeEntry = createEntry(keyEntry.getEndNode(), blankNode);
+                Relationship keyValueRelationship = nodeEntry.addNode( theNode );
 				entryCount++;
 				assert entryCount <= bTree.getOrder();
 				if (bTree.getOrder() == entryCount) {
 					moveMiddleUp();
 				}
-				return nodeEntry.getUnderlyingRelationship();
+				return keyValueRelationship;
 			}
 			keyEntry = keyEntry.getNextKey();
 		}
@@ -267,7 +268,7 @@ class TreeNode {
 				.hasNext();
 		// ok add first entry in root
 		Node blankNode = bTree.getGraphDb().createNode();
-		return createEntry(treeNode, blankNode, theNode).getUnderlyingRelationship();
+		return createEntry(treeNode, blankNode).addNode( theNode );
 	}
 
 	<T> Iterable<Node> getWithValue(T val, PropertyComparator<T> comp) {
@@ -400,10 +401,13 @@ class TreeNode {
 	}
 
 	private NodeEntry createEntry(Node startNode, Node endNode, Node theNode) {
-		NodeEntry newEntry = new NodeEntry(this,
-				startNode.createRelationshipTo(endNode, RelTypes.KEY_ENTRY));
-		newEntry.setNode(theNode);
+		NodeEntry newEntry = createEntry( startNode, endNode );
+        newEntry.addNode( theNode );
 		return newEntry;
+	}
+
+	private NodeEntry createEntry(Node startNode, Node endNode) {
+        return new NodeEntry( this, startNode.createRelationshipTo(endNode, RelTypes.KEY_ENTRY));
 	}
 
 	boolean isRoot() {
@@ -422,12 +426,9 @@ class TreeNode {
 			if (bTree.getComparator().compare(theNode, currentNode) < 0) {
 				// create new blank node for key entry relationship
 				Node blankNode = bTree.getGraphDb().createNode();
-				NodeEntry newEntry = createEntry(keyEntry.getStartNode(),
-						blankNode, theNode);
+				NodeEntry newEntry = createEntry(keyEntry.getStartNode(), blankNode);
 				for (Node n : theNodes) {
-					if (!n.equals(theNode)) {
-						newEntry.setNode(n);
-					}
+                    newEntry.addNode(n);
 				}
 				// move previous keyEntry to start at blank node
 				keyEntry.move(this, blankNode, keyEntry.getEndNode());
@@ -443,7 +444,7 @@ class TreeNode {
 		}
 		// ok insert first entry (in new root)
 		Node blankNode = bTree.getGraphDb().createNode();
-		return createEntry(treeNode, blankNode, theNode);
+        return createEntry( treeNode, blankNode, theNode );
 	}
 
 	private void moveMiddleUp() {
