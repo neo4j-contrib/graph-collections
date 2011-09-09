@@ -299,18 +299,10 @@ public class IndexedRelationship implements Iterable<Relationship>
      */
     public Relationship createRelationshipTo( Node node )
     {
-        bTree.addNode( node );
-        Relationship keyValueRelationship = null;
-        for ( Relationship rel : node.getRelationships( SortedTree.RelTypes.KEY_VALUE, Direction.INCOMING ) )
+        Relationship keyValueRelationship = bTree.addNode( node );
+        if ( !keyValueRelationship.hasProperty( DIRECTION_PROPERTY_NAME ) )
         {
-            if ( rel.getProperty( SortedTree.TREE_NAME ).equals( relType.name() ) )
-            {
-                keyValueRelationship = rel;
-                if ( !rel.hasProperty( DIRECTION_PROPERTY_NAME ) )
-                {
-                    rel.setProperty( DIRECTION_PROPERTY_NAME, direction.name() );
-                }
-            }
+            keyValueRelationship.setProperty( DIRECTION_PROPERTY_NAME, direction.name() );
         }
         return getRelationship( keyValueRelationship );
     }

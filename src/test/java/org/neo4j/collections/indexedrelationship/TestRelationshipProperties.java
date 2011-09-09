@@ -54,12 +54,12 @@ public class TestRelationshipProperties extends Neo4jTestCase
         {
             if ( rel.getEndNode().equals( node1 ) )
             {
-                assertEquals( rel.getProperty( "rel property" ), "relationship 1" );
+                assertEquals( "relationship 1", rel.getProperty( "rel property" ) );
             }
 
             if ( rel.getEndNode().equals( node2 ) )
             {
-                assertEquals( rel.getProperty( "rel property" ), "relationship 2" );
+                assertEquals( "relationship 2", rel.getProperty( "rel property" ) );
             }
 
             count++;

@@ -253,6 +253,43 @@ public class TestIndexedRelationship extends Neo4jTestCase
     }
 
     @Test
+    public void testIncomingAndOutgoingIndexRelationships()
+    {
+        Node indexedNode = graphDb().createNode();
+        IndexedRelationship ir = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING,
+            new IdComparator(), true, indexedNode, graphDb() );
+        Node indexedNode2 = graphDb().createNode();
+        IndexedRelationship ir2 = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.INCOMING,
+            new IdComparator(), true, indexedNode2, graphDb() );
+
+        Node leafEnd = graphDb().createNode();
+        leafEnd.setProperty( "name", "n1" );
+
+        ir.createRelationshipTo( leafEnd );
+        ir2.createRelationshipTo( leafEnd );
+
+        IndexedRelationshipExpander relationshipExpander = new IndexedRelationshipExpander( graphDb(),
+            Direction.OUTGOING, RelTypes.INDEXED_RELATIONSHIP );
+        IndexedRelationshipExpander relationshipExpander2 = new IndexedRelationshipExpander( graphDb(),
+            Direction.INCOMING, RelTypes.INDEXED_RELATIONSHIP );
+
+        int count = 0;
+        for ( Relationship rel : relationshipExpander.expand( indexedNode ) )
+        {
+            assertEquals( leafEnd, rel.getEndNode() );
+            assertEquals( indexedNode, rel.getStartNode() );
+            count++;
+        }
+        for ( Relationship rel : relationshipExpander2.expand( indexedNode2 ) )
+        {
+            assertEquals( leafEnd, rel.getStartNode() );
+            assertEquals( indexedNode2, rel.getEndNode() );
+            count++;
+        }
+        assertEquals( 2, count );
+    }
+
+    @Test
     public void testIndexedRelationshipExpanderAtDestination()
     {
         Node indexedNode = graphDb().createNode();
