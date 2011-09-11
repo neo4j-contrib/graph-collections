@@ -19,24 +19,23 @@
  */
 package org.neo4j.collections.sortedtree;
 
-import java.lang.UnsupportedOperationException;
-
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.HashMap;
-
+import org.neo4j.collections.NodeCollection;
+import org.neo4j.collections.graphdb.PropertyComparator;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.collections.graphdb.PropertyComparator;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * A sorted list of nodes (structured as a Btree in neo4j).
  */
-public class SortedTree implements Iterable<Relationship>
+public class SortedTree implements NodeCollection//Iterable<Relationship>
 {
 
 	public static final String TREE_NAME = "tree_name";
@@ -245,6 +244,89 @@ public class SortedTree implements Iterable<Relationship>
         return isUniqueIndex;
     }
 
+    class NodeIterator implements Iterator<Node>{
+
+    	private TreeNode currentNode;
+
+        NodeEntry entry = null;
+        Iterator<Node> ni = null;
+        NodeIterator bi = null;
+        NodeIterator ai = null;
+        int step = 0;
+
+    	NodeIterator(TreeNode currentNode){
+    		initTreeNode(currentNode);
+    	}
+
+    	private void initTreeNode(TreeNode currentNode){
+    		this.currentNode = currentNode;
+    		NodeEntry entry = (this.currentNode == null) ?  null : currentNode.getFirstEntry();
+    		if(entry != null){
+    			initEntry(entry);
+    		}
+    	}
+
+    	private void initEntry(NodeEntry nodeEntry){
+    		this.entry = nodeEntry;
+			TreeNode beforeTree = entry.getBeforeSubTree();
+			if ( beforeTree != null )
+			{
+				bi = new NodeIterator(beforeTree);
+			}
+			ni = entry.getNodes().iterator();
+    	}
+
+    	private void initAfterEntry(NodeEntry entry){
+            TreeNode afterTree = entry.getAfterSubTree();
+            if ( afterTree != null )
+            {
+                ai = new NodeIterator( afterTree );
+            }
+    	}
+
+		@Override
+		public boolean hasNext() {
+			if(entry != null){
+				if(bi != null && bi.hasNext()){
+					return true;
+				}else if(ni.hasNext()){
+					return true;
+				}else{
+					return false;
+				}
+			}else{
+				if(ai != null && ai.hasNext()){
+					return true;
+				}else return false;
+			}
+		}
+
+		@Override
+		public Node next() {
+			if(bi != null && bi.hasNext()){
+				return bi.next();
+			}else if(ni.hasNext()){
+				Node n = ni.next();
+				if(!ni.hasNext()){
+					initAfterEntry(entry);
+					entry = entry.getNextKey();
+					if(entry != null){
+						initEntry(entry);
+					}
+				}
+				return n;
+			}else if(ai.hasNext()){
+				return ai.next();
+			}
+			return null;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+    }
+
     class RelationshipIterator implements Iterator<Relationship>{
 
     	private TreeNode currentNode;
@@ -328,8 +410,20 @@ public class SortedTree implements Iterable<Relationship>
 		}
     }
 
-    public Iterator<Relationship> iterator(){
-    	return new RelationshipIterator(treeRoot);
+    public Iterator<Node> iterator(){
+    	return new NodeIterator(treeRoot);
     }
 
+    @Override
+    public Iterable<Relationship> getValueRelationships()
+    {
+        return new Iterable<Relationship>() {
+
+            @Override
+            public Iterator<Relationship> iterator()
+            {
+                return new RelationshipIterator( treeRoot );
+            }
+        };
+    }
 }

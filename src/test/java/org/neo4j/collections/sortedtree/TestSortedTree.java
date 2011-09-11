@@ -200,7 +200,7 @@ public class TestSortedTree extends Neo4jTestCase
 
 		assertTrue( longTree.iterator().hasNext() );
 		int count = 0;
-		for( Relationship r: longTree){
+		for( Node n: longTree){
 			count++;
 		}
 		assertTrue( count == 39);
@@ -249,13 +249,12 @@ public class TestSortedTree extends Neo4jTestCase
 		
 		assertTrue( stringTree.iterator().hasNext() );
 		count = 0;
-		for(Relationship r: stringTree){
+		for(Node n: stringTree){
 			count++;
 		}
 		assertTrue( count == 39);		
 		count = 0;
-		for(Relationship r: stringTree){
-            Node n = r.getEndNode();
+		for(Node n: stringTree){
 			count++;
 			if(count == 1){
 				assertTrue(n.getProperty("name").equals("nodeaaaaa"));
@@ -287,7 +286,7 @@ public class TestSortedTree extends Neo4jTestCase
 		stringTree.removeNode(node36);
 		stringTree.removeNode(node38);
 		count = 0;
-		for(Relationship r: stringTree){
+		for(Node n: stringTree){
 			count++;
 		}
 		assertTrue( count == 20);
@@ -313,7 +312,7 @@ public class TestSortedTree extends Neo4jTestCase
 		stringTree.removeNode(node37);
 		stringTree.removeNode(node39);
 		count = 0;
-		for(Relationship r: stringTree){
+		for(Node n: stringTree){
 			count++;
 		}
 		assertTrue( count == 0);		
