@@ -25,13 +25,5 @@ public class TestEnvelope {
 		assertTrue(a.intersects(e));
 		assertTrue(e.intersects(a));
 	}
-	
-	@Test
-	public void testCovers() {
-		Envelope a = new Envelope(new double[] { 0 }, new double[] { 0 });
-		// assertTrue(1 == a.getArea());		
-		
-		
-	}
-	
+
 }
