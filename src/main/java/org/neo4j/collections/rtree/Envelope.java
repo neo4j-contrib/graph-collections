@@ -119,20 +119,21 @@ public class Envelope {
 
 	public boolean disjoint(Envelope other) {
 		if (isValid() && other.isValid() && getDimension() == other.getDimension()) {
-			for (int i = 0; i < min.length; i++) {
-				if (other.min[i] > max[i] && other.max[i] > max[i])
-					return true;
-			}
+			return !intersects(other);
 		}
 		return false;
 	}	
-	
 
 	public boolean intersects(Envelope other) {
 		if (isValid() && other.isValid() && getDimension() == other.getDimension()) {
-			return !disjoint(other);
+			boolean result = false;
+			for (int i = 0; i < min.length; i++) {
+				result = result || !(other.min[i] > max[i] || other.max[i] < min[i]);
+			}
+			return result;
+		} else {
+			return false;
 		}
-		return false;
 	}	
 	
 	public void expandToInclude(Envelope other) {
