@@ -42,15 +42,14 @@ public class RTreeIndex implements SpatialIndexWriter {
 	// Constructor
 	
 	public RTreeIndex(GraphDatabaseService database, Node rootNode, EnvelopeDecoder envelopeEncoder) {
-		this(database, rootNode, envelopeEncoder, 100, 51);
+		this(database, rootNode, envelopeEncoder, 100);
 	}
 	
-	public RTreeIndex(GraphDatabaseService database, Node rootNode, EnvelopeDecoder envelopeDecoder, int maxNodeReferences, int minNodeReferences) {
+	public RTreeIndex(GraphDatabaseService database, Node rootNode, EnvelopeDecoder envelopeDecoder, int maxNodeReferences) {
 		this.database = database;
 		this.rootNode = rootNode;
 		this.envelopeDecoder = envelopeDecoder;
 		this.maxNodeReferences = maxNodeReferences;
-		this.minNodeReferences = minNodeReferences;
 
 		if (envelopeDecoder == null) {
 			throw new NullPointerException("envelopeDecoder is NULL");
@@ -102,43 +101,35 @@ public class RTreeIndex implements SpatialIndexWriter {
 		// remove the entry 
 		geomNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING).delete();
 		if (deleteGeomNode) deleteNode(geomNode);
-		
+
 		// reorganize the tree if needed
-		if (getIndexNodeParent(indexNode) != null && countChildren(indexNode, RTreeRelationshipTypes.RTREE_REFERENCE) < minNodeReferences) {
-			// indexNode is not the root and contain less than the minimum number of entries
-			// tree needs reorganization
-			
-			// find the parent that must be deleted (its children < minNodeReferences) nearest to the root
-			Node lastParentNodeToDelete = findIndexNodeToDeleteNearestToRoot(indexNode);
-			
-			// find all geomNodes in the subtree
-			SearchAll search = new SearchAll();
-			visit(search, lastParentNodeToDelete);
-			List<Node> orphanedGeometryNodes = search.getResults();
-
-			// remove all geomNode in the subtree
-			for (Node orphan : orphanedGeometryNodes) {
-				orphan.getSingleRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING).delete();
-			}
-			
-			Node deletedNodeParent = getIndexNodeParent(lastParentNodeToDelete);
-			deleteRecursivelyEmptySubtree(lastParentNodeToDelete);
-
-			// adjust tree
-			adjustParentBoundingBox(deletedNodeParent, RTreeRelationshipTypes.RTREE_CHILD);
-			
-			// add orphaned geomNodes
-			for (Node orphan : orphanedGeometryNodes) {
-				add(orphan);
-			}			
+		if (countChildren(indexNode, RTreeRelationshipTypes.RTREE_REFERENCE) == 0) {
+			indexNode = deleteEmptyTreeNodes(indexNode, RTreeRelationshipTypes.RTREE_REFERENCE);			
+			adjustParentBoundingBox(indexNode, RTreeRelationshipTypes.RTREE_CHILD);
 		} else {
-			// indexNode is root or contains more than the minimum number of geomNode references
-			adjustParentBoundingBox(indexNode, RTreeRelationshipTypes.RTREE_REFERENCE);
-			adjustPathBoundingBox(indexNode);
+			adjustParentBoundingBox(indexNode, RTreeRelationshipTypes.RTREE_REFERENCE);			
 		}
+		
+		adjustPathBoundingBox(indexNode);
 		
 		countSaved = false;
 		totalGeometryCount--;		
+	}
+	
+	private Node deleteEmptyTreeNodes(Node indexNode, RelationshipType relType) {
+		if (countChildren(indexNode, relType) == 0) {
+			Node parent = getIndexNodeParent(indexNode);
+			if (parent != null) {
+				indexNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_CHILD, Direction.INCOMING).delete();
+				indexNode.delete();
+				return deleteEmptyTreeNodes(parent, RTreeRelationshipTypes.RTREE_CHILD);
+			} else {
+				// root
+				return indexNode;
+			}
+		} else {
+			return indexNode;
+		}
 	}
 	
 	@Override
@@ -170,7 +161,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 			indexRoot.getSingleRelationship(RTreeRelationshipTypes.RTREE_ROOT, Direction.INCOMING).delete();
 			
 			// delete tree
-			deleteRecursivelyEmptySubtree(indexRoot);
+			deleteRecursivelySubtree(indexRoot);
 			
 			// delete tree metadata
 			Relationship metadataNodeRelationship = getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_METADATA, Direction.OUTGOING);
@@ -333,14 +324,12 @@ public class RTreeIndex implements SpatialIndexWriter {
 			metadataNode = layerNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_METADATA, Direction.OUTGOING).getEndNode();
 			
 			maxNodeReferences = (Integer) metadataNode.getProperty("maxNodeReferences");
-			minNodeReferences = (Integer) metadataNode.getProperty("minNodeReferences");
 		} else {
 			// metadata initialization
 			metadataNode = database.createNode();
 			layerNode.createRelationshipTo(metadataNode, RTreeRelationshipTypes.RTREE_METADATA);
 			
 			metadataNode.setProperty("maxNodeReferences", maxNodeReferences);
-			metadataNode.setProperty("minNodeReferences", minNodeReferences);
 		}
 		
 		saveCount();
@@ -486,7 +475,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 			// if indexNode is the root
 			createNewRoot(indexNode, newIndexNode);
 		} else {
-			adjustParentBoundingBox(parent, (double[]) indexNode.getProperty(PROP_BBOX));
+			expandParentBoundingBoxAfterNewChild(parent, (double[]) indexNode.getProperty(PROP_BBOX));
 			
 			addChild(parent, RTreeRelationshipTypes.RTREE_CHILD, newIndexNode);
 
@@ -579,20 +568,6 @@ public class RTreeIndex implements SpatialIndexWriter {
 			bestGroupEnvelope.expandToInclude(getLeafNodeEnvelope(bestEntry));
 
 			entries.remove(bestEntry);
-			
-			// each group must contain at least minNodeReferences entries.
-			// if the group size added to the number of remaining entries is equal to minNodeReferences
-			// just add them to the group
-			
-			if (group1.size() + entries.size() == minNodeReferences) {
-				group1.addAll(entries);
-				entries.clear();
-			}
-			
-			if (group2.size() + entries.size() == minNodeReferences) {
-				group2.addAll(entries);
-				entries.clear();
-			}
 		}
 		
 		// reset bounding box and add new children
@@ -633,20 +608,17 @@ public class RTreeIndex implements SpatialIndexWriter {
 	    double[] childBBox = null;
 	    if (type == RTreeRelationshipTypes.RTREE_REFERENCE) {
 	        childBBox = envelopeToBBox(envelopeDecoder.decodeEnvelope(newChild));
-			if (newChild.hasRelationship(type, Direction.INCOMING)) {
-				throw new RuntimeException("Leaf node already has incoming index relationship: " + newChild);
-			}
 	    } else {
 	        childBBox = (double[]) newChild.getProperty(PROP_BBOX);
 	    }
 		parent.createRelationshipTo(newChild, type);
-		return adjustParentBoundingBox(parent, childBBox);
+		return expandParentBoundingBoxAfterNewChild(parent, childBBox);
 	}
 	
 	private void adjustPathBoundingBox(Node indexNode) {
 		Node parent = getIndexNodeParent(indexNode);
 		if (parent != null) {
-			if (adjustParentBoundingBox(parent, (double[]) indexNode.getProperty(PROP_BBOX))) {
+			if (adjustParentBoundingBox(parent, RTreeRelationshipTypes.RTREE_CHILD)) {
 				// entry has been modified: adjust the path for the parent
 				adjustPathBoundingBox(parent);
 			}
@@ -656,8 +628,14 @@ public class RTreeIndex implements SpatialIndexWriter {
 	/**
 	 * Fix an IndexNode bounding box after a child has been removed
 	 * @param indexNode
+	 * @return true if something has changed
 	 */
-	private void adjustParentBoundingBox(Node indexNode, RelationshipType relationshipType) {
+	private boolean adjustParentBoundingBox(Node indexNode, RelationshipType relationshipType) {
+		double[] old = null;
+		if (indexNode.hasProperty(PROP_BBOX)) {
+			old = (double[]) indexNode.getProperty(PROP_BBOX);
+		}
+ 		
 		Envelope bbox = null;
 		
 		Iterator<Relationship> iterator = indexNode.getRelationships(relationshipType, Direction.OUTGOING).iterator();
@@ -672,17 +650,20 @@ public class RTreeIndex implements SpatialIndexWriter {
 		}
 
 		if (bbox == null) {
-			// We have no more data in this node, delete it and adjust it's parent node
-			Relationship relationship = indexNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_CHILD, Direction.INCOMING);
-			if (relationship != null) {
-				Node parentNode = relationship.getStartNode();
-				relationship.delete();
-				indexNode.delete();
-				adjustParentBoundingBox(parentNode, RTreeRelationshipTypes.RTREE_CHILD);
-			}
-		}else{
+			// this could happen in an empty tree
+			bbox = new Envelope(0, 0, 0, 0);
+		}
+		
+		if (old.length != 4 || 
+			bbox.getMinX() != old[0] ||
+			bbox.getMinY() != old[1] ||
+			bbox.getMaxX() != old[2] ||
+			bbox.getMaxY() != old[3]) 
+		{
 			indexNode.setProperty(PROP_BBOX, new double[] { bbox.getMinX(), bbox.getMinY(), bbox.getMaxX(), bbox.getMaxY() });
-			adjustPathBoundingBox(indexNode);
+			return true;
+		} else {
+			return false;
 		}
 	}
 		
@@ -692,7 +673,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 	 * @param child geomNode inserted
 	 * @return is bbox changed?
 	 */
-	private boolean adjustParentBoundingBox(Node parent, double[] childBBox) {
+	private boolean expandParentBoundingBoxAfterNewChild(Node parent, double[] childBBox) {
 		if (!parent.hasProperty(PROP_BBOX)) {
 			parent.setProperty(PROP_BBOX, new double[] { childBBox[0], childBBox[1], childBBox[2], childBBox[3] });
 			return true;
@@ -744,20 +725,9 @@ public class RTreeIndex implements SpatialIndexWriter {
 		return e.getWidth() * e.getHeight();
 	}
 
-	private Node findIndexNodeToDeleteNearestToRoot(Node indexNode) {
-		Node indexNodeParent = getIndexNodeParent(indexNode);
-		
-		if (getIndexNodeParent(indexNodeParent) != null && countChildren(indexNodeParent, RTreeRelationshipTypes.RTREE_CHILD) == minNodeReferences) {
-			// indexNodeParent is not the root and will contain less than the minimum number of entries
-			return findIndexNodeToDeleteNearestToRoot(indexNodeParent);
-		} else {
-			return indexNode;
-		}
-	}
-	
-	private void deleteRecursivelyEmptySubtree(Node indexNode) {
+	private void deleteRecursivelySubtree(Node indexNode) {
 		for (Relationship relationship : indexNode.getRelationships(RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING)) {
-			deleteRecursivelyEmptySubtree(relationship.getEndNode());
+			deleteRecursivelySubtree(relationship.getEndNode());
 		}
 		
 		Relationship relationshipWithFather = indexNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_CHILD, Direction.INCOMING);
@@ -827,7 +797,6 @@ public class RTreeIndex implements SpatialIndexWriter {
 	private Node rootNode;
 	private EnvelopeDecoder envelopeDecoder;	
 	private int maxNodeReferences;
-	private int minNodeReferences;
 	
 	private Node metadataNode;
 	private int totalGeometryCount = 0;
