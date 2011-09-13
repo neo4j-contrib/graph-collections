@@ -23,6 +23,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.neo4j.collections.rtree.filter.SearchFilter;
+import org.neo4j.collections.rtree.filter.SearchResults;
+import org.neo4j.collections.rtree.search.Search;
+import org.neo4j.collections.rtree.search.SearchAll;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -31,6 +35,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.StopEvaluator;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.TraversalPosition;
 import org.neo4j.graphdb.Traverser.Order;
 
 
@@ -246,7 +251,55 @@ public class RTreeIndex implements SpatialIndexWriter {
 	public Iterable<Node> getAllIndexedNodes() {
 		return new IndexNodeToGeometryNodeIterable(getAllIndexInternalNodes());
 	}
-	
+
+	private class SearchEvaluator implements ReturnableEvaluator, StopEvaluator {
+		private SearchFilter filter;
+		private TraversalPosition lastPosition;
+		private boolean isReturnableNode;
+		private boolean isStopNode;
+
+		public SearchEvaluator(SearchFilter filter) {
+			this.filter = filter;
+		}
+
+		void checkPosition(TraversalPosition position) {
+			if (!position.equals(lastPosition)) {
+				Relationship rel = position.lastRelationshipTraversed();
+				Node node = position.currentNode();
+				if (rel == null) {
+					isStopNode = false;
+					isReturnableNode = false;
+				} else if (rel.getType().equals(RTreeRelationshipTypes.RTREE_CHILD)) {
+					isStopNode = filter.needsToVisit(getIndexNodeEnvelope(node));
+					isReturnableNode = false;
+				} else {
+					isReturnableNode = filter.geometryMatches(node);
+					isStopNode = !isReturnableNode;
+				}
+			}
+			lastPosition = position;
+		}
+
+		@Override
+		public boolean isReturnableNode(TraversalPosition position) {
+			checkPosition(position);
+			return isReturnableNode;
+		}
+
+		@Override
+		public boolean isStopNode(TraversalPosition position) {
+			checkPosition(position);
+			return isStopNode;
+		}
+	}
+
+	public SearchResults searchIndex(SearchFilter filter) {
+		// TODO: Refactor to new traversal API
+		SearchEvaluator searchEvaluator = new SearchEvaluator(filter);
+		return new SearchResults(getIndexRoot().traverse(Order.DEPTH_FIRST, searchEvaluator, searchEvaluator,
+				RTreeRelationshipTypes.RTREE_CHILD, Direction.OUTGOING, RTreeRelationshipTypes.RTREE_REFERENCE, Direction.OUTGOING));
+	}
+
 	public void visit(SpatialIndexVisitor visitor, Node indexNode) {
 		if (!visitor.needsToVisit(getIndexNodeEnvelope(indexNode))) return;
 		

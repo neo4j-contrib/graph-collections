@@ -17,10 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.search;
 
 import java.util.List;
 
+import org.neo4j.collections.rtree.SpatialIndexVisitor;
 import org.neo4j.graphdb.Node;
 
 

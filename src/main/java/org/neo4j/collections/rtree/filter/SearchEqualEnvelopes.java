@@ -17,29 +17,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.filter;
 
-import org.neo4j.collections.rtree.filter.SearchFilter;
-import org.neo4j.collections.rtree.filter.SearchResults;
-import org.neo4j.collections.rtree.search.Search;
+import org.neo4j.collections.rtree.Envelope;
+import org.neo4j.collections.rtree.EnvelopeDecoder;
 import org.neo4j.graphdb.Node;
 
+public class SearchEqualEnvelopes extends AbstractSearchEnvelopeIntersection {
 
-public interface SpatialIndexReader {
+	public SearchEqualEnvelopes(EnvelopeDecoder decoder, Envelope referenceEnvelope) {
+		super(decoder, referenceEnvelope);
+	}
 
-	EnvelopeDecoder getEnvelopeDecoder();
-	
-	boolean isEmpty();	
+	@Override
+	protected boolean onEnvelopeIntersection(Node geomNode, Envelope geomEnvelope) {
+		return referenceEnvelope.contains(geomEnvelope) && geomEnvelope.contains(referenceEnvelope);
+	}
 
-	int count();
-		
-	Envelope getBoundingBox();
-
-	boolean isNodeIndexed(Long nodeId);
-	
-    Iterable<Node> getAllIndexedNodes();
-
-	void executeSearch(Search search);    
-    
-	SearchResults searchIndex(SearchFilter filter);
 }
