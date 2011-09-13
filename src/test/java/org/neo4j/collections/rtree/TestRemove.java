@@ -30,7 +30,7 @@ public class TestRemove extends SpatialTestCase {
 		int rtreeMaxNodeReferences = 100;
 		
 		RTreeIndex index = new RTreeIndex(graphDb(), graphDb().getReferenceNode(), 
-				new EnvelopeDecoderFromDoubleArray("bbox"), rtreeMaxNodeReferences, 51);
+				new EnvelopeDecoderFromDoubleArray("bbox"), rtreeMaxNodeReferences);
 		
         long[] ids = new long[rtreeMaxNodeReferences + 1];
         for (int i = 0; i < ids.length; i++) {
