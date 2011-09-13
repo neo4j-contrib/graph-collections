@@ -17,24 +17,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.filter;
 
+import org.neo4j.collections.rtree.Envelope;
+import org.neo4j.collections.rtree.EnvelopeDecoder;
 import org.neo4j.graphdb.Node;
 
+/**
+ * Find Envelopes covered by the given Envelope
+ */
+public class SearchCoveredByEnvelope extends AbstractSearchEnvelopeIntersection {
 
-public class SearchEqualEnvelopes extends AbstractSearchEnvelopeIntersection {
-
-	public SearchEqualEnvelopes(EnvelopeDecoder decoder, Envelope referenceEnvelope) {
+	public SearchCoveredByEnvelope(EnvelopeDecoder decoder, Envelope referenceEnvelope) {
 		super(decoder, referenceEnvelope);
 	}
 
 	@Override
-	protected void onEnvelopeIntersection(Node geomNode, Envelope geomEnvelope) {
-		if (referenceEnvelope.contains(geomEnvelope) &&
-			geomEnvelope.contains(referenceEnvelope)) 
-		{
-			add(geomNode);
-	    }
+	protected boolean onEnvelopeIntersection(Node geomNode, Envelope geomEnvelope) {
+		// check if every point of this Envelope is a point of the Reference Envelope
+	    return referenceEnvelope.contains(geomEnvelope);
 	}
 
 }

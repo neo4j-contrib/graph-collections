@@ -17,8 +17,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.search;
 
+import org.neo4j.collections.rtree.Envelope;
+import org.neo4j.collections.rtree.EnvelopeDecoder;
 import org.neo4j.graphdb.Node;
 
 

@@ -17,29 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.filter;
 
-import org.neo4j.collections.rtree.filter.SearchFilter;
-import org.neo4j.collections.rtree.filter.SearchResults;
-import org.neo4j.collections.rtree.search.Search;
+import org.neo4j.collections.rtree.Envelope;
 import org.neo4j.graphdb.Node;
 
-
-public interface SpatialIndexReader {
-
-	EnvelopeDecoder getEnvelopeDecoder();
-	
-	boolean isEmpty();	
-
-	int count();
-		
-	Envelope getBoundingBox();
-
-	boolean isNodeIndexed(Long nodeId);
-	
-    Iterable<Node> getAllIndexedNodes();
-
-	void executeSearch(Search search);    
-    
-	SearchResults searchIndex(SearchFilter filter);
+public interface SearchFilter {
+	boolean needsToVisit(Envelope envelope);
+	boolean geometryMatches(Node geomNode);
 }

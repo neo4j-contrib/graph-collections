@@ -17,29 +17,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.search;
 
-import org.neo4j.collections.rtree.filter.SearchFilter;
-import org.neo4j.collections.rtree.filter.SearchResults;
-import org.neo4j.collections.rtree.search.Search;
+import org.neo4j.collections.rtree.Envelope;
+import org.neo4j.collections.rtree.EnvelopeDecoder;
 import org.neo4j.graphdb.Node;
 
 
-public interface SpatialIndexReader {
+/**
+ * Find Envelops covered by the given Envelope
+ */
+public class SearchCoveredByEnvelope extends AbstractSearchEnvelopeIntersection {
 
-	EnvelopeDecoder getEnvelopeDecoder();
-	
-	boolean isEmpty();	
+	public SearchCoveredByEnvelope(EnvelopeDecoder decoder, Envelope referenceEnvelope) {
+		super(decoder, referenceEnvelope);
+	}
 
-	int count();
-		
-	Envelope getBoundingBox();
+	@Override
+	protected void onEnvelopeIntersection(Node geomNode, Envelope geomEnvelope) {
+		// check if every point of this Envelope is a point of the Reference Envelope
+	    if (referenceEnvelope.contains(geomEnvelope)) {
+	    	add(geomNode);
+	    }
+	}
 
-	boolean isNodeIndexed(Long nodeId);
-	
-    Iterable<Node> getAllIndexedNodes();
-
-	void executeSearch(Search search);    
-    
-	SearchResults searchIndex(SearchFilter filter);
 }
