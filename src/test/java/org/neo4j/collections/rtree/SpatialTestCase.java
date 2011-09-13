@@ -19,7 +19,7 @@
  */
 package org.neo4j.collections.rtree;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Direction;
@@ -30,10 +30,14 @@ import org.neo4j.graphdb.Relationship;
 public abstract class SpatialTestCase extends Neo4jTestCase {
 
 	protected void assertEnvelopeEquals(Envelope a, Envelope b) {
-		assertTrue(a.getMinX() == b.getMinX() &&
-				a.getMinY() == b.getMinY() &&
-				a.getMaxX() == b.getMaxX() &&
-				a.getMaxY() == b.getMaxY());
+		assertTrue(a.isValid());
+		assertTrue(b.isValid());
+		assertEquals(a.getDimension(), b.getDimension());
+		
+		for (int i = 0; i < a.getDimension(); i++) {
+			assertEquals(a.getMin(i), b.getMin(i), 0);
+			assertEquals(a.getMax(i), b.getMax(i), 0);
+		}
 	}	
 	
 	protected RTreeIndex createIndex() {

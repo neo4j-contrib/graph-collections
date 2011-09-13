@@ -64,10 +64,12 @@ public class Envelope {
 	}
 	
 	/**
-	 * Creates an empty envelope with unknown dimension. Be sure to add something to this before attempting to access the contents. 
+	 * Creates an empty envelope with unknown dimension. Be sure to add something to this before attempting 
+	 * to access the contents. 
 	 */
 	public Envelope() {
 	}
+	
 	
 	// Public methods
 
@@ -119,20 +121,21 @@ public class Envelope {
 
 	public boolean disjoint(Envelope other) {
 		if (isValid() && other.isValid() && getDimension() == other.getDimension()) {
-			for (int i = 0; i < min.length; i++) {
-				if (other.min[i] > max[i] && other.max[i] > max[i])
-					return true;
-			}
+			return !intersects(other);
 		}
 		return false;
 	}	
-	
 
 	public boolean intersects(Envelope other) {
 		if (isValid() && other.isValid() && getDimension() == other.getDimension()) {
-			return !disjoint(other);
+			boolean result = false;
+			for (int i = 0; i < min.length; i++) {
+				result = result || !(other.min[i] > max[i] || other.max[i] < min[i]);
+			}
+			return result;
+		} else {
+			return false;
 		}
-		return false;
 	}	
 	
 	public void expandToInclude(Envelope other) {
@@ -174,9 +177,9 @@ public class Envelope {
 	 * @return distance between envelopes
 	 */
 	public double distance(Envelope other, int dimension) {
-		if(min[dimension] < other.min[dimension]){
+		if (min[dimension] < other.min[dimension]) {
 			return other.min[dimension] - max[dimension];
-		}else{
+		} else {
 			return min[dimension] - other.max[dimension];
 		}
 	}
@@ -202,11 +205,11 @@ public class Envelope {
 	}
 
 	public void expandToInclude(double[] p) {
-		if(!isValid()) {
+		if (!isValid()) {
 			min = p.clone();
 			max = p.clone();
 		} else {
-			for (int i = 0; i < min.length; i++) {
+			for (int i = 0; i < Math.min(p.length, min.length); i++) {
 				if (p[i] < min[i])
 					min[i] = p[i];
 				if (p[i] > max[i])
@@ -262,17 +265,12 @@ public class Envelope {
 		return ans;
 	}	
 	
-	// Attributes
-	
-	private double[] min;
-	private double[] max;
-
 	/**
 	 * Move this Envelope by the specified offsets
 	 * @param offset array of offsets
 	 */
 	public void translate(double[] offset) {
-		for (int i = 0; i < offset.length; i++) {
+		for (int i = 0; i < Math.min(offset.length, min.length); i++) {
 			min[i] += offset[i];
 			max[i] += offset[i];
 		}
@@ -282,7 +280,10 @@ public class Envelope {
 		return "Envelope: min=" + makeString(min) + ", max=" + makeString(max);
 	}
 	
-	public static String makeString(double[] vals) {
+	
+	// Private methods
+	
+	private static String makeString(double[] vals) {
 		StringBuffer sb = new StringBuffer();
 		if (vals == null) {
 			sb.append("null");
@@ -298,5 +299,11 @@ public class Envelope {
 				sb.append(")");
 		}
 		return sb.toString();
-	}
+	}	
+	
+	
+	// Attributes
+	
+	private double[] min;
+	private double[] max;
 }

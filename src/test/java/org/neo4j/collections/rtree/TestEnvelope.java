@@ -40,5 +40,25 @@ public class TestEnvelope extends SpatialTestCase {
 		assertEquals("2D Box Envelope '" + envelope + "' should have 2,4 width", 2, envelope.getWidth(), 0);
 		assertEquals("2D Box Envelope '" + envelope + "' should have 2,4 width", 4, envelope.getHeight(), 0);
     }
-	
+
+	@Test
+	public void testDisjoint() {		
+		Envelope a = new Envelope(new double[] { 0 }, new double[] { 1 });
+		Envelope b = new Envelope(new double[] { 2 }, new double[] { 3 });		
+		Envelope c = new Envelope(new double[] { 1 }, new double[] { 3 });
+		Envelope d = new Envelope(new double[] { -2 }, new double[] { -1 });				
+		Envelope e = new Envelope(new double[] { -2 }, new double[] { 0 });						
+		
+		assertTrue(a.disjoint(b));
+		assertFalse(a.disjoint(c));
+		assertTrue(b.disjoint(a));
+		assertTrue(a.disjoint(d));
+		assertFalse(a.disjoint(e));
+		
+		assertTrue(a.intersects(c));
+		assertTrue(c.intersects(a));
+		assertTrue(a.intersects(e));
+		assertTrue(e.intersects(a));
+	}
+
 }
