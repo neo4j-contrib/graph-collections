@@ -29,7 +29,7 @@ import org.neo4j.graphdb.Relationship;
 
 
 /**
- * http://en.wikipedia.org/wiki/Radix_tree
+ * Implementation of a Radix Tree (http://en.wikipedia.org/wiki/Radix_tree)
  */
 public class RadixTreeImpl implements RadixTree {
     
@@ -58,8 +58,14 @@ public class RadixTreeImpl implements RadixTree {
     
 	@Override
 	public List<Node> get(String key) {
-		List<Node> results = new ArrayList<Node>();
-		get(key, rootNode, results);
+		List<Relationship> relationships = new ArrayList<Relationship>();
+		getRelationships(key, rootNode, relationships);
+		
+		List<Node> results = new ArrayList<Node>(relationships.size());		
+		for (Relationship rel : relationships) {
+			results.add(rel.getEndNode());
+		}
+		
 		return results;
 	}
 	
@@ -83,9 +89,21 @@ public class RadixTreeImpl implements RadixTree {
 	}	
 	
 	@Override
-	public void delete(String key) {
-		// TODO
-		throw new UnsupportedOperationException();
+	public int remove(String key, boolean deleteIndexedNodes) {
+		// TODO remove empty index nodes
+
+		List<Relationship> results = new ArrayList<Relationship>();
+		getRelationships(key, rootNode, results);
+
+		for (Relationship rel : results) {
+			Node indexedNode = rel.getEndNode();
+			rel.delete();
+			if (deleteIndexedNodes) {
+				indexedNode.delete();
+			}
+		}
+		
+		return results.size();
 	}
 
 	
@@ -142,25 +160,25 @@ public class RadixTreeImpl implements RadixTree {
 		return true;
 	}
 	
-	private void getLeafs(Node tree, List<Node> results) {
+	private void getLeafsRelationships(Node tree, List<Relationship> results) {
 		for (Relationship r : tree.getRelationships(Direction.OUTGOING, RadixTreeRelationshipTypes.RADIXTREE_LEAF)) {
-			results.add(r.getEndNode());
-		}
+			results.add(r);
+		}		
 	}
 	
-	private void get(String key, Node tree, List<Node> results) {
+	private void getRelationships(String key, Node tree, List<Relationship> results) {
 		String label = getLabel(tree);
 		
 		if (label.length() > key.length()) {
 			return;
 		} else if (label.equals(key)) {
-			getLeafs(tree, results);
+			getLeafsRelationships(tree, results);
 		} else {
 			int matchingCharacters = countMatchingCharacters(key, label);
 			if (matchingCharacters > 0 || isRoot(tree)) {
 				key = key.substring(matchingCharacters);
 				for (Relationship r : tree.getRelationships(Direction.OUTGOING, RadixTreeRelationshipTypes.RADIXTREE_TREE)) {
-					get(key, r.getEndNode(), results);
+					getRelationships(key, r.getEndNode(), results);
 					if (results.size() > 0) {
 						break;
 					}
@@ -168,7 +186,7 @@ public class RadixTreeImpl implements RadixTree {
 			}
 		}
 	}	
-	
+		
 	private boolean insert(String key, Node value, Node tree, String labelPrefix, boolean unique) {
 		String label = getLabel(tree);
 		String completeLabel = labelPrefix + label;

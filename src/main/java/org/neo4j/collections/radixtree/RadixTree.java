@@ -36,6 +36,6 @@ public interface RadixTree {
 	boolean insertUnique(String key, Node node);
 	
 	
-	void delete(String key);
+	int remove(String key, boolean deleteIndexedNodes);
 	
 }
