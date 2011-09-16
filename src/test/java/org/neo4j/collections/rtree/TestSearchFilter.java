@@ -24,26 +24,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.neo4j.collections.rtree.search.Search;
-import org.neo4j.collections.rtree.search.SearchCoveredByEnvelope;
-import org.neo4j.collections.rtree.search.SearchEqualEnvelopes;
+import org.neo4j.collections.rtree.filter.SearchFilter;
+import org.neo4j.collections.rtree.filter.SearchCoveredByEnvelope;
+import org.neo4j.collections.rtree.filter.SearchEqualEnvelopes;
 import org.neo4j.graphdb.Node;
 
-
-public class TestSearch extends SpatialTestCase {
+public class TestSearchFilter extends SpatialTestCase {
 	
 	@Test
-	public void myFirstTest() {
+	public void searchIndexWithFilter() {
 		RTreeIndex index = new RTreeIndex(graphDb(), graphDb().getReferenceNode(), 
 				new EnvelopeDecoderFromDoubleArray("bbox"));
 
 		assertTrue(index.isEmpty());
 		assertEquals(0, index.count());		
-		
-//		// invalid bbox test
-//		index.add(createGeomNode(0, 0, -2, -3));
-		
-		// equal bbox test
+
 		index.add(createGeomNode(0, 0, 2, 3));
 		
 		index.add(createGeomNode(10, 0));
@@ -67,19 +62,13 @@ public class TestSearch extends SpatialTestCase {
 		Envelope expectedBbox = new Envelope(0, 25, 0, 32);
 		assertEnvelopeEquals(bbox, expectedBbox);
 		
-//		Search search = new SearchInvalidEnvelopes(index.getEnvelopeDecoder());
-//		index.executeSearch(search);
-//		assertEquals(1, search.getResults().size());
-
-		Search search = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), 
+		SearchFilter filter = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), 
 				new Envelope(0, 2, 0, 3));
-		index.executeSearch(search);
-		assertEquals(1, search.getResults().size());
+		assertEquals(1, index.searchIndex(filter).count());
 
-		search = new SearchCoveredByEnvelope(index.getEnvelopeDecoder(), 
+		filter = new SearchCoveredByEnvelope(index.getEnvelopeDecoder(), 
 				new Envelope(9, 15, -1, 3));
-		index.executeSearch(search);
-		assertEquals(3, search.getResults().size());
+		assertEquals(3, index.searchIndex(filter).count());
 		
 		// TODO test index.removeAll(deleteGeomNodes, monitor)
 

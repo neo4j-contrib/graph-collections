@@ -17,12 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.filter;
 
+import org.neo4j.collections.rtree.Envelope;
 import org.neo4j.graphdb.Node;
 
-
-public class SearchAll extends AbstractSearch {
+public class SearchAll implements SearchFilter {
 
 	@Override
 	public boolean needsToVisit(Envelope indexNodeEnvelope) {
@@ -30,8 +30,8 @@ public class SearchAll extends AbstractSearch {
 	}
 
 	@Override
-	public void onIndexReference(Node geomNode) {
-		add(geomNode);
+	public boolean geometryMatches(Node geomNode) {
+		return true;
 	}
 
 }

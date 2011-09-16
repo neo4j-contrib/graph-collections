@@ -17,29 +17,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.search;
 
-import org.neo4j.collections.rtree.filter.SearchFilter;
-import org.neo4j.collections.rtree.filter.SearchResults;
-import org.neo4j.collections.rtree.search.Search;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neo4j.graphdb.Node;
 
 
-public interface SpatialIndexReader {
-
-	EnvelopeDecoder getEnvelopeDecoder();
+public abstract class AbstractSearch implements Search {
 	
-	boolean isEmpty();	
-
-	int count();
+	// Constructor
+	
+	public AbstractSearch() {
+		this.results = new ArrayList<Node>();
+	}
+	
+	
+	// Public methods
+	
+	@Override
+	public List<Node> getResults() {
+		return results;
+	}
+	
+	
+	// Private methods
+	
+	protected void add(Node geomNode) {
+		results.add(geomNode);
+	}
 		
-	Envelope getBoundingBox();
-
-	boolean isNodeIndexed(Long nodeId);
+	protected void clearResults() {
+		results.clear();
+	}
 	
-    Iterable<Node> getAllIndexedNodes();
+	
+	// Attributes
 
-	void executeSearch(Search search);    
-    
-	SearchResults searchIndex(SearchFilter filter);
+	private List<Node> results;
 }

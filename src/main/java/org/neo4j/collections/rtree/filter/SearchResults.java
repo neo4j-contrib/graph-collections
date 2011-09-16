@@ -17,43 +17,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.collections.rtree;
+package org.neo4j.collections.rtree.filter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 
 import org.neo4j.graphdb.Node;
 
+public class SearchResults implements Iterable<Node> {
+	private Iterable<Node> traverser;
+	private int count = -1;
 
-public abstract class AbstractSearch implements Search {
-	
-	// Constructor
-	
-	public AbstractSearch() {
-		this.results = new ArrayList<Node>();
+	public SearchResults(Iterable<Node> traverser) {
+		this.traverser = traverser;
 	}
-	
-	
-	// Public methods
-	
+
 	@Override
-	public List<Node> getResults() {
-		return results;
+	public Iterator<Node> iterator() {
+		return traverser.iterator();
 	}
-	
-	
-	// Private methods
-	
-	protected void add(Node geomNode) {
-		results.add(geomNode);
-	}
-		
-	protected void clearResults() {
-		results.clear();
-	}
-	
-	
-	// Attributes
 
-	private List<Node> results;
+	public int count() {
+		if (count < 0) {
+			count = 0;
+			for (@SuppressWarnings("unused")
+			Node node : this) {
+				count++;
+			}
+		}
+		return count;
+	}
 }
