@@ -26,6 +26,7 @@ import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.collections.graphdb.SortableBinaryEdgeType;
 import org.neo4j.collections.indexedrelationship.IndexedRelationship;
+import org.neo4j.collections.sortedtree.PropertySortedTree;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
@@ -79,10 +80,14 @@ public class SortableBinaryEdgeTypeImpl<T> extends BinaryEdgeTypeImpl implements
 	
 	@Override
 	public SortableBinaryEdge<T> createEdge(Vertex startVertex, Vertex endVertex) {
-		IndexedRelationship idxRel = new IndexedRelationship(
-				DynamicRelationshipType.withName(this.getName()),
-				Direction.OUTGOING, this.getPropertyType(), true, startVertex.getNode(),
-				getDb().getGraphDatabaseService());
+        IndexedRelationship idxRel = new IndexedRelationship( startVertex.getNode(),
+            DynamicRelationshipType.withName(this.getName()), Direction.OUTGOING );
+        if ( !idxRel.exists() )
+        {
+            PropertySortedTree<T> propertySortedTree = new PropertySortedTree<T>( getDb().getGraphDatabaseService(),
+                getDb().getGraphDatabaseService().createNode(), getPropertyType(), true, getName() );
+            idxRel.create( propertySortedTree );
+        }
 		Relationship rel = idxRel.createRelationshipTo(endVertex.getNode());
 		return new SortableBinaryEdgeImpl<T>(db, rel.getId(), idxRel);
 	}

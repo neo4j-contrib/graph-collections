@@ -42,45 +42,82 @@ public class SortedTree implements NodeCollection//Iterable<Relationship>
 	public static final String IS_UNIQUE_INDEX = "is_unique_index";
 	public static final String COMPARATOR_CLASS = "comparator_class";
 
-	public static enum RelTypes implements RelationshipType
+    public static enum RelTypes implements RelationshipType
 	{
 		TREE_ROOT,
 		SUB_TREE,
 		// a relationship type where relationship actually is the *key entry*
 		KEY_ENTRY,
 		KEY_VALUE
-	};
+	}
 
 	private final GraphDatabaseService graphDb;
+    private Node baseNode;
     private final Comparator<Node> nodeComparator;
     private final String treeName;
 	private final boolean isUniqueIndex;
 	private TreeNode treeRoot;
 
+    /**
+     * Instantiate a previously stored SortedTree from the base node.
+     *
+     * @param baseNode the base node of the sorted tree.
+     */
+    public SortedTree( Node baseNode )
+    {
+        this.graphDb = baseNode.getGraphDatabase();
+        this.baseNode = baseNode;
 
-	/**
+        try
+        {
+            Relationship rel = baseNode.getSingleRelationship( RelTypes.TREE_ROOT, Direction.OUTGOING );
+            String comparatorClass = (String) rel.getProperty( COMPARATOR_CLASS );
+            this.nodeComparator = (Comparator<Node>) Class.forName( comparatorClass ).newInstance();
+            this.treeName = (String) rel.getProperty( TREE_NAME );
+            this.isUniqueIndex = (Boolean) rel.getProperty( IS_UNIQUE_INDEX );
+            this.treeRoot = new TreeNode( this, rel.getEndNode() );
+        }
+        catch ( Exception e )
+        {
+            throw new IllegalStateException( "Unable to re-instantiate SortedTree from graph data structure.", e );
+        }
+    }
+
+    /**
 	 * @param graphDb the {@link GraphDatabaseService} instance.
-	 * @param rootNode the root of this tree.
+	 * @param baseNode the base node of this tree, the root relationship hangs off this node.
 	 * @param nodeComparator the {@link Comparator} to use to sort the nodes.
 	 * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
 	 * @param treeName value set on both the TREE_ROOT and the KEY_VALUE relations.
 	 */
-	public SortedTree( GraphDatabaseService graphDb, Node rootNode,
+	public SortedTree( GraphDatabaseService graphDb, Node baseNode,
         Comparator<Node> nodeComparator, boolean isUniqueIndex, String treeName )
 	{
 
-        if ( rootNode == null || graphDb == null )
+        if ( baseNode == null || graphDb == null )
         {
             throw new IllegalArgumentException(
-                    "Null parameter rootNode=" + rootNode
+                    "Null parameter baseNode=" + baseNode
                             + " graphDb=" + graphDb );
         }
 		this.graphDb = graphDb;
-		this.treeRoot = new TreeNode( this, rootNode );
+        this.baseNode = baseNode;
 
         Transaction tx = graphDb.beginTx();
         try
         {
+            if ( !baseNode.hasRelationship( RelTypes.TREE_ROOT, Direction.OUTGOING ) ) {
+                Node rootNode = graphDb.createNode();
+                baseNode.createRelationshipTo( rootNode, RelTypes.TREE_ROOT );
+                this.treeRoot = new TreeNode( this, rootNode );
+
+                baseNode.setProperty( NodeCollection.NODE_COLLECTION_CLASS, SortedTree.class.getName() );
+            }
+            else {
+                this.treeRoot = new TreeNode( this, baseNode.getSingleRelationship(
+                    RelTypes.TREE_ROOT, Direction.OUTGOING ).getEndNode() );
+            }
+
             assertPropertyIsSame( TREE_NAME, treeName );
             this.treeName = treeName;
             assertPropertyIsSame( IS_UNIQUE_INDEX, isUniqueIndex );
@@ -165,7 +202,13 @@ public class SortedTree implements NodeCollection//Iterable<Relationship>
 		rel.delete();
 	}
 
-	/**
+    @Override
+    public Node getBaseNode()
+    {
+        return baseNode;
+    }
+
+    /**
 	 * Adds a {@link Node} to this list.
 	 * @param node the {@link Node} to add.
 	 * @return {@code true} if this call modified the tree, i.e. if the node

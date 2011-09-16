@@ -19,13 +19,14 @@
  */
 package org.neo4j.collections.sortedtree;
 
-import java.util.Iterator;
-import java.util.ArrayList;
-
+import org.neo4j.collections.NodeCollection;
+import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 class NodeEntry
 {
@@ -133,7 +134,7 @@ class NodeEntry
 
 	Node getANode()
 	{
-			Iterable<Relationship> rels = getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING);
+			Iterable<Relationship> rels = getEndNode().getRelationships(NodeCollection.RelationshipTypes.VALUE, Direction.OUTGOING);
 			for(Relationship rel: rels){
 				return rel.getEndNode();
 			}
@@ -168,7 +169,7 @@ class NodeEntry
 
 		@Override
 		public Iterator<Node> iterator() {
-			Iterable<Relationship> rels = getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING);
+			Iterable<Relationship> rels = getEndNode().getRelationships(NodeCollection.RelationshipTypes.VALUE, Direction.OUTGOING);
 			return new NodeIterator(rels.iterator());
 		}
 
@@ -187,7 +188,7 @@ class NodeEntry
 
 		@Override
 		public Iterator<Relationship> iterator() {
-            return getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING).iterator();
+            return getEndNode().getRelationships(NodeCollection.RelationshipTypes.VALUE, Direction.OUTGOING).iterator();
 		}
 
 	}
@@ -199,7 +200,7 @@ class NodeEntry
 
     Relationship addNode( Node node )
     {
-    	Relationship rel = getEndNode().createRelationshipTo(node, RelTypes.KEY_VALUE);
+    	Relationship rel = getEndNode().createRelationshipTo(node, NodeCollection.RelationshipTypes.VALUE);
     	String treeName = treeNode.getBTree().getTreeName();
     	if(treeName != null){
     		rel.setProperty(SortedTree.TREE_NAME, treeName);
@@ -223,7 +224,7 @@ class NodeEntry
 		assert node != null;
 		this.treeNode = node;
 		ArrayList<TempRelationship> trls = new ArrayList<TempRelationship>();
-		for(Relationship rel: getEndNode().getRelationships(RelTypes.KEY_VALUE, Direction.OUTGOING)){
+		for(Relationship rel: getEndNode().getRelationships(NodeCollection.RelationshipTypes.VALUE, Direction.OUTGOING)){
 			trls.add(new TempRelationship(rel));
 			rel.delete();
 		}
@@ -231,7 +232,7 @@ class NodeEntry
 		entryRelationship = startNode.createRelationshipTo( endNode,
 			RelTypes.KEY_ENTRY );
 		for(TempRelationship trl: trls){
-			Relationship rel = getEndNode().createRelationshipTo(trl.getEndNode(), RelTypes.KEY_VALUE);
+			Relationship rel = getEndNode().createRelationshipTo(trl.getEndNode(), NodeCollection.RelationshipTypes.VALUE);
 			for(String key: trl.getProperties().keySet()){
 				rel.setProperty(key, trl.getProperties().get(key));
 			}

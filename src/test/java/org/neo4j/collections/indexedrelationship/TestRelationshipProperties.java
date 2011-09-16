@@ -21,6 +21,7 @@ package org.neo4j.collections.indexedrelationship;
 
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
+import org.neo4j.collections.sortedtree.SortedTree;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -33,8 +34,10 @@ public class TestRelationshipProperties extends Neo4jTestCase
     public void testIndexRelationshipAttributes()
     {
         Node indexedNode = graphDb().createNode();
-        IndexedRelationship ir = new IndexedRelationship( TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP,
-            Direction.OUTGOING, new TestIndexedRelationship.IdComparator(), true, indexedNode, graphDb() );
+        SortedTree st = new SortedTree( graphDb(), graphDb().createNode(), new TestIndexedRelationship.IdComparator(),
+            true, TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode,
+            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st );
 
         Node node1 = graphDb().createNode();
         node1.setProperty( "name", "node 1" );
@@ -72,12 +75,16 @@ public class TestRelationshipProperties extends Neo4jTestCase
     public void testIndexRelationshipAttributesFromDestination()
     {
         Node indexedNode = graphDb().createNode();
-        IndexedRelationship ir = new IndexedRelationship( TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP,
-            Direction.OUTGOING, new TestIndexedRelationship.IdComparator(), true, indexedNode, graphDb() );
+        SortedTree st1 = new SortedTree( graphDb(), graphDb().createNode(), new TestIndexedRelationship.IdComparator(),
+            true, TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode,
+            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st1 );
 
         Node indexedNode2 = graphDb().createNode();
-        IndexedRelationship ir2 = new IndexedRelationship( TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP,
-            Direction.OUTGOING, new TestIndexedRelationship.IdComparator(), true, indexedNode2, graphDb() );
+        SortedTree st2 = new SortedTree( graphDb(), graphDb().createNode(), new TestIndexedRelationship.IdComparator(),
+            true, TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
+        IndexedRelationship ir2 = new IndexedRelationship( indexedNode2,
+            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st2 );
 
         Node destination = graphDb().createNode();
         destination.setProperty( "name", "node 1" );

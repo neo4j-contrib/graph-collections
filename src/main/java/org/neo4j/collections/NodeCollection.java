@@ -21,6 +21,7 @@ package org.neo4j.collections;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 
 import java.util.Iterator;
 
@@ -29,6 +30,21 @@ import java.util.Iterator;
  */
 public interface NodeCollection extends Iterable<Node>
 {
+    static final String NODE_COLLECTION_CLASS = "node_collection_class";
+
+    static enum RelationshipTypes implements RelationshipType
+    {
+        VALUE
+    }
+
+    /**
+     * Get the base node for the node collection, e.g. for a tree this would be the root, for a list it
+     * would be the head.
+     * 
+     * @return the node used to base the node collection off
+     */
+    Node getBaseNode();
+
     /**
      * Add a node to the to a collection.
      *
