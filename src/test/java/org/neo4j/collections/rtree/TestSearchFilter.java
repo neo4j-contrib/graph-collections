@@ -21,24 +21,23 @@ package org.neo4j.collections.rtree;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.neo4j.collections.rtree.filter.SearchFilter;
 import org.neo4j.collections.rtree.filter.SearchCoveredByEnvelope;
 import org.neo4j.collections.rtree.filter.SearchEqualEnvelopes;
+import org.neo4j.collections.rtree.filter.SearchFilter;
+import org.neo4j.collections.rtree.filter.SearchResults;
 import org.neo4j.graphdb.Node;
+
 
 public class TestSearchFilter extends SpatialTestCase {
 	
 	@Test
 	public void searchIndexWithFilter() {
-		RTreeIndex index = new RTreeIndex(graphDb(), graphDb().getReferenceNode(), 
+		RTreeIndex index = new RTreeIndex(graphDb(), graphDb().getReferenceNode(),  
 				new EnvelopeDecoderFromDoubleArray("bbox"));
 
-		assertTrue(index.isEmpty());
-		assertEquals(0, index.count());		
-
+		// equal bbox test
 		index.add(createGeomNode(0, 0, 2, 3));
 		
 		index.add(createGeomNode(10, 0));
@@ -46,36 +45,30 @@ public class TestSearchFilter extends SpatialTestCase {
 		index.add(createGeomNode(14, 2));
 		index.add(createGeomNode(25, 32));
 		
-		Node geomNode = createGeomNode(11, 1);
-		index.add(geomNode);
-
 		assertFalse(index.isEmpty());
-		assertEquals(6, index.count());		
-		
-		assertTrue(index.isNodeIndexed(geomNode.getId()));
-		index.remove(geomNode.getId(), false);
-		assertFalse(index.isNodeIndexed(geomNode.getId()));		
-		
 		assertEquals(5, index.count());
 		
-		Envelope bbox = index.getBoundingBox();
-		Envelope expectedBbox = new Envelope(0, 25, 0, 32);
-		assertEnvelopeEquals(bbox, expectedBbox);
-		
-		SearchFilter filter = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), 
-				new Envelope(0, 2, 0, 3));
-		assertEquals(1, index.searchIndex(filter).count());
+		SearchFilter filter = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), new Envelope(0, 2, 0, 3));
+		SearchResults results = index.searchIndex(filter);
 
-		filter = new SearchCoveredByEnvelope(index.getEnvelopeDecoder(), 
-				new Envelope(9, 15, -1, 3));
-		assertEquals(3, index.searchIndex(filter).count());
+		int count = 0;
+		for (Node node : results) {
+			System.out.println("found node: " + node.getId());
+			count++;
+		}
 		
-		// TODO test index.removeAll(deleteGeomNodes, monitor)
-
-		index.clear(new NullListener());
-		assertEquals(0, index.count());
+		assertEquals(1, count);
 		
-		debugIndexTree(index, graphDb().getReferenceNode());
+		filter = new SearchCoveredByEnvelope(index.getEnvelopeDecoder(), new Envelope(9, 15, -1, 3));
+		results = index.searchIndex(filter);
+		
+		count = 0;
+		for (Node node : results) {
+			System.out.println("found node: " + node.getId());
+			count++;
+		}
+		
+		assertEquals(3, count);
 	}
 
 }

@@ -26,7 +26,6 @@ import java.util.List;
 import org.neo4j.collections.rtree.filter.SearchFilter;
 import org.neo4j.collections.rtree.filter.SearchResults;
 import org.neo4j.collections.rtree.search.Search;
-import org.neo4j.collections.rtree.search.SearchAll;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -244,8 +243,8 @@ public class RTreeIndex implements SpatialIndexWriter {
 	}
 
 	private class SearchEvaluator implements ReturnableEvaluator, StopEvaluator {
+		
 		private SearchFilter filter;
-		private TraversalPosition lastPosition;
 		private boolean isReturnableNode;
 		private boolean isStopNode;
 
@@ -254,21 +253,18 @@ public class RTreeIndex implements SpatialIndexWriter {
 		}
 
 		void checkPosition(TraversalPosition position) {
-			if (!position.equals(lastPosition)) {
-				Relationship rel = position.lastRelationshipTraversed();
-				Node node = position.currentNode();
-				if (rel == null) {
-					isStopNode = false;
-					isReturnableNode = false;
-				} else if (rel.getType().equals(RTreeRelationshipTypes.RTREE_CHILD)) {
-					isStopNode = filter.needsToVisit(getIndexNodeEnvelope(node));
-					isReturnableNode = false;
-				} else {
-					isReturnableNode = filter.geometryMatches(node);
-					isStopNode = !isReturnableNode;
-				}
+			Relationship rel = position.lastRelationshipTraversed();
+			Node node = position.currentNode();
+			if (rel == null) {
+				isStopNode = false;
+				isReturnableNode = false;
+			} else if (rel.getType().equals(RTreeRelationshipTypes.RTREE_CHILD)) {
+				isReturnableNode = false;
+				isStopNode = !filter.needsToVisit(getIndexNodeEnvelope(node));
+			} else if (rel.getType().equals(RTreeRelationshipTypes.RTREE_REFERENCE)) {
+				isReturnableNode = filter.geometryMatches(node);
+				isStopNode = true;
 			}
-			lastPosition = position;
 		}
 
 		@Override
