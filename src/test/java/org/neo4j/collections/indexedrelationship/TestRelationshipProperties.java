@@ -34,8 +34,8 @@ public class TestRelationshipProperties extends Neo4jTestCase
     public void testIndexRelationshipAttributes()
     {
         Node indexedNode = graphDb().createNode();
-        SortedTree st = new SortedTree( graphDb(), graphDb().createNode(), new TestIndexedRelationship.IdComparator(),
-            true, TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
+        SortedTree st = new SortedTree( graphDb(), new TestIndexedRelationship.IdComparator(), true,
+            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
         IndexedRelationship ir = new IndexedRelationship( indexedNode,
             TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st );
 
@@ -75,14 +75,14 @@ public class TestRelationshipProperties extends Neo4jTestCase
     public void testIndexRelationshipAttributesFromDestination()
     {
         Node indexedNode = graphDb().createNode();
-        SortedTree st1 = new SortedTree( graphDb(), graphDb().createNode(), new TestIndexedRelationship.IdComparator(),
-            true, TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
+        SortedTree st1 = new SortedTree( graphDb(), new TestIndexedRelationship.IdComparator(), true,
+            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
         IndexedRelationship ir = new IndexedRelationship( indexedNode,
             TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st1 );
 
         Node indexedNode2 = graphDb().createNode();
-        SortedTree st2 = new SortedTree( graphDb(), graphDb().createNode(), new TestIndexedRelationship.IdComparator(),
-            true, TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
+        SortedTree st2 = new SortedTree( graphDb(), new TestIndexedRelationship.IdComparator(), true,
+            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
         IndexedRelationship ir2 = new IndexedRelationship( indexedNode2,
             TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st2 );
 

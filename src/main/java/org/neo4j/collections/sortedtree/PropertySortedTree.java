@@ -40,10 +40,9 @@ public class PropertySortedTree<T> extends SortedTree{
     	return getWithValue(val, propertyType);
     }
     
-	public PropertySortedTree(GraphDatabaseService graphDb, Node baseNode,
-			ComparablePropertyType<T> propertyType, boolean isUniqueIndex,
-			String treeName) {
-		super(graphDb, baseNode, propertyType, isUniqueIndex, treeName);
+	public PropertySortedTree( GraphDatabaseService graphDb, ComparablePropertyType<T> propertyType,
+                               boolean isUniqueIndex, String treeName ) {
+		super(graphDb, propertyType, isUniqueIndex, treeName);
 		this.propertyType = propertyType;
 	}
 

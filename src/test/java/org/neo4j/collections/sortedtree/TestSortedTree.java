@@ -24,15 +24,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
 import static org.junit.Assert.assertTrue;
 
 public class TestSortedTree extends Neo4jTestCase
 {
-	private Node longTreeNode;
-	private Node stringTreeNode;
-	
 	private SortedTree longTree;
 	private SortedTree stringTree;
 
@@ -57,14 +53,8 @@ public class TestSortedTree extends Neo4jTestCase
 	@Before
 	public void setUpSortedTree() throws Exception
 	{
-		longTreeNode = graphDb().createNode();
-		Node longTreeInitialRootNode = graphDb().createNode();
-		Node stringTreeNode = graphDb().createNode();
-		Node stringTreeInitialRootNode = graphDb().createNode();
-		longTreeNode.createRelationshipTo(longTreeInitialRootNode, SortedTree.RelTypes.TREE_ROOT);
-		stringTreeNode.createRelationshipTo(stringTreeInitialRootNode, SortedTree.RelTypes.TREE_ROOT);
-		longTree = new SortedTree(graphDb(), longTreeInitialRootNode, new IdComparator(), true, "Unique long test");
-		stringTree = new SortedTree(graphDb(), stringTreeInitialRootNode, new NameComparator(), false, "Non unique string test");
+		longTree = new SortedTree(graphDb(), new IdComparator(), true, "Unique long test");
+		stringTree = new SortedTree(graphDb(), new NameComparator(), false, "Non unique string test");
 	}
 	
 	@After

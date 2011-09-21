@@ -85,7 +85,7 @@ public class SortableBinaryEdgeTypeImpl<T> extends BinaryEdgeTypeImpl implements
         if ( !idxRel.exists() )
         {
             PropertySortedTree<T> propertySortedTree = new PropertySortedTree<T>( getDb().getGraphDatabaseService(),
-                getDb().getGraphDatabaseService().createNode(), getPropertyType(), true, getName() );
+                getPropertyType(), true, getName() );
             idxRel.create( propertySortedTree );
         }
 		Relationship rel = idxRel.createRelationshipTo(endVertex.getNode());
