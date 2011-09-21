@@ -21,23 +21,36 @@ package org.neo4j.collections.indexedrelationship;
 
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
-import org.neo4j.collections.sortedtree.SortedTree;
+import org.neo4j.collections.list.UnrolledLinkedList;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 
 import static junit.framework.Assert.assertEquals;
 
-public class TestRelationshipProperties extends Neo4jTestCase
+public class TestUnrolledLinkedListRelationshipProperties extends Neo4jTestCase
 {
+    public static class IdComparator implements java.util.Comparator<Node>
+    {
+        public int compare( Node n1, Node n2 )
+        {
+            return ((Long) n1.getId()).compareTo( n2.getId() );
+        }
+    }
+
+    public static enum RelTypes implements RelationshipType
+    {
+        INDEXED_RELATIONSHIP
+    }
+
     @Test
     public void testIndexRelationshipAttributes()
     {
         Node indexedNode = graphDb().createNode();
-        SortedTree st = new SortedTree( graphDb(), new TestIndexedRelationship.IdComparator(), true,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
-        IndexedRelationship ir = new IndexedRelationship( indexedNode,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st );
+        UnrolledLinkedList ull = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull );
 
         Node node1 = graphDb().createNode();
         node1.setProperty( "name", "node 1" );
@@ -50,7 +63,7 @@ public class TestRelationshipProperties extends Neo4jTestCase
         relationship2.setProperty( "rel property", "relationship 2" );
 
         IndexedRelationshipExpander expander = new IndexedRelationshipExpander( graphDb(), Direction.OUTGOING,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP );
+            RelTypes.INDEXED_RELATIONSHIP );
 
         int count = 0;
         for ( Relationship rel : expander.expand( indexedNode ) )
@@ -75,16 +88,14 @@ public class TestRelationshipProperties extends Neo4jTestCase
     public void testIndexRelationshipAttributesFromDestination()
     {
         Node indexedNode = graphDb().createNode();
-        SortedTree st1 = new SortedTree( graphDb(), new TestIndexedRelationship.IdComparator(), true,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
-        IndexedRelationship ir = new IndexedRelationship( indexedNode,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st1 );
+        UnrolledLinkedList ull1 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull1 );
 
         Node indexedNode2 = graphDb().createNode();
-        SortedTree st2 = new SortedTree( graphDb(), new TestIndexedRelationship.IdComparator(), true,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP.name() );
-        IndexedRelationship ir2 = new IndexedRelationship( indexedNode2,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING, st2 );
+        UnrolledLinkedList ull2 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir2 = new IndexedRelationship( indexedNode2, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull2 );
 
         Node destination = graphDb().createNode();
         destination.setProperty( "name", "node 1" );
@@ -95,7 +106,7 @@ public class TestRelationshipProperties extends Neo4jTestCase
         relationship2.setProperty( "rel property", "relationship 2" );
 
         IndexedRelationshipExpander expander = new IndexedRelationshipExpander( graphDb(), Direction.INCOMING,
-            TestIndexedRelationship.RelTypes.INDEXED_RELATIONSHIP );
+            RelTypes.INDEXED_RELATIONSHIP );
 
         int count = 0;
         for ( Relationship rel : expander.expand( destination ) )

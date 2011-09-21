@@ -21,6 +21,8 @@ package org.neo4j.collections.list;
 
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
+import org.neo4j.collections.NodeCollection;
+import org.neo4j.collections.NodeCollectionLoader;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
@@ -31,6 +33,7 @@ import java.util.Iterator;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * The normal order of adding to an UnrolledLinkedList would be in the end of the list forwards order, e.g. adding
@@ -68,6 +71,29 @@ public class TestUnrolledLinkedList extends Neo4jTestCase
 
         Collections.reverse( nodes );
         UnrolledLinkedList loaded = new UnrolledLinkedList( list.getBaseNode() );
+        int count = 0;
+        for ( Node node : loaded )
+        {
+            assertEquals( nodes.get( count++ ), node );
+        }
+        assertEquals( nodes.size(), count );
+    }
+
+    @Test
+    public void testCreationAndLoading()
+    {
+        ArrayList<Node> nodes = createNodes( 2 );
+        UnrolledLinkedList list = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        for ( Node node : nodes )
+        {
+            list.addNode( node );
+        }
+
+        Collections.reverse( nodes );
+        UnrolledLinkedList loaded = (UnrolledLinkedList) NodeCollectionLoader.load( list.getBaseNode() );
+
+        assertNotNull( loaded );
+
         int count = 0;
         for ( Node node : loaded )
         {

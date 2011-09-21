@@ -138,6 +138,7 @@ public class UnrolledLinkedList implements NodeCollection
         }
 
         baseNode = graphDb.createNode();
+        baseNode.setProperty( GRAPH_COLLECTION_CLASS, UnrolledLinkedList.class.getName() );
         baseNode.setProperty( COMPARATOR_CLASS, nodeComparator.getClass().getName() );
         baseNode.setProperty( PAGE_SIZE, pageSize );
         baseNode.setProperty( MARGIN, margin );
