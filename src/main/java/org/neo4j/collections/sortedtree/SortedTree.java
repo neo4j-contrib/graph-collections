@@ -105,7 +105,7 @@ public class SortedTree implements NodeCollection//Iterable<Relationship>
             Node rootNode = graphDb.createNode();
             Relationship treeRootRelationship = baseNode.createRelationshipTo( rootNode, RelTypes.TREE_ROOT );
             this.treeRoot = new TreeNode( this, rootNode );
-            baseNode.setProperty( NodeCollection.NODE_COLLECTION_CLASS, SortedTree.class.getName() );
+            baseNode.setProperty( NodeCollection.GRAPH_COLLECTION_CLASS, SortedTree.class.getName() );
 
             treeRootRelationship.setProperty(  TREE_NAME, treeName );
             treeRootRelationship.setProperty( IS_UNIQUE_INDEX, isUniqueIndex );
@@ -217,7 +217,7 @@ public class SortedTree implements NodeCollection//Iterable<Relationship>
 	 * @return whether or not this call modified the list, i.e. if the node
 	 * existed in this list.
 	 */
-	public boolean removeNode( Node node )
+	public boolean remove( Node node )
 	{
 		acquireLock();
 		return treeRoot.removeEntry( node );

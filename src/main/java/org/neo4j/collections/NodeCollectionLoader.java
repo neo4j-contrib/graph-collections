@@ -43,7 +43,7 @@ public class NodeCollectionLoader
      */
     @SuppressWarnings({"unchecked"})
     public static NodeCollection load( Node baseNode ) {
-        String className = (String) baseNode.getProperty( NodeCollection.NODE_COLLECTION_CLASS, null );
+        String className = (String) baseNode.getProperty( NodeCollection.GRAPH_COLLECTION_CLASS, null );
         if ( className != null ) {
             try {
                 Class<? extends NodeCollection> nodeCollectionClass =

@@ -21,7 +21,6 @@ package org.neo4j.collections.indexedrelationship;
 
 import org.neo4j.collections.NodeCollection;
 import org.neo4j.collections.NodeCollectionLoader;
-import org.neo4j.collections.sortedtree.SortedTree;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -176,7 +175,7 @@ public class IndexedRelationship implements Iterable<Relationship>
      */
     public boolean removeRelationshipTo( Node node )
     {
-        return nodeCollection.removeNode( node );
+        return nodeCollection.remove( node );
     }
 
     /**
