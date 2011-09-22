@@ -186,6 +186,7 @@ public class UnrolledLinkedList implements NodeCollection
                 {
                     relationship.delete();
                     page.setProperty( ITEM_COUNT, ((Integer) page.getProperty( ITEM_COUNT )) - 1 );
+                    checkJoinNode( page );
                     return true;
                 }
             }
@@ -285,34 +286,12 @@ public class UnrolledLinkedList implements NodeCollection
             // If we are about to go above the upper bound then split the current page and return whichever page the
             // new node should fall within.
 
-            ArrayList<Relationship> relationships = new ArrayList<Relationship>();
-            for ( Relationship relationship : candidatePage.getRelationships(
-                GraphCollection.RelationshipTypes.VALUE, Direction.OUTGOING ) )
-            {
-                relationships.add( relationship );
-            }
-            Collections.sort( relationships, relationshipComparator );
-
+            ArrayList<Relationship> relationships = getSortedRelationships( candidatePage );
             Node newPage = baseNode.getGraphDatabase().createNode();
-            int newPageCount = 0;
-            for ( Relationship relationship : relationships )
-            {
-                Relationship newRelationship = newPage.createRelationshipTo(
-                    relationship.getEndNode(), GraphCollection.RelationshipTypes.VALUE );
-                for ( String key : relationship.getPropertyKeys() )
-                {
-                    newRelationship.setProperty( key, relationship.getProperty( key ) );
-                }
-                relationship.delete();
-
-                newPageCount++;
-                if ( newPageCount >= count / 2 )
-                {
-                    break;
-                }
-            }
-            newPage.setProperty( ITEM_COUNT, newPageCount );
-            candidatePage.setProperty( ITEM_COUNT, count - newPageCount );
+            int moveCount = count / 2;
+            moveFirstRelationships( relationships, newPage, moveCount );
+            newPage.setProperty( ITEM_COUNT, moveCount );
+            candidatePage.setProperty( ITEM_COUNT, count - moveCount );
 
             Relationship previous = candidatePage.getSingleRelationship(
                 RelationshipTypes.NEXT_PAGE, Direction.INCOMING );
@@ -376,6 +355,138 @@ public class UnrolledLinkedList implements NodeCollection
             }
         }
         return candidatePage;
+    }
+
+    private void checkJoinNode( Node candidatePage )
+    {
+        int count = (Integer) candidatePage.getProperty( ITEM_COUNT );
+        Relationship head = candidatePage.getSingleRelationship( RelationshipTypes.HEAD, Direction.INCOMING );
+        if ( head != null )
+        {
+            // Don't join head even if falling below lower bound, unless it is empty, then drop the page
+
+            if ( count == 0 )
+            {
+                Relationship next = candidatePage.getSingleRelationship(
+                    RelationshipTypes.NEXT_PAGE, Direction.OUTGOING );
+                if ( next != null )
+                {
+                    head.delete();
+                    candidatePage.delete();
+                    baseNode.createRelationshipTo( next.getEndNode(), RelationshipTypes.HEAD );
+                    next.delete();
+                }
+            }
+        }
+        else if ( count < (pageSize - margin) )
+        {
+            Relationship previousRelationship = candidatePage.getSingleRelationship(
+                RelationshipTypes.NEXT_PAGE, Direction.INCOMING );
+            Relationship nextRelationship = candidatePage.getSingleRelationship(
+                RelationshipTypes.NEXT_PAGE, Direction.OUTGOING );
+
+            Node previous = previousRelationship.getStartNode();
+            Node next = nextRelationship != null ? nextRelationship.getEndNode() : null;
+
+            int previousCount = (Integer) previous.getProperty( ITEM_COUNT );
+            int nextCount = next != null ? (Integer) next.getProperty( ITEM_COUNT ) : -1;
+
+            if ( (count + previousCount) <= (pageSize + margin) )
+            {
+                // Move this pages nodes into previous page
+
+                moveValueRelationships( candidatePage, previous );
+                previous.setProperty( ITEM_COUNT, previousCount + count );
+
+                previousRelationship.delete();
+                if ( next != null )
+                {
+                    nextRelationship.delete();
+                    previous.createRelationshipTo( next, RelationshipTypes.NEXT_PAGE );
+                }
+                candidatePage.delete();
+            }
+            else if ( nextCount != -1 && (count + nextCount) <= (pageSize + margin) )
+            {
+                // Move this pages nodes into next page
+
+                moveValueRelationships( candidatePage, next );
+                next.setProperty( ITEM_COUNT, nextCount + count );
+
+                previousRelationship.delete();
+                nextRelationship.delete();
+                previous.createRelationshipTo( next, RelationshipTypes.NEXT_PAGE );
+                candidatePage.delete();
+            }
+            else if ( previousCount > nextCount )
+            {
+                // Joining the pages will force a split again, therefore bypass this by moving nodes out of previous
+                // page into this page
+
+                ArrayList<Relationship> relationships = getSortedRelationships( previous );
+                Collections.reverse( relationships );
+                int moveCount = ((previousCount + count) / 2) - count;
+                moveFirstRelationships( relationships, candidatePage, moveCount );
+                previous.setProperty( ITEM_COUNT, previousCount - moveCount );
+                candidatePage.setProperty( ITEM_COUNT, count + moveCount );
+            }
+            else if ( nextCount != -1 ) // should never get here if nextCount == -1 since previousCount will be greater
+            {
+                // Joining the pages will force a split again, therefore bypass this by moving nodes out of next
+                // page into this page 
+
+                ArrayList<Relationship> relationships = getSortedRelationships( next );
+                int moveCount = ((nextCount + count) / 2) - count;
+                moveFirstRelationships( relationships, candidatePage, moveCount );
+                next.setProperty( ITEM_COUNT, nextCount - moveCount );
+                candidatePage.setProperty( ITEM_COUNT, count + moveCount );
+            }
+        }
+    }
+
+    private ArrayList<Relationship> getSortedRelationships( Node candidatePage )
+    {
+        ArrayList<Relationship> relationships = new ArrayList<Relationship>();
+        for ( Relationship relationship : candidatePage.getRelationships(
+            GraphCollection.RelationshipTypes.VALUE, Direction.OUTGOING ) )
+        {
+            relationships.add( relationship );
+        }
+        Collections.sort( relationships, relationshipComparator );
+        return relationships;
+    }
+
+    private void moveValueRelationships( Node candidatePage, Node previous )
+    {
+        for ( Relationship valueRelationship : candidatePage.getRelationships(
+            GraphCollection.RelationshipTypes.VALUE, Direction.OUTGOING ) )
+        {
+            moveValueRelationship( valueRelationship, previous );
+        }
+    }
+
+    private void moveFirstRelationships( ArrayList<Relationship> relationships, Node targetPage, int moveCount )
+    {
+        for ( Relationship relationship : relationships )
+        {
+            moveValueRelationship( relationship, targetPage );
+            moveCount--;
+            if ( moveCount == 0 )
+            {
+                break;
+            }
+        }
+    }
+
+    private void moveValueRelationship( Relationship valueRelationship, Node targetPage )
+    {
+        Relationship newRelationship = targetPage.createRelationshipTo(
+            valueRelationship.getEndNode(), GraphCollection.RelationshipTypes.VALUE );
+        for ( String key : valueRelationship.getPropertyKeys() )
+        {
+            newRelationship.setProperty( key, valueRelationship.getProperty( key ) );
+        }
+        valueRelationship.delete();
     }
 
     private void acquireLock()
