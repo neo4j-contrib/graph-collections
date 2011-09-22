@@ -19,20 +19,18 @@
  */
 package org.neo4j.collections.indexedrelationship;
 
-import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
-import org.neo4j.collections.sortedtree.PropertySortedTree;
-import org.neo4j.collections.sortedtree.SortedTree;
+import org.neo4j.collections.NodeCollection;
+import org.neo4j.collections.NodeCollectionLoader;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 
-import java.util.Comparator;
 import java.util.Iterator;
 
 /**
- * A specialized relationship type using a {@link SortedTree} index.
+ * A specialized relationship type using a {@link NodeCollection} index.
  * Every relationship is stored in the index, making it possible to
  * have a sorted collection of relationships, or to enforce a unicity
  * constraint on the relationship.
@@ -63,27 +61,209 @@ import java.util.Iterator;
  */
 public class IndexedRelationship implements Iterable<Relationship>
 {
-    public static final String DIRECTION_PROPERTY_NAME = "relationship_direction";
-    public static final String PROPERTY_TYPE = "org.neo4j.collections.indexedrelationship.property_name";
+    public static final String RELATIONSHIP_DIRECTION = "relationship_direction";
+    public static final String RELATIONSHIP_TYPE = "relationship_type";
 
-    private final GraphDatabaseService graphDb;
-    private final SortedTree bTree;
+    public static enum RelationshipTypes implements RelationshipType {
+        NODE_COLLECTION
+    }
+
     private final Node indexedNode;
     private final RelationshipType relType;
     private final Direction direction;
+    private NodeCollection nodeCollection;
 
-    private Node createTreeRoot( Node node )
+    /**
+     * Create an IndexedRelationship around all the relationships of a given type from a given node. The underlying
+     * NodeCollection must already exist and be attached to the indexed node for the given relationship type and
+     * direction.
+     *
+     * @param indexedNode the node that the indexing is being based on.
+     * @param relType {@link org.neo4j.graphdb.RelationshipType} of the relationships maintained in the index.
+     * @param direction the {@link org.neo4j.graphdb.Direction} of the relationship.
+     */
+    public IndexedRelationship( Node indexedNode, RelationshipType relType, Direction direction )
     {
-        Node treeRoot = graphDb.createNode();
-        Relationship rel = indexedNode.createRelationshipTo( treeRoot, SortedTree.RelTypes.TREE_ROOT );
-        rel.setProperty( DIRECTION_PROPERTY_NAME, direction.name() );
-        return treeRoot;
+        this.indexedNode = indexedNode;
+        this.relType = relType;
+        this.direction = direction;
+        nodeCollection = getNodeCollection();
+    }
+
+    /**
+     * Create an IndexedRelationship around all the relationships of a given type from a given node.
+     *
+     * @param indexedNode the node that the indexing is being based on.
+     * @param relType {@link org.neo4j.graphdb.RelationshipType} of the relationships maintained in the index.
+     * @param direction the {@link org.neo4j.graphdb.Direction} of the relationship.
+     * @param nodeCollection the collection to use to index the nodes linked to by the relationships being indexed.
+     */
+    public IndexedRelationship( Node indexedNode, RelationshipType relType, Direction direction,
+                                    NodeCollection nodeCollection )
+    {
+        this.indexedNode = indexedNode;
+        this.relType = relType;
+        this.direction = direction;
+        create( nodeCollection );
+    }
+
+    /**
+     * Does an IndexedRelationship exist at this node for the given relationship type and direction.
+     *
+     * @return <code>true</code> if an indexed relationship exists.
+     */
+    public boolean exists()
+    {
+        return nodeCollection != null;
+    }
+
+    /**
+     * Create an IndexedRelationship against this node with the given relationship type and direction. The node
+     * collection supplied to the IndexedRelationship must already have a base node. The node collection may or may not
+     * have any other nodes related to it.
+     *
+     * @param nodeCollection the { @link NodeCollection } backing this indexed relationship.
+     */
+    public void create( NodeCollection nodeCollection )
+    {
+        Relationship indexRelationship = indexedNode.createRelationshipTo( nodeCollection.getBaseNode(), RelationshipTypes.NODE_COLLECTION );
+        indexRelationship.setProperty( RELATIONSHIP_TYPE, relType.name() );
+        indexRelationship.setProperty( RELATIONSHIP_DIRECTION, direction.name() );
+        this.nodeCollection = nodeCollection;
+    }
+
+    /**
+     * Creates a relationship from the indexed node to the supplied node
+     *
+     * @param node the end node of the relationship.
+     *
+     * @return the relationship that was created between the indexedNode and the end node..
+     */
+    public Relationship createRelationshipTo( Node node )
+    {
+        Relationship keyValueRelationship = nodeCollection.addNode( node );
+        if ( !keyValueRelationship.hasProperty( RELATIONSHIP_DIRECTION ) )
+        {
+            keyValueRelationship.setProperty( RELATIONSHIP_DIRECTION, direction.name() );
+        }
+        if ( !keyValueRelationship.hasProperty( RELATIONSHIP_TYPE ) )
+        {
+            keyValueRelationship.setProperty( RELATIONSHIP_TYPE, relType.name() );
+        }
+        return getRelationship( keyValueRelationship );
+    }
+
+    /**
+     * Gets the relationship between the indexed node and the given node.
+     *
+     * @param relationship the {@link org.neo4j.collections.NodeCollection.RelationshipTypes#VALUE} relationship at the end of the indexed relationship.
+     *
+     * @return the relationship between the indexed node and the given node.
+     */
+    public Relationship getRelationship( Relationship relationship )
+    {
+        return new DirectRelationship( indexedNode, relationship );
+    }
+
+    /**
+     * Removes the relationship from the indexed node to the supplied node if it exists
+     *
+     * @param node the end node of the relationship.
+     *
+     * @return {@code true} if this call modified the index, i.e. if the node
+     *         was actually stored in the index.
+     */
+    public boolean removeRelationshipTo( Node node )
+    {
+        return nodeCollection.remove( node );
+    }
+
+    /**
+     * @return the {@link Node} whose outgoing relationships are being indexed.
+     */
+    public Node getIndexedNode()
+    {
+        return indexedNode;
+    }
+
+    /**
+     * @return the {@link RelationshipType} of the indexed relationships.
+     */
+    public RelationshipType getRelationshipType()
+    {
+        return relType;
+    }
+
+    /**
+     * @return the {@link Node}s whose incoming relationships are being indexed.
+     */
+    public Iterator<Relationship> iterator()
+    {
+        return new RelationshipIterator();
+    }
+
+    private NodeCollection getNodeCollection()
+    {
+        Relationship indexRelationship = null;
+        for ( Relationship candidateRelationship : this.indexedNode.getRelationships( RelationshipTypes.NODE_COLLECTION, Direction.OUTGOING ) )
+        {
+            String relName = (String) candidateRelationship.getProperty( RELATIONSHIP_TYPE, null );
+            if ( relType.name().equals( relName ) )
+            {
+                String dir = (String) candidateRelationship.getProperty( RELATIONSHIP_DIRECTION, null );
+                if ( direction.name().equals( dir ) )
+                {
+                    if ( indexRelationship != null ) {
+                        throw new IllegalStateException(
+                            "Multiple IndexedRelationship's on the given node with relationship type: "  +
+                                relType.name() + " and direction: " + direction.name());
+                    }
+                    
+                    indexRelationship = candidateRelationship;
+                }
+            }
+        }
+
+        if ( indexRelationship != null )
+        {
+            return NodeCollectionLoader.load(indexRelationship.getEndNode());
+        }
+
+        return null;
+    }
+
+    private class RelationshipIterator implements Iterator<Relationship>
+    {
+        Iterator<Relationship> it = nodeCollection.getValueRelationships().iterator();
+        Relationship currentRelationship = null;
+
+        @Override
+        public boolean hasNext()
+        {
+            return it.hasNext();
+        }
+
+        @Override
+        public Relationship next()
+        {
+            currentRelationship = it.next();
+            return getRelationship( currentRelationship );
+        }
+
+        @Override
+        public void remove()
+        {
+            if ( currentRelationship != null )
+            {
+                removeRelationshipTo( currentRelationship.getEndNode() );
+            }
+        }
     }
 
     private class DirectRelationship implements Relationship
     {
-        final Node indexedNode;
-        final Relationship keyValueRelationship;
+        private final Node indexedNode;
+        private final Relationship keyValueRelationship;
 
         DirectRelationship( Node indexedNode, Relationship keyValueRelationship )
         {
@@ -137,12 +317,6 @@ public class IndexedRelationship implements Iterable<Relationship>
         @Override
         public void setProperty( String key, Object value )
         {
-            if ( key.equals( SortedTree.TREE_NAME ) || key.equals( SortedTree.COMPARATOR_CLASS ) ||
-                key.equals( SortedTree.IS_UNIQUE_INDEX ) )
-            {
-                throw new RuntimeException( "Property value " + key +
-                    " is not a valid property name. This property is maintained by the SortedTree implementation" );
-            }
             keyValueRelationship.setProperty( key, value );
         }
 
@@ -207,193 +381,5 @@ public class IndexedRelationship implements Iterable<Relationship>
         {
             return relType.equals( IndexedRelationship.this.relType );
         }
-    }
-
-    private class RelationshipIterator implements Iterator<Relationship>
-    {
-        Iterator<Relationship> it = bTree.iterator();
-        Relationship currentRelationship = null;
-
-        @Override
-        public boolean hasNext()
-        {
-            return it.hasNext();
-        }
-
-        @Override
-        public Relationship next()
-        {
-            currentRelationship = it.next();
-            return getRelationship( currentRelationship );
-        }
-
-        @Override
-        public void remove()
-        {
-            if ( currentRelationship != null )
-            {
-                removeRelationshipTo( currentRelationship.getEndNode() );
-            }
-        }
-    }
-
-    /**
-     * Create an IndexedRelationship around all the relationships of a given type from a given node.
-     *
-     * @param relType {@link RelationshipType} of the relationships maintained in the index.
-     * @param direction the {@link Direction} of the relationship.
-     * @param propertyType the {@link ComparablePropertyType} to use to sort the nodes.
-     * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
-     * @param node the start node of the relationship.
-     * @param graphDb the {@link GraphDatabaseService} instance.
-     */
-    public <T> IndexedRelationship( RelationshipType relType, Direction direction,
-                                    ComparablePropertyType<T> propertyType, boolean isUniqueIndex, Node node,
-                                    GraphDatabaseService graphDb )
-    {
-        indexedNode = node;
-        this.relType = relType;
-        this.graphDb = graphDb;
-        this.direction = direction;
-        Relationship rel = getIndexedRootRelationship();
-        if ( rel == null )
-        {
-            createTreeRoot( node );
-            rel = getIndexedRootRelationship();
-        }
-        rel.setProperty( PROPERTY_TYPE, propertyType.getName() );
-        bTree = new PropertySortedTree<T>( graphDb, rel.getEndNode(), propertyType, isUniqueIndex, relType.name() );
-    }
-
-
-    /**
-     * Create an IndexedRelationship around all the relationships of a given type from a given node.
-     * <p/>
-     * <b>Note:</b> The comparator that is used for sorting the relationships cannot be an anonymous inner class.
-     *
-     * @param relType {@link RelationshipType} of the relationships maintained in the index.
-     * @param direction the {@link Direction} of the relationship.
-     * @param nodeComparator the {@link Comparator} to use to sort the nodes.
-     * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
-     * @param node the start node of the relationship.
-     * @param graphDb the {@link GraphDatabaseService} instance.
-     */
-    public IndexedRelationship( RelationshipType relType, Direction direction, Comparator<Node> nodeComparator,
-                                boolean isUniqueIndex, Node node, GraphDatabaseService graphDb )
-    {
-        indexedNode = node;
-        this.relType = relType;
-        this.graphDb = graphDb;
-        this.direction = direction;
-        Relationship rel = getIndexedRootRelationship();
-        Node treeNode = (rel == null) ? createTreeRoot( node ) : rel.getEndNode();
-        bTree = new SortedTree( graphDb, treeNode, nodeComparator, isUniqueIndex, relType.name() );
-    }
-
-    /**
-     * Creates a relationship from the indexed node to the supplied node
-     *
-     * @param node the end node of the relationship.
-     *
-     * @return the relationship that was created between the indexedNode and the end node..
-     */
-    public Relationship createRelationshipTo( Node node )
-    {
-        bTree.addNode( node );
-        Relationship keyValueRelationship = null;
-        for ( Relationship rel : node.getRelationships( SortedTree.RelTypes.KEY_VALUE, Direction.INCOMING ) )
-        {
-            if ( rel.getProperty( SortedTree.TREE_NAME ).equals( relType.name() ) )
-            {
-                keyValueRelationship = rel;
-                if ( !rel.hasProperty( DIRECTION_PROPERTY_NAME ) )
-                {
-                    rel.setProperty( DIRECTION_PROPERTY_NAME, direction.name() );
-                }
-            }
-        }
-        return getRelationship( keyValueRelationship );
-    }
-
-    /**
-     * Gets the relationship between the indexed node and the given node.
-     *
-     * @param relationship the SortedTree.RelTypes.KEY_VALUE relationship at the end of the indexed relationship.
-     *
-     * @return the relationship between the indexed node and the given node.
-     */
-    public Relationship getRelationship( Relationship relationship )
-    {
-        return new DirectRelationship( indexedNode, relationship );
-    }
-
-    /**
-     * Removes the relationship from the indexed node to the supplied node if it exists
-     *
-     * @param node the end node of the relationship.
-     *
-     * @return {@code true} if this call modified the index, i.e. if the node
-     *         was actually stored in the index.
-     */
-    public boolean removeRelationshipTo( Node node )
-    {
-        return bTree.removeNode( node );
-    }
-
-    /**
-     * @return the {@link Node} whose outgoing relationships are being indexed.
-     */
-    public Node getIndexedNode()
-    {
-        return indexedNode;
-    }
-
-    /**
-     * @return the {@link Relationship} pointing to the root of the index tree.
-     */
-    public Relationship getIndexedRootRelationship()
-    {
-        Iterable<Relationship> indexRelationships = this.indexedNode.getRelationships( SortedTree.RelTypes.TREE_ROOT );
-        for ( Relationship indexRelationship : indexRelationships )
-        {
-            String relName = (String) indexRelationship.getProperty( SortedTree.TREE_NAME );
-            if ( relName.equals( relType.name() ) )
-            {
-                if ( indexRelationship.hasProperty( IndexedRelationship.DIRECTION_PROPERTY_NAME ) )
-                {
-                    String dir = (String) indexRelationship.getProperty( IndexedRelationship.DIRECTION_PROPERTY_NAME );
-                    if ( dir.equals( direction.name() ) )
-                    {
-                        return indexRelationship;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-
-    /**
-     * @return the {@link RelationshipType} of the indexed relationships.
-     */
-    public RelationshipType getRelationshipType()
-    {
-        return relType;
-    }
-
-    /**
-     * @return {@code true} of the index guarantees unicity
-     */
-    public boolean isUniqueIndex()
-    {
-        return bTree.isUniqueIndex();
-    }
-
-    /**
-     * @return the {@link Node}s whose incoming relationships are being indexed.
-     */
-    public Iterator<Relationship> iterator()
-    {
-        return new RelationshipIterator();
     }
 }
