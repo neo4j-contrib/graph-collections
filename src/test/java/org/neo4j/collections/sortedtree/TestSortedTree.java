@@ -24,15 +24,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
 import static org.junit.Assert.assertTrue;
 
 public class TestSortedTree extends Neo4jTestCase
 {
-	private Node longTreeNode;
-	private Node stringTreeNode;
-	
 	private SortedTree longTree;
 	private SortedTree stringTree;
 
@@ -57,14 +53,8 @@ public class TestSortedTree extends Neo4jTestCase
 	@Before
 	public void setUpSortedTree() throws Exception
 	{
-		longTreeNode = graphDb().createNode();
-		Node longTreeInitialRootNode = graphDb().createNode();
-		Node stringTreeNode = graphDb().createNode();
-		Node stringTreeInitialRootNode = graphDb().createNode();
-		longTreeNode.createRelationshipTo(longTreeInitialRootNode, SortedTree.RelTypes.TREE_ROOT);
-		stringTreeNode.createRelationshipTo(stringTreeInitialRootNode, SortedTree.RelTypes.TREE_ROOT);
-		longTree = new SortedTree(graphDb(), longTreeInitialRootNode, new IdComparator(), true, "Unique long test");
-		stringTree = new SortedTree(graphDb(), stringTreeInitialRootNode, new NameComparator(), false, "Non unique string test");
+		longTree = new SortedTree(graphDb(), new IdComparator(), true, "Unique long test");
+		stringTree = new SortedTree(graphDb(), new NameComparator(), false, "Non unique string test");
 	}
 	
 	@After
@@ -200,7 +190,7 @@ public class TestSortedTree extends Neo4jTestCase
 
 		assertTrue( longTree.iterator().hasNext() );
 		int count = 0;
-		for( Relationship r: longTree){
+		for( Node n: longTree){
 			count++;
 		}
 		assertTrue( count == 39);
@@ -249,13 +239,12 @@ public class TestSortedTree extends Neo4jTestCase
 		
 		assertTrue( stringTree.iterator().hasNext() );
 		count = 0;
-		for(Relationship r: stringTree){
+		for(Node n: stringTree){
 			count++;
 		}
 		assertTrue( count == 39);		
 		count = 0;
-		for(Relationship r: stringTree){
-            Node n = r.getEndNode();
+		for(Node n: stringTree){
 			count++;
 			if(count == 1){
 				assertTrue(n.getProperty("name").equals("nodeaaaaa"));
@@ -266,54 +255,54 @@ public class TestSortedTree extends Neo4jTestCase
 			
 		}
 		assertTrue(stringTree.containsNode(node2));
-		stringTree.removeNode(node2);
+		stringTree.remove(node2);
 		assertTrue(!stringTree.containsNode(node2));
-		stringTree.removeNode(node4);
-		stringTree.removeNode(node6);
-		stringTree.removeNode(node8);
-		stringTree.removeNode(node10);
-		stringTree.removeNode(node12);
-		stringTree.removeNode(node14);
-		stringTree.removeNode(node16);
-		stringTree.removeNode(node18);
-		stringTree.removeNode(node20);
-		stringTree.removeNode(node22);
-		stringTree.removeNode(node24);
-		stringTree.removeNode(node26);
-		stringTree.removeNode(node28);
-		stringTree.removeNode(node30);
-		stringTree.removeNode(node32);
-		stringTree.removeNode(node34);
-		stringTree.removeNode(node36);
-		stringTree.removeNode(node38);
+		stringTree.remove(node4);
+		stringTree.remove(node6);
+		stringTree.remove(node8);
+		stringTree.remove(node10);
+		stringTree.remove(node12);
+		stringTree.remove(node14);
+		stringTree.remove(node16);
+		stringTree.remove(node18);
+		stringTree.remove(node20);
+		stringTree.remove(node22);
+		stringTree.remove(node24);
+		stringTree.remove(node26);
+		stringTree.remove(node28);
+		stringTree.remove(node30);
+		stringTree.remove(node32);
+		stringTree.remove(node34);
+		stringTree.remove(node36);
+		stringTree.remove(node38);
 		count = 0;
-		for(Relationship r: stringTree){
+		for(Node n: stringTree){
 			count++;
 		}
 		assertTrue( count == 20);
 		
-		stringTree.removeNode(node1);
-		stringTree.removeNode(node3);
-		stringTree.removeNode(node5);
-		stringTree.removeNode(node7);
-		stringTree.removeNode(node9);
-		stringTree.removeNode(node11);
-		stringTree.removeNode(node13);
-		stringTree.removeNode(node15);
-		stringTree.removeNode(node17);
-		stringTree.removeNode(node19);
-		stringTree.removeNode(node21);
-		stringTree.removeNode(node23);
-		stringTree.removeNode(node25);
-		stringTree.removeNode(node27);
-		stringTree.removeNode(node29);
-		stringTree.removeNode(node31);
-		stringTree.removeNode(node33);
-		stringTree.removeNode(node35);
-		stringTree.removeNode(node37);
-		stringTree.removeNode(node39);
+		stringTree.remove(node1);
+		stringTree.remove(node3);
+		stringTree.remove(node5);
+		stringTree.remove(node7);
+		stringTree.remove(node9);
+		stringTree.remove(node11);
+		stringTree.remove(node13);
+		stringTree.remove(node15);
+		stringTree.remove(node17);
+		stringTree.remove(node19);
+		stringTree.remove(node21);
+		stringTree.remove(node23);
+		stringTree.remove(node25);
+		stringTree.remove(node27);
+		stringTree.remove(node29);
+		stringTree.remove(node31);
+		stringTree.remove(node33);
+		stringTree.remove(node35);
+		stringTree.remove(node37);
+		stringTree.remove(node39);
 		count = 0;
-		for(Relationship r: stringTree){
+		for(Node n: stringTree){
 			count++;
 		}
 		assertTrue( count == 0);		

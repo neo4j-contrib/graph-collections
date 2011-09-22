@@ -19,75 +19,102 @@
  */
 package org.neo4j.collections.sortedtree;
 
-import java.lang.UnsupportedOperationException;
-
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.HashMap;
-
+import org.neo4j.collections.NodeCollection;
+import org.neo4j.collections.graphdb.PropertyComparator;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.collections.graphdb.PropertyComparator;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * A sorted list of nodes (structured as a Btree in neo4j).
  */
-public class SortedTree implements Iterable<Relationship>
+public class SortedTree implements NodeCollection//Iterable<Relationship>
 {
 
 	public static final String TREE_NAME = "tree_name";
 	public static final String IS_UNIQUE_INDEX = "is_unique_index";
 	public static final String COMPARATOR_CLASS = "comparator_class";
 
-	public static enum RelTypes implements RelationshipType
+    public static enum RelTypes implements RelationshipType
 	{
 		TREE_ROOT,
 		SUB_TREE,
 		// a relationship type where relationship actually is the *key entry*
 		KEY_ENTRY,
 		KEY_VALUE
-	};
+	}
 
-	private final GraphDatabaseService graphDb;
+    private final Node baseNode;
     private final Comparator<Node> nodeComparator;
     private final String treeName;
 	private final boolean isUniqueIndex;
 	private TreeNode treeRoot;
 
+    /**
+     * Instantiate a previously stored SortedTree from the base node.
+     *
+     * @param baseNode the base node of the sorted tree.
+     */
+    public SortedTree( Node baseNode )
+    {
+        this.baseNode = baseNode;
 
-	/**
-	 * @param graphDb the {@link GraphDatabaseService} instance.
-	 * @param rootNode the root of this tree.
-	 * @param nodeComparator the {@link Comparator} to use to sort the nodes.
-	 * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
-	 * @param treeName value set on both the TREE_ROOT and the KEY_VALUE relations.
-	 */
-	public SortedTree( GraphDatabaseService graphDb, Node rootNode,
-        Comparator<Node> nodeComparator, boolean isUniqueIndex, String treeName )
+        try
+        {
+            Relationship rel = baseNode.getSingleRelationship( RelTypes.TREE_ROOT, Direction.OUTGOING );
+            String comparatorClass = (String) rel.getProperty( COMPARATOR_CLASS );
+            this.nodeComparator = (Comparator<Node>) Class.forName( comparatorClass ).newInstance();
+            this.treeName = (String) rel.getProperty( TREE_NAME );
+            this.isUniqueIndex = (Boolean) rel.getProperty( IS_UNIQUE_INDEX );
+            this.treeRoot = new TreeNode( this, rel.getEndNode() );
+        }
+        catch ( Exception e )
+        {
+            throw new IllegalStateException( "Unable to re-instantiate SortedTree from graph data structure.", e );
+        }
+    }
+
+    /**
+     * Create a new sorted tree within the graph database.
+     * 
+	 * @param graphDb the {@link org.neo4j.graphdb.GraphDatabaseService} instance.
+     * @param nodeComparator the {@link java.util.Comparator} to use to sort the nodes.
+     * @param isUniqueIndex determines if every entry in the tree needs to have a unique comparator value
+     * @param treeName value set on both the TREE_ROOT and the KEY_VALUE relations.
+     */
+	public SortedTree( GraphDatabaseService graphDb, Comparator<Node> nodeComparator, boolean isUniqueIndex,
+                       String treeName )
 	{
 
-        if ( rootNode == null || graphDb == null )
+        if (graphDb == null )
         {
-            throw new IllegalArgumentException(
-                    "Null parameter rootNode=" + rootNode
-                            + " graphDb=" + graphDb );
+            throw new IllegalArgumentException( "Graph Database must be provided when creating new SortedTree" );
         }
-		this.graphDb = graphDb;
-		this.treeRoot = new TreeNode( this, rootNode );
+        this.baseNode = graphDb.createNode();
 
         Transaction tx = graphDb.beginTx();
         try
         {
-            assertPropertyIsSame( TREE_NAME, treeName );
+            Node rootNode = graphDb.createNode();
+            Relationship treeRootRelationship = baseNode.createRelationshipTo( rootNode, RelTypes.TREE_ROOT );
+            this.treeRoot = new TreeNode( this, rootNode );
+            baseNode.setProperty( NodeCollection.GRAPH_COLLECTION_CLASS, SortedTree.class.getName() );
+
+            treeRootRelationship.setProperty(  TREE_NAME, treeName );
+            treeRootRelationship.setProperty( IS_UNIQUE_INDEX, isUniqueIndex );
+            treeRootRelationship.setProperty( COMPARATOR_CLASS, nodeComparator.getClass().getName());
+
             this.treeName = treeName;
-            assertPropertyIsSame( IS_UNIQUE_INDEX, isUniqueIndex );
     		this.isUniqueIndex = isUniqueIndex;
-            assertPropertyIsSame( COMPARATOR_CLASS, nodeComparator.getClass().getName());
             this.nodeComparator = nodeComparator;
+
             tx.success();
         }
         finally
@@ -95,26 +122,6 @@ public class SortedTree implements Iterable<Relationship>
             tx.finish();
         }
 	}
-
-    private void assertPropertyIsSame( String key, Object value )
-    {
-        Object storedValue = treeRoot.getUnderlyingNode().getSingleRelationship(RelTypes.TREE_ROOT, Direction.INCOMING).getProperty( key, null );
-        if ( storedValue != null )
-        {
-            if ( !storedValue.equals( value ) )
-            {
-                throw new IllegalArgumentException( "SortedTree("
-                                                    + treeRoot.getUnderlyingNode().getSingleRelationship(RelTypes.TREE_ROOT, Direction.INCOMING)
-                                                    + ") property '" + key
-                                                    + "' is " + storedValue
-                                                    + ", passed in " + value );
-            }
-        }
-        else
-        {
-        	treeRoot.getUnderlyingNode().getSingleRelationship(RelTypes.TREE_ROOT, Direction.INCOMING).setProperty( key, value );
-        }
-    }
 
     private void acquireLock(){
     	Relationship rel = treeRoot.getUnderlyingNode().getSingleRelationship(RelTypes.TREE_ROOT, Direction.INCOMING);
@@ -166,7 +173,13 @@ public class SortedTree implements Iterable<Relationship>
 		rel.delete();
 	}
 
-	/**
+    @Override
+    public Node getBaseNode()
+    {
+        return baseNode;
+    }
+
+    /**
 	 * Adds a {@link Node} to this list.
 	 * @param node the {@link Node} to add.
 	 * @return {@code true} if this call modified the tree, i.e. if the node
@@ -204,7 +217,7 @@ public class SortedTree implements Iterable<Relationship>
 	 * @return whether or not this call modified the list, i.e. if the node
 	 * existed in this list.
 	 */
-	public boolean removeNode( Node node )
+	public boolean remove( Node node )
 	{
 		acquireLock();
 		return treeRoot.removeEntry( node );
@@ -217,7 +230,7 @@ public class SortedTree implements Iterable<Relationship>
 
 	GraphDatabaseService getGraphDb()
 	{
-		return graphDb;
+		return baseNode.getGraphDatabase();
 	}
 
 	String getTreeName(){
@@ -243,6 +256,89 @@ public class SortedTree implements Iterable<Relationship>
     public boolean isUniqueIndex()
     {
         return isUniqueIndex;
+    }
+
+    class NodeIterator implements Iterator<Node>{
+
+    	private TreeNode currentNode;
+
+        NodeEntry entry = null;
+        Iterator<Node> ni = null;
+        NodeIterator bi = null;
+        NodeIterator ai = null;
+        int step = 0;
+
+    	NodeIterator(TreeNode currentNode){
+    		initTreeNode(currentNode);
+    	}
+
+    	private void initTreeNode(TreeNode currentNode){
+    		this.currentNode = currentNode;
+    		NodeEntry entry = (this.currentNode == null) ?  null : currentNode.getFirstEntry();
+    		if(entry != null){
+    			initEntry(entry);
+    		}
+    	}
+
+    	private void initEntry(NodeEntry nodeEntry){
+    		this.entry = nodeEntry;
+			TreeNode beforeTree = entry.getBeforeSubTree();
+			if ( beforeTree != null )
+			{
+				bi = new NodeIterator(beforeTree);
+			}
+			ni = entry.getNodes().iterator();
+    	}
+
+    	private void initAfterEntry(NodeEntry entry){
+            TreeNode afterTree = entry.getAfterSubTree();
+            if ( afterTree != null )
+            {
+                ai = new NodeIterator( afterTree );
+            }
+    	}
+
+		@Override
+		public boolean hasNext() {
+			if(entry != null){
+				if(bi != null && bi.hasNext()){
+					return true;
+				}else if(ni.hasNext()){
+					return true;
+				}else{
+					return false;
+				}
+			}else{
+				if(ai != null && ai.hasNext()){
+					return true;
+				}else return false;
+			}
+		}
+
+		@Override
+		public Node next() {
+			if(bi != null && bi.hasNext()){
+				return bi.next();
+			}else if(ni.hasNext()){
+				Node n = ni.next();
+				if(!ni.hasNext()){
+					initAfterEntry(entry);
+					entry = entry.getNextKey();
+					if(entry != null){
+						initEntry(entry);
+					}
+				}
+				return n;
+			}else if(ai.hasNext()){
+				return ai.next();
+			}
+			return null;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
     }
 
     class RelationshipIterator implements Iterator<Relationship>{
@@ -328,8 +424,20 @@ public class SortedTree implements Iterable<Relationship>
 		}
     }
 
-    public Iterator<Relationship> iterator(){
-    	return new RelationshipIterator(treeRoot);
+    public Iterator<Node> iterator(){
+    	return new NodeIterator(treeRoot);
     }
 
+    @Override
+    public Iterable<Relationship> getValueRelationships()
+    {
+        return new Iterable<Relationship>() {
+
+            @Override
+            public Iterator<Relationship> iterator()
+            {
+                return new RelationshipIterator( treeRoot );
+            }
+        };
+    }
 }

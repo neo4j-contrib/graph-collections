@@ -29,7 +29,6 @@ public class PropertySortedTree<T> extends SortedTree{
 
     /**
      * @param val the value to check if it's in the tree.
-     * @param property the property of the stored node to be used to compare the supplied value
      * @return {@code true} if this list contains the node, otherwise
      * {@code false}.
      */
@@ -41,10 +40,9 @@ public class PropertySortedTree<T> extends SortedTree{
     	return getWithValue(val, propertyType);
     }
     
-	public PropertySortedTree(GraphDatabaseService graphDb, Node rootNode,
-			ComparablePropertyType<T> propertyType, boolean isUniqueIndex,
-			String treeName) {
-		super(graphDb, rootNode, propertyType, isUniqueIndex, treeName);
+	public PropertySortedTree( GraphDatabaseService graphDb, ComparablePropertyType<T> propertyType,
+                               boolean isUniqueIndex, String treeName ) {
+		super(graphDb, propertyType, isUniqueIndex, treeName);
 		this.propertyType = propertyType;
 	}
 

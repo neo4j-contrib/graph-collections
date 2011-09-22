@@ -21,34 +21,25 @@ package org.neo4j.collections.indexedrelationship;
 
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
+import org.neo4j.collections.list.UnrolledLinkedList;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestIndexedRelationship extends Neo4jTestCase
+public class TestUnrolledLinkedListIndexedRelationship extends Neo4jTestCase
 {
     public static class IdComparator implements java.util.Comparator<Node>
     {
         public int compare( Node n1, Node n2 )
         {
-            long l1 = Long.reverse( n1.getId() );
-            long l2 = Long.reverse( n2.getId() );
-            if ( l1 == l2 )
-            {
-                return 0;
-            }
-            else if ( l1 < l2 )
-            {
-                return -1;
-            }
-            else
-            {
-                return 1;
-            }
+            return ((Long) n1.getId()).compareTo( n2.getId() );
         }
     }
 
@@ -63,8 +54,9 @@ public class TestIndexedRelationship extends Neo4jTestCase
     public void testIndexRelationshipBasic()
     {
         Node indexedNode = graphDb().createNode();
-        IndexedRelationship ir = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING,
-            new IdComparator(), true, indexedNode, graphDb() );
+        UnrolledLinkedList ull = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull );
 
         Node n1 = graphDb().createNode();
         n1.setProperty( "name", "n1" );
@@ -115,8 +107,9 @@ public class TestIndexedRelationship extends Neo4jTestCase
     public void testIndexRelationshipIncoming()
     {
         Node indexedNode = graphDb().createNode();
-        IndexedRelationship ir = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.INCOMING,
-            new IdComparator(), true, indexedNode, graphDb() );
+        UnrolledLinkedList ull = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.INCOMING, ull );
 
         Node n1 = graphDb().createNode();
         n1.setProperty( "name", "n1" );
@@ -167,10 +160,13 @@ public class TestIndexedRelationship extends Neo4jTestCase
     public void testTwoIndexRelationshipsOnSingleNode()
     {
         Node indexedNode = graphDb().createNode();
-        IndexedRelationship ir = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING,
-            new IdComparator(), true, indexedNode, graphDb() );
-        IndexedRelationship ir2 = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP_TWO, Direction.OUTGOING,
-            new IdComparator(), true, indexedNode, graphDb() );
+        UnrolledLinkedList ull1 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull1 );
+
+        UnrolledLinkedList ull2 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir2 = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP_TWO,
+            Direction.OUTGOING, ull2 );
 
         Node n1 = graphDb().createNode();
         n1.setProperty( "name", "n1" );
@@ -221,11 +217,14 @@ public class TestIndexedRelationship extends Neo4jTestCase
     public void testTwoIndexRelationshipsToSingleDestination()
     {
         Node indexedNode = graphDb().createNode();
-        IndexedRelationship ir = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING,
-            new IdComparator(), true, indexedNode, graphDb() );
+        UnrolledLinkedList ull1 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull1 );
+
         Node indexedNode2 = graphDb().createNode();
-        IndexedRelationship ir2 = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING,
-            new IdComparator(), true, indexedNode2, graphDb() );
+        UnrolledLinkedList ull2 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir2 = new IndexedRelationship( indexedNode2, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull2 );
 
         Node destination = graphDb().createNode();
         destination.setProperty( "name", "n1" );
@@ -253,12 +252,53 @@ public class TestIndexedRelationship extends Neo4jTestCase
     }
 
     @Test
+    public void testIncomingAndOutgoingIndexRelationships()
+    {
+        Node indexedNode = graphDb().createNode();
+        UnrolledLinkedList ull1 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull1 );
+
+        Node indexedNode2 = graphDb().createNode();
+        UnrolledLinkedList ull2 = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir2 = new IndexedRelationship( indexedNode2, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.INCOMING, ull2 );
+
+        Node leafEnd = graphDb().createNode();
+        leafEnd.setProperty( "name", "n1" );
+
+        ir.createRelationshipTo( leafEnd );
+        ir2.createRelationshipTo( leafEnd );
+
+        IndexedRelationshipExpander relationshipExpander = new IndexedRelationshipExpander( graphDb(),
+            Direction.OUTGOING, RelTypes.INDEXED_RELATIONSHIP );
+        IndexedRelationshipExpander relationshipExpander2 = new IndexedRelationshipExpander( graphDb(),
+            Direction.INCOMING, RelTypes.INDEXED_RELATIONSHIP );
+
+        int count = 0;
+        for ( Relationship rel : relationshipExpander.expand( indexedNode ) )
+        {
+            assertEquals( leafEnd, rel.getEndNode() );
+            assertEquals( indexedNode, rel.getStartNode() );
+            count++;
+        }
+        for ( Relationship rel : relationshipExpander2.expand( indexedNode2 ) )
+        {
+            assertEquals( leafEnd, rel.getStartNode() );
+            assertEquals( indexedNode2, rel.getEndNode() );
+            count++;
+        }
+        assertEquals( 2, count );
+    }
+
+    @Test
     public void testIndexedRelationshipExpanderAtDestination()
     {
         Node indexedNode = graphDb().createNode();
         Node nonIndexedNode = graphDb().createNode();
-        IndexedRelationship ir = new IndexedRelationship( RelTypes.INDEXED_RELATIONSHIP, Direction.OUTGOING,
-            new IdComparator(), true, indexedNode, graphDb() );
+        UnrolledLinkedList ull = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull );
 
         Node n1 = graphDb().createNode();
         ir.createRelationshipTo( n1 );
@@ -275,5 +315,59 @@ public class TestIndexedRelationship extends Neo4jTestCase
             count++;
         }
         assertEquals( 2, count );
+    }
+
+    @Test
+    public void testIndexedRelationshipExpanderMultiplePage()
+    {
+        Node indexedNode = graphDb().createNode();
+        Node nonIndexedNode = graphDb().createNode();
+        UnrolledLinkedList ull = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
+        IndexedRelationship ir = new IndexedRelationship( indexedNode, RelTypes.INDEXED_RELATIONSHIP,
+            Direction.OUTGOING, ull );
+
+        ArrayList<Node> nodes = createNodes( 20 );
+        for ( Node node : nodes )
+        {
+            ir.createRelationshipTo( node );
+            nonIndexedNode.createRelationshipTo( node, RelTypes.INDEXED_RELATIONSHIP );
+        }
+
+        IndexedRelationshipExpander outgoingRelationshipExpander = new IndexedRelationshipExpander( graphDb(),
+            Direction.OUTGOING, RelTypes.INDEXED_RELATIONSHIP );
+        IndexedRelationshipExpander incomingRelationshipExpander = new IndexedRelationshipExpander( graphDb(),
+            Direction.INCOMING, RelTypes.INDEXED_RELATIONSHIP );
+
+        int count = 0;
+        for ( Relationship rel : outgoingRelationshipExpander.expand( indexedNode ) )
+        {
+            assertTrue( rel.getStartNode().equals( indexedNode ) );
+            assertEquals( nodes.get(count), rel.getEndNode() );
+            count++;
+        }
+        assertEquals( nodes.size(), count );
+
+        for ( Node node : nodes )
+        {
+            count = 0;
+            for ( Relationship rel : incomingRelationshipExpander.expand( node ) )
+            {
+                assertTrue( rel.getStartNode().equals( indexedNode ) || rel.getStartNode().equals( nonIndexedNode ) );
+                assertEquals( node, rel.getEndNode() );
+                count++;
+            }
+            assertEquals( 2, count );
+        }
+    }
+
+    private ArrayList<Node> createNodes( int count )
+    {
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        for ( int i = 0; i < count; i++ )
+        {
+            nodes.add( graphDb().createNode() );
+        }
+        Collections.sort( nodes, new IdComparator() );
+        return nodes;
     }
 }

@@ -19,7 +19,7 @@
  */
 package org.neo4j.collections.indexedrelationship;
 
-import org.neo4j.collections.sortedtree.SortedTree;
+import org.neo4j.collections.NodeCollection;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -31,7 +31,6 @@ import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.kernel.Traversal;
 
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -83,33 +82,17 @@ public class IndexedRelationshipExpander implements RelationshipExpander
                 directRelationshipIterator = null;
             }
 
-            Relationship startingIndexedRelationship = getStartingIndexedRelationship( node, relType, direction );
-            if ( startingIndexedRelationship == null )
+            IndexedRelationship indexedRelationship = new IndexedRelationship( node, relType, direction );
+            if ( !indexedRelationship.exists() )
             {
                 indexedRelationshipIterator = null;
             }
             else
             {
-                boolean isUniqueIndex = (Boolean) startingIndexedRelationship.getProperty( SortedTree.IS_UNIQUE_INDEX );
-                try
-                {
-                    Class<?> comparatorClass = Class.forName( (String) startingIndexedRelationship.getProperty(
-                        SortedTree.COMPARATOR_CLASS ) );
-                    Comparator<Node> comparator = (Comparator<Node>) comparatorClass.newInstance();
-                    indexedRelationshipIterator = new IndexedRelationship( relType, direction, comparator,
-                        isUniqueIndex, node, graphDb ).iterator();
-                }
-                catch ( Exception e )
-                {
-                    throw new RuntimeException( "Comparator class cannot be instantiated" );
-                }
+                indexedRelationshipIterator = indexedRelationship.iterator();
             }
 
             indexedRelationshipDestinationIterator = Traversal.description().depthFirst()
-                .relationships( SortedTree.RelTypes.KEY_VALUE, Direction.INCOMING )
-                .relationships( SortedTree.RelTypes.KEY_ENTRY, Direction.INCOMING )
-                .relationships( SortedTree.RelTypes.SUB_TREE, Direction.INCOMING )
-                .relationships( SortedTree.RelTypes.TREE_ROOT, Direction.INCOMING )
                 .evaluator( new Evaluator()
                 {
                     @Override
@@ -123,51 +106,30 @@ public class IndexedRelationshipExpander implements RelationshipExpander
                         Relationship relationship = path.lastRelationship();
                         if ( path.length() == 1 )
                         {
-                            String relationshipName = (String) relationship.getProperty( SortedTree.TREE_NAME, null );
-                            String relationshipDirection = (String) relationship.getProperty(
-                                IndexedRelationship.DIRECTION_PROPERTY_NAME, null );
-                            if ( relType.name().equals( relationshipName ) &&
-                                direction.reverse().name().equals( relationshipDirection ) )
-                            {
-                                return Evaluation.EXCLUDE_AND_CONTINUE;
+                            if ( relationship.getType().equals( NodeCollection.RelationshipTypes.VALUE ) ) {
+                                String relationshipType = (String) relationship.getProperty(
+                                    IndexedRelationship.RELATIONSHIP_TYPE, null );
+                                String relationshipDirection = (String) relationship.getProperty(
+                                    IndexedRelationship.RELATIONSHIP_DIRECTION, null );
+
+                                if ( relType.name().equals( relationshipType ) &&
+                                    direction.reverse().name().equals( relationshipDirection ) )
+                                {
+                                    return Evaluation.EXCLUDE_AND_CONTINUE;
+                                }
                             }
-                            else
-                            {
-                                return Evaluation.EXCLUDE_AND_PRUNE;
-                            }
+
+                            return Evaluation.EXCLUDE_AND_PRUNE;
                         }
 
-
-                        if ( relationship.getType().equals( SortedTree.RelTypes.TREE_ROOT ) )
+                        if ( relationship.getType().equals( IndexedRelationship.RelationshipTypes.NODE_COLLECTION ) )
                         {
                             return Evaluation.INCLUDE_AND_PRUNE;
                         }
+                        
                         return Evaluation.EXCLUDE_AND_CONTINUE;
                     }
                 } ).traverse( node ).iterator();
-        }
-
-        private Relationship getStartingIndexedRelationship( Node node, RelationshipType relType, Direction direction )
-        {
-            Iterable<Relationship> indexRels = node.getRelationships( SortedTree.RelTypes.TREE_ROOT );
-            Relationship ir = null;
-            for ( Relationship indexRel : indexRels )
-            {
-                String relName = (String) indexRel.getProperty( SortedTree.TREE_NAME );
-                if ( relName.equals( relType.name() ) )
-                {
-                    if ( indexRel.hasProperty( IndexedRelationship.DIRECTION_PROPERTY_NAME ) )
-                    {
-                        String dir = (String) indexRel.getProperty( IndexedRelationship.DIRECTION_PROPERTY_NAME );
-                        if ( dir.equals( direction.name() ) )
-                        {
-                            ir = indexRel;
-                            break;
-                        }
-                    }
-                }
-            }
-            return ir;
         }
 
         @Override
@@ -202,16 +164,12 @@ public class IndexedRelationshipExpander implements RelationshipExpander
             if ( indexedRelationshipDestinationIterator != null && indexedRelationshipDestinationIterator.hasNext() )
             {
                 Path path = indexedRelationshipDestinationIterator.next();
-                boolean isUniqueIndex = (Boolean) path.lastRelationship().getProperty( SortedTree.IS_UNIQUE_INDEX );
                 String direction = (String) path.lastRelationship().getProperty(
-                    IndexedRelationship.DIRECTION_PROPERTY_NAME );
+                    IndexedRelationship.RELATIONSHIP_DIRECTION );
                 try
                 {
-                    Class<?> comparatorClass = Class.forName( (String) path.lastRelationship().getProperty(
-                        SortedTree.COMPARATOR_CLASS ) );
-                    Comparator<Node> comparator = (Comparator<Node>) comparatorClass.newInstance();
-                    IndexedRelationship indexedRelationship = new IndexedRelationship( relType,
-                        Direction.valueOf( direction ), comparator, isUniqueIndex, path.endNode(), graphDb );
+                    IndexedRelationship indexedRelationship = new IndexedRelationship( path.endNode(), relType,
+                        Direction.valueOf( direction ) );
                     return indexedRelationship.getRelationship( path.relationships().iterator().next() );
                 }
                 catch ( Exception e )
