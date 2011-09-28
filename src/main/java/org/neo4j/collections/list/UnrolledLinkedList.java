@@ -26,6 +26,9 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.kernel.AbstractGraphDatabase;
+import org.neo4j.kernel.Config;
+import org.neo4j.kernel.impl.transaction.LockType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -159,11 +162,12 @@ public class UnrolledLinkedList implements NodeCollection
     @Override
     public Relationship addNode( Node node )
     {
-        acquireLock();
+        acquireLock( LockType.WRITE );
 
         Node page = checkSplitNode( getPage( node ), node );
+        Relationship relationship = page.createRelationshipTo( node, GraphCollection.RelationshipTypes.VALUE );
         page.setProperty( ITEM_COUNT, ((Integer) page.getProperty( ITEM_COUNT )) + 1 );
-        return page.createRelationshipTo( node, GraphCollection.RelationshipTypes.VALUE );
+        return relationship;
     }
 
     @Override
@@ -175,6 +179,8 @@ public class UnrolledLinkedList implements NodeCollection
     @Override
     public boolean remove( Node node )
     {
+        acquireLock( LockType.WRITE );
+
         Node page = getPage( node );
         do
         {
@@ -203,38 +209,41 @@ public class UnrolledLinkedList implements NodeCollection
         }
         while ( shouldContainNode( page, node ) );
 
-
         return false;
     }
 
     @Override
     public Iterator<Node> iterator()
     {
-        return new NodeIterator( getHead(), nodeComparator );
+        acquireLock( LockType.READ );
+
+        return new NodeIterator( getHead( false ), nodeComparator );
     }
 
     @Override
     public Iterable<Relationship> getValueRelationships()
     {
+        acquireLock( LockType.READ );
+
         return new Iterable<Relationship>()
         {
             @Override
             public Iterator<Relationship> iterator()
             {
-                return new RelationshipIterator( getHead(), relationshipComparator );
+                return new RelationshipIterator( getHead( false ), relationshipComparator );
             }
         };
     }
 
-    private Node getHead()
+    private Node getHead( boolean createMissing )
     {
-        Node head;
+        Node head = null;
         Relationship relationship = baseNode.getSingleRelationship( RelationshipTypes.HEAD, Direction.OUTGOING );
         if ( relationship != null )
         {
             head = relationship.getEndNode();
         }
-        else
+        else if ( createMissing )
         {
             head = baseNode.getGraphDatabase().createNode();
             head.setProperty( ITEM_COUNT, 0 );
@@ -245,7 +254,7 @@ public class UnrolledLinkedList implements NodeCollection
 
     private Node getPage( Node node )
     {
-        Node pageNode = getHead();
+        Node pageNode = getHead( true );
         while ( true )
         {
             if ( shouldContainNode( pageNode, node ) )
@@ -489,9 +498,20 @@ public class UnrolledLinkedList implements NodeCollection
         valueRelationship.delete();
     }
 
-    private void acquireLock()
+    private void acquireLock( LockType lockType )
     {
-        baseNode.removeProperty( "___dummy_property_to_acquire_lock___" );
+        GraphDatabaseService graphDb = baseNode.getGraphDatabase();
+        if ( lockType == LockType.READ && graphDb instanceof AbstractGraphDatabase )
+        {
+            Config config = ((AbstractGraphDatabase) baseNode.getGraphDatabase()).getConfig();
+            config.getLockManager().getReadLock( baseNode );
+            config.getLockReleaser().addLockToTransaction( baseNode, LockType.READ );
+        }
+        else
+        {
+            // default to write lock if read locks unavailable
+            baseNode.removeProperty( "___dummy_property_to_acquire_lock___" );
+        }
     }
 
     private static abstract class ItemIterator<T> implements Iterator<T>
@@ -507,9 +527,12 @@ public class UnrolledLinkedList implements NodeCollection
         {
             currentPage = head;
             itemComparator = comparator;
-            hasNext = true;
-            populate();
-            checkNext();
+            hasNext = currentPage != null;
+            if ( hasNext )
+            {
+                populate();
+                checkNext();
+            }
         }
 
         @Override
