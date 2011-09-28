@@ -67,22 +67,14 @@ public class TestSearch extends SpatialTestCase {
 		Envelope expectedBbox = new Envelope(0, 25, 0, 32);
 		assertEnvelopeEquals(bbox, expectedBbox);
 		
-//		Search search = new SearchInvalidEnvelopes(index.getEnvelopeDecoder());
-//		index.executeSearch(search);
-//		assertEquals(1, search.getResults().size());
-
-		Search search = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), 
-				new Envelope(0, 2, 0, 3));
+		Search search = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), new Envelope(0, 2, 0, 3));
 		index.executeSearch(search);
 		assertEquals(1, search.getResults().size());
 
-		search = new SearchCoveredByEnvelope(index.getEnvelopeDecoder(), 
-				new Envelope(9, 15, -1, 3));
+		search = new SearchCoveredByEnvelope(index.getEnvelopeDecoder(), new Envelope(9, 15, -1, 3));
 		index.executeSearch(search);
 		assertEquals(3, search.getResults().size());
 		
-		// TODO test index.removeAll(deleteGeomNodes, monitor)
-
 		index.clear(new NullListener());
 		assertEquals(0, index.count());
 		

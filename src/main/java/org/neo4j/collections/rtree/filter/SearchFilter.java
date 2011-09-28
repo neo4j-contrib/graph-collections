@@ -23,6 +23,9 @@ import org.neo4j.collections.rtree.Envelope;
 import org.neo4j.graphdb.Node;
 
 public interface SearchFilter {
+	
 	boolean needsToVisit(Envelope envelope);
+	
 	boolean geometryMatches(Node geomNode);
+	
 }

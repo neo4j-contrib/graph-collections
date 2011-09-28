@@ -24,6 +24,7 @@ import org.neo4j.collections.rtree.EnvelopeDecoder;
 import org.neo4j.graphdb.Node;
 
 public abstract class AbstractSearchEnvelopeIntersection implements SearchFilter {
+	
 	protected EnvelopeDecoder decoder;
 	protected Envelope referenceEnvelope;
 
@@ -43,6 +44,7 @@ public abstract class AbstractSearchEnvelopeIntersection implements SearchFilter
 		if (geomEnvelope.intersects(referenceEnvelope)) {
 			return onEnvelopeIntersection(geomNode, geomEnvelope);
 		}
+		
 		return false;
 	}
 	
