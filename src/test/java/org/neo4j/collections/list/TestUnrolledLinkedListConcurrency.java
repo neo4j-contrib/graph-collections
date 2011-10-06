@@ -43,7 +43,7 @@ import static junit.framework.Assert.assertTrue;
 
 public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCase
 {
-    private enum Signals
+    private enum States
     {
         WRITE, READ
     }
@@ -55,7 +55,7 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
     {
         final ArrayList<Node> nodes = createNodes( 4 );
         final UnrolledLinkedList list = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
-        final SignalSynchronizer sync = new SignalSynchronizer( Signals.class );
+        final StateSynchronizer sync = new StateSynchronizer( States.class );
 
         FutureTask<Boolean> reader = new ThrowingFutureTask<Boolean>( new Callable<Boolean>()
         {
@@ -67,7 +67,7 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
                 {
                     ArrayList<Node> innerNodes = new ArrayList<Node>( nodes.subList( 0, 3 ) );
                     Collections.reverse( innerNodes );
-                    assertTrue( sync.wait( Signals.READ ) );
+                    assertTrue( sync.wait( States.READ ) );
                     UnrolledLinkedList innerList = new UnrolledLinkedList( list.getBaseNode() );
 
                     int count = 0;
@@ -79,7 +79,7 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
                             // wont receive read signal as writer will be waiting to gain a write lock on base node
                             // will timeout then finish its reading process, whereby the writer will gain write lock
                             // and complete its write process
-                            assertFalse( sync.signalAndWait( Signals.WRITE, Signals.READ, 1, TimeUnit.SECONDS ) );
+                            assertFalse( sync.signalAndWait( States.WRITE, States.READ, 1, TimeUnit.SECONDS ) );
                         }
                     }
 
@@ -103,11 +103,11 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
                 // commits the nodes added through by the writer so the reader can then see them
                 // also releases the write lock held on base node allowing reader thread access
                 restartTx();
-                assertTrue( sync.signalAndWait( Signals.READ, Signals.WRITE ) );
+                assertTrue( sync.signalAndWait( States.READ, States.WRITE ) );
             }
         }
         restartTx();
-        sync.signal( Signals.READ );
+        sync.signal( States.READ );
 
         assertTrue( reader.get( 1000, TimeUnit.MILLISECONDS ) );
     }
@@ -117,7 +117,7 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
     {
         final ArrayList<Node> nodes = createNodes( 4 );
         final UnrolledLinkedList list = new UnrolledLinkedList( graphDb(), new IdComparator(), 4 );
-        final SignalSynchronizer sync = new SignalSynchronizer( Signals.class );
+        final StateSynchronizer sync = new StateSynchronizer( States.class );
 
         FutureTask<Boolean> reader = new ThrowingFutureTask<Boolean>( new Callable<Boolean>()
         {
@@ -126,7 +126,7 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
             {
                 ArrayList<Node> innerNodes = new ArrayList<Node>( nodes.subList( 0, 3 ) );
                 Collections.reverse( innerNodes );
-                assertTrue( sync.wait( Signals.READ ) );
+                assertTrue( sync.wait( States.READ ) );
                 UnrolledLinkedList innerList = new UnrolledLinkedList( list.getBaseNode() );
 
                 int count = 0;
@@ -137,7 +137,7 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
                     {
                         // will receive read signal as there will be no read lock against the base node therefore
                         // the writer add node will not block
-                        assertTrue( sync.signalAndWait( Signals.WRITE, Signals.READ, 1, TimeUnit.SECONDS ) );
+                        assertTrue( sync.signalAndWait( States.WRITE, States.READ, 1, TimeUnit.SECONDS ) );
                     }
                 }
 
@@ -155,43 +155,45 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
                 // commits the nodes added through by the writer so the reader can then see them
                 // also releases the write lock held on base node allowing reader thread access
                 restartTx();
-                assertTrue( sync.signalAndWait( Signals.READ, Signals.WRITE ) );
+                assertTrue( sync.signalAndWait( States.READ, States.WRITE ) );
             }
         }
         restartTx();
-        sync.signal( Signals.READ );
+        sync.signal( States.READ );
 
         assertTrue( reader.get( 1000, TimeUnit.MILLISECONDS ) );
     }
 
-    private static class SignalSynchronizer
+    private static class StateSynchronizer
     {
         private static final long MAX_WAIT_SECONDS = 10;
         private final Lock lock;
         private final Map<Enum, Condition> conditions;
+        private Enum state;
 
-        public SignalSynchronizer( Class<? extends Enum> signals )
+        public StateSynchronizer( Class<? extends Enum> states )
         {
             lock = new ReentrantLock();
             conditions = new HashMap<Enum, Condition>();
 
-            for ( Enum signal : signals.getEnumConstants() )
+            for ( Enum state : states.getEnumConstants() )
             {
-                conditions.put( signal, lock.newCondition() );
+                conditions.put( state, lock.newCondition() );
             }
         }
 
-        public boolean wait( Enum waitSignal, long timeout, TimeUnit unit ) throws InterruptedException
+        public boolean wait( Enum waitState, long timeout, TimeUnit unit ) throws InterruptedException
         {
-            if ( !conditions.containsKey( waitSignal ) )
+            if ( !conditions.containsKey( waitState ) )
             {
-                throw new IllegalArgumentException( "Not a valid signal: " + waitSignal );
+                throw new IllegalArgumentException( "Not a valid state: " + waitState );
             }
 
             lock.lock();
             try
             {
-                return conditions.get( waitSignal ).await( timeout, unit );
+                return waitState.equals( state ) ||
+                    conditions.get( waitState ).await( timeout, unit );
             }
             finally
             {
@@ -199,17 +201,19 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
             }
         }
 
-        public boolean wait( Enum waitSignal ) throws InterruptedException
+        public boolean wait( Enum waitState ) throws InterruptedException
         {
-            if ( !conditions.containsKey( waitSignal ) )
+            if ( !conditions.containsKey( waitState ) )
             {
-                throw new IllegalArgumentException( "Not a valid signal: " + waitSignal );
+                throw new IllegalArgumentException( "Not a valid state: " + waitState );
             }
 
             lock.lock();
+
             try
             {
-                return conditions.get( waitSignal ).await( MAX_WAIT_SECONDS, TimeUnit.SECONDS );
+                return waitState.equals( state ) ||
+                    conditions.get( waitState ).await( MAX_WAIT_SECONDS, TimeUnit.SECONDS );
             }
             finally
             {
@@ -217,23 +221,24 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
             }
         }
 
-        public boolean signalAndWait( Enum signal, Enum waitSignal, long timeout, TimeUnit unit )
+        public boolean signalAndWait( Enum state, Enum waitState, long timeout, TimeUnit unit )
             throws InterruptedException
         {
-            if ( !conditions.containsKey( signal ) )
+            if ( !conditions.containsKey( state ) )
             {
-                throw new IllegalArgumentException( "Not a valid signal: " + signal );
+                throw new IllegalArgumentException( "Not a valid state: " + state );
             }
-            if ( !conditions.containsKey( waitSignal ) )
+            if ( !conditions.containsKey( waitState ) )
             {
-                throw new IllegalArgumentException( "Not a valid signal: " + waitSignal );
+                throw new IllegalArgumentException( "Not a valid state: " + waitState );
             }
 
             lock.lock();
             try
             {
-                conditions.get( signal ).signal();
-                return conditions.get( waitSignal ).await( timeout, unit );
+                this.state = state;
+                conditions.get( state ).signal();
+                return conditions.get( waitState ).await( timeout, unit );
             }
             finally
             {
@@ -241,22 +246,23 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
             }
         }
 
-        public boolean signalAndWait( Enum signal, Enum waitSignal ) throws InterruptedException
+        public boolean signalAndWait( Enum state, Enum waitState ) throws InterruptedException
         {
-            if ( !conditions.containsKey( signal ) )
+            if ( !conditions.containsKey( state ) )
             {
-                throw new IllegalArgumentException( "Not a valid signal: " + signal );
+                throw new IllegalArgumentException( "Not a valid state: " + state );
             }
-            if ( !conditions.containsKey( waitSignal ) )
+            if ( !conditions.containsKey( waitState ) )
             {
-                throw new IllegalArgumentException( "Not a valid signal: " + waitSignal );
+                throw new IllegalArgumentException( "Not a valid state: " + waitState );
             }
 
             lock.lock();
             try
             {
-                conditions.get( signal ).signal();
-                return conditions.get( waitSignal ).await( MAX_WAIT_SECONDS, TimeUnit.SECONDS );
+                this.state = state;
+                conditions.get( state ).signal();
+                return conditions.get( waitState ).await( MAX_WAIT_SECONDS, TimeUnit.SECONDS );
             }
             finally
             {
@@ -264,17 +270,18 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
             }
         }
 
-        public void signal( Enum signal )
+        public void signal( Enum state )
         {
-            if ( !conditions.containsKey( signal ) )
+            if ( !conditions.containsKey( state ) )
             {
-                throw new IllegalArgumentException( "Not a valid signal: " + signal );
+                throw new IllegalArgumentException( "Not a valid state: " + state );
             }
 
             lock.lock();
             try
             {
-                conditions.get( signal ).signal();
+                this.state = state;
+                conditions.get( state ).signal();
             }
             finally
             {
