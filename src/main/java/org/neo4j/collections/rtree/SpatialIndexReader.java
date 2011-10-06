@@ -21,7 +21,6 @@ package org.neo4j.collections.rtree;
 
 import org.neo4j.collections.rtree.filter.SearchFilter;
 import org.neo4j.collections.rtree.filter.SearchResults;
-import org.neo4j.collections.rtree.search.Search;
 import org.neo4j.graphdb.Node;
 
 
@@ -39,7 +38,5 @@ public interface SpatialIndexReader {
 	
     Iterable<Node> getAllIndexedNodes();
 
-	void executeSearch(Search search);    
-    
 	SearchResults searchIndex(SearchFilter filter);
 }
