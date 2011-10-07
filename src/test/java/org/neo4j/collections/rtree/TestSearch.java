@@ -24,9 +24,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.neo4j.collections.rtree.search.Search;
-import org.neo4j.collections.rtree.search.SearchCoveredByEnvelope;
-import org.neo4j.collections.rtree.search.SearchEqualEnvelopes;
+import org.neo4j.collections.rtree.filter.SearchCoveredByEnvelope;
+import org.neo4j.collections.rtree.filter.SearchEqualEnvelopes;
+import org.neo4j.collections.rtree.filter.SearchFilter;
+import org.neo4j.collections.rtree.filter.SearchResults;
 import org.neo4j.graphdb.Node;
 
 
@@ -67,13 +68,13 @@ public class TestSearch extends SpatialTestCase {
 		Envelope expectedBbox = new Envelope(0, 25, 0, 32);
 		assertEnvelopeEquals(bbox, expectedBbox);
 		
-		Search search = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), new Envelope(0, 2, 0, 3));
-		index.executeSearch(search);
-		assertEquals(1, search.getResults().size());
+		SearchFilter search = new SearchEqualEnvelopes(index.getEnvelopeDecoder(), new Envelope(0, 2, 0, 3));
+		SearchResults results = index.searchIndex(search);
+		assertEquals(1, results.count());
 
 		search = new SearchCoveredByEnvelope(index.getEnvelopeDecoder(), new Envelope(9, 15, -1, 3));
-		index.executeSearch(search);
-		assertEquals(3, search.getResults().size());
+		results = index.searchIndex(search);
+		assertEquals(3, results.count());
 		
 		index.clear(new NullListener());
 		assertEquals(0, index.count());

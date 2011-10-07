@@ -21,7 +21,6 @@ package org.neo4j.collections.rtree;
 
 import org.neo4j.collections.rtree.filter.SearchFilter;
 import org.neo4j.collections.rtree.filter.SearchResults;
-import org.neo4j.collections.rtree.search.Search;
 import org.neo4j.graphdb.Node;
 
 
@@ -71,13 +70,6 @@ public class SpatialIndexPerformanceProxy implements SpatialIndexReader {
         System.out.println("# exec time(isNodeIndexed(" + nodeId + ")): " + (stop - start) + "ms");		
 		return result;
 	}    
-    
-    public void executeSearch(Search search) {
-        long start = System.currentTimeMillis();
-        spatialIndex.executeSearch(search);
-        long stop = System.currentTimeMillis();
-        System.out.println("# exec time(executeSearch(" + search + ")): " + (stop - start) + "ms");
-    }
 
     public Iterable<Node> getAllIndexedNodes() {
         long start = System.currentTimeMillis();    	
