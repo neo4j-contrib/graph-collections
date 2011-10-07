@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.neo4j.collections.rtree.filter.SearchFilter;
 import org.neo4j.collections.rtree.filter.SearchResults;
-import org.neo4j.collections.rtree.search.Search;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -217,15 +216,6 @@ public class RTreeIndex implements SpatialIndexWriter {
 		Node geomNode = database.getNodeById(geomNodeId);			
 		// be sure geomNode is inside this RTree
 		return findLeafContainingGeometryNode(geomNode, false) != null;
-	}
-
-	@Override
-	public void executeSearch(Search search) {
-		if (isEmpty()) return;
-		
-		saveCount();
-		
-		visit(search, getIndexRoot());
 	}
 	
 	public void warmUp() {
