@@ -101,10 +101,13 @@ public class RTreeIndex implements SpatialIndexWriter {
 	
 	public void remove(long geomNodeId, boolean deleteGeomNode, boolean throwExceptionIfNotFound) {
 		Node geomNode = database.getNodeById(geomNodeId);
+		if ( geomNode==null && !throwExceptionIfNotFound) {
+		    //fail silently
+		    return;
+		}
 		
 		// be sure geomNode is inside this RTree
 		Node indexNode = findLeafContainingGeometryNode(geomNode, throwExceptionIfNotFound);
-		
 		// remove the entry 
 		geomNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING).delete();
 		if (deleteGeomNode) deleteNode(geomNode);
