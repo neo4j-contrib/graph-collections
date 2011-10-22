@@ -96,10 +96,14 @@ public class RTreeIndex implements SpatialIndexWriter {
 	
 	@Override
 	public void remove(long geomNodeId, boolean deleteGeomNode) {
+	    remove(geomNodeId, deleteGeomNode, true);
+	}
+	
+	public void remove(long geomNodeId, boolean deleteGeomNode, boolean throwExceptionIfNotFound) {
 		Node geomNode = database.getNodeById(geomNodeId);
 		
 		// be sure geomNode is inside this RTree
-		Node indexNode = findLeafContainingGeometryNode(geomNode, true);
+		Node indexNode = findLeafContainingGeometryNode(geomNode, throwExceptionIfNotFound);
 		
 		// remove the entry 
 		geomNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING).delete();
