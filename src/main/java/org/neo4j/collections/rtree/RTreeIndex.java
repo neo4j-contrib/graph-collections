@@ -109,7 +109,10 @@ public class RTreeIndex implements SpatialIndexWriter {
 		// be sure geomNode is inside this RTree
 		Node indexNode = findLeafContainingGeometryNode(geomNode, throwExceptionIfNotFound);
 		// remove the entry 
-		geomNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING).delete();
+        final Relationship geometryRtreeReference = geomNode.getSingleRelationship(RTreeRelationshipTypes.RTREE_REFERENCE, Direction.INCOMING);
+        if (geometryRtreeReference != null) {
+            geometryRtreeReference.delete();
+        }
 		if (deleteGeomNode) deleteNode(geomNode);
 
 		// reorganize the tree if needed
