@@ -22,12 +22,12 @@ package org.neo4j.collections.graphdb.impl;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeType;
+import org.neo4j.collections.graphdb.SortableBinaryEdge;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.VertexType;
+import org.neo4j.collections.indexedrelationship.IndexedRelationship;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
-import org.neo4j.collections.graphdb.SortableBinaryEdge;
-import org.neo4j.collections.indexedrelationship.IndexedRelationship;
 
 public class SortableBinaryEdgeImpl<T> extends BinaryEdgeImpl implements SortableBinaryEdge<T>{
 

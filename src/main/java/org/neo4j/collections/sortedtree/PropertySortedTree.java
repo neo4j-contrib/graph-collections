@@ -19,8 +19,8 @@
  */
 package org.neo4j.collections.sortedtree;
 
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 public class PropertySortedTree<T> extends SortedTree{

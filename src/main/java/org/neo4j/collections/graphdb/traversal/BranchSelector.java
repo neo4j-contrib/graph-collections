@@ -19,8 +19,8 @@
  */
 package org.neo4j.collections.graphdb.traversal;
 
-import org.neo4j.collections.graphdb.TraversalPath;
 import org.neo4j.collections.graphdb.Traversal;
+import org.neo4j.collections.graphdb.TraversalPath;
 
 public interface BranchSelector {
 

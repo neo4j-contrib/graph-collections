@@ -21,8 +21,8 @@ package org.neo4j.collections.graphdb.impl;
 
 import java.util.Iterator;
 
-import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.DatabaseService;
+import org.neo4j.collections.graphdb.EdgeType;
 
 class RelationshipTypeIterator implements Iterator<EdgeType>{
 

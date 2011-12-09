@@ -19,11 +19,11 @@
  */
 package org.neo4j.collections.btree;
 
+import org.neo4j.collections.btree.AbstractBTree.RelTypes;
+import org.neo4j.collections.treemap.BTreeMap;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.btree.AbstractBTree.RelTypes;
-import org.neo4j.collections.treemap.BTreeMap;
 
 /**
  * Wraps the functionality of one entry in a {@link BTree}.

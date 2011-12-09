@@ -21,9 +21,6 @@ package org.neo4j.collections;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
-
-import java.util.Iterator;
 
 /**
  * A NodeCollection provides an interface to store a collection of nodes using some form of in graph data structure.

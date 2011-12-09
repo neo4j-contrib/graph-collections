@@ -21,10 +21,10 @@ package org.neo4j.collections.btree;
 
 import javax.transaction.Transaction;
 
+import org.neo4j.collections.btree.AbstractBTree.RelTypes;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.btree.AbstractBTree.RelTypes;
 import org.neo4j.kernel.AbstractGraphDatabase;
 
 class TreeNode

@@ -23,12 +23,12 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.collections.graphdb.impl.ConnectorTypeImpl;
 import org.neo4j.collections.graphdb.impl.EdgeTypeImpl;
 import org.neo4j.collections.graphdb.impl.PropertyImpl;
 import org.neo4j.collections.graphdb.impl.VertexTypeImpl;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
 
 public abstract class PropertyType<T> extends EdgeTypeImpl{
 

@@ -19,6 +19,9 @@
  */
 package org.neo4j.collections.indexedrelationship;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import org.neo4j.collections.NodeCollection;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -30,9 +33,6 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.kernel.Traversal;
-
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 public class IndexedRelationshipExpander implements RelationshipExpander
 {

@@ -19,17 +19,17 @@
  */
 package org.neo4j.collections.sortedtree;
 
-import javax.transaction.Transaction;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.transaction.Transaction;
+
 import org.neo4j.collections.NodeCollection;
+import org.neo4j.collections.graphdb.PropertyComparator;
+import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.graphdb.PropertyComparator;
-import org.neo4j.collections.sortedtree.SortedTree.RelTypes;
 import org.neo4j.kernel.AbstractGraphDatabase;
 
 class TreeNode {

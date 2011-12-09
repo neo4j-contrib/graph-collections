@@ -19,6 +19,12 @@
  */
 package org.neo4j.collections.list;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import org.neo4j.collections.GraphCollection;
 import org.neo4j.collections.NodeCollection;
 import org.neo4j.graphdb.Direction;
@@ -29,12 +35,6 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.kernel.Config;
 import org.neo4j.kernel.impl.transaction.LockType;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  * Implementation of an UnrolledLinkedList for storage of nodes. This collection is primarily for use within an

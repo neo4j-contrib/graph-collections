@@ -19,10 +19,10 @@
  */
 package org.neo4j.collections.graphdb;
 
-import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Unrestricted;
+import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Bijective;
 import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Injective;
 import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Surjective;
-import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Bijective;
+import org.neo4j.collections.graphdb.impl.ConnectionModeImpl.Unrestricted;
 
 
 /**

@@ -28,11 +28,11 @@ import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
-import org.neo4j.collections.graphdb.VertexType;
-import org.neo4j.graphdb.Node;
 import org.neo4j.collections.graphdb.Property;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.collections.graphdb.VertexType;
+import org.neo4j.graphdb.Node;
 
 public class PropertyImpl<T> extends EdgeImpl implements Property<T>{
 

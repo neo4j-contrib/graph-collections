@@ -22,9 +22,9 @@ package org.neo4j.collections.graphdb.traversal.impl;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.neo4j.collections.graphdb.TraversalPath;
 import org.neo4j.collections.graphdb.Traversal;
 import org.neo4j.collections.graphdb.TraversalDescription;
+import org.neo4j.collections.graphdb.TraversalPath;
 
 public class TraversalImpl implements Traversal{
 

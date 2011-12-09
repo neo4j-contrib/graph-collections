@@ -19,11 +19,11 @@
  */
 package org.neo4j.collections;
 
+import java.util.Iterator;
+
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.RelationshipType;
-
-import java.util.Iterator;
 
 /**
  * A GraphCollection provides an interface to store a collection of nodes or relationships using some form of in graph

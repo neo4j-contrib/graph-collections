@@ -21,10 +21,10 @@ package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.PropertyType;
-import org.neo4j.collections.graphdb.SortableBinaryEdge;
-import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
+import org.neo4j.collections.graphdb.SortableBinaryEdge;
 import org.neo4j.collections.graphdb.SortableBinaryEdgeType;
+import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.indexedrelationship.IndexedRelationship;
 import org.neo4j.collections.sortedtree.PropertySortedTree;
 import org.neo4j.graphdb.Direction;

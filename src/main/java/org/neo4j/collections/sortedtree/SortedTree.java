@@ -19,6 +19,10 @@
  */
 package org.neo4j.collections.sortedtree;
 
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+
 import org.neo4j.collections.NodeCollection;
 import org.neo4j.collections.graphdb.PropertyComparator;
 import org.neo4j.graphdb.Direction;
@@ -27,10 +31,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * A sorted list of nodes (structured as a Btree in neo4j).

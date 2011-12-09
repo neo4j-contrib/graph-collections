@@ -19,10 +19,10 @@
  */
 package org.neo4j.collections.graphdb.impl;
 
-import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.ConnectionMode;
-import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.ConnectorType;
+import org.neo4j.collections.graphdb.DatabaseService;
+import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;

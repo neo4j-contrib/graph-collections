@@ -19,6 +19,8 @@
  */
 package org.neo4j.collections.graphdb;
 
+import org.neo4j.graphdb.Relationship;
+
 /**
  * A specialized version of an {@link Edge}, where the number of
  * {@link Connectors} is two, and where those Connectors have a

@@ -19,9 +19,9 @@
  */
 package org.neo4j.collections;
 
-import org.neo4j.graphdb.Node;
-
 import java.lang.reflect.Constructor;
+
+import org.neo4j.graphdb.Node;
 
 /**
  * Load a node collection from the graph database.

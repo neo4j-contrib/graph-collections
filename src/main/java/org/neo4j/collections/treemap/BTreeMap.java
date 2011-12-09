@@ -23,14 +23,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.neo4j.collections.btree.BTree;
+import org.neo4j.collections.btree.KeyEntry;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.collections.btree.BTree;
-import org.neo4j.collections.btree.KeyEntry;
 
 /**
  * A map implementation using {@link org.neo4j.index.impl.btree.BTree BTree}

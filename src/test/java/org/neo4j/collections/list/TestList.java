@@ -21,14 +21,14 @@ package org.neo4j.collections.list;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
-import org.neo4j.collections.timeline.Timeline;
 import org.neo4j.graphdb.Node;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 public class TestList extends Neo4jTestCase{
 	

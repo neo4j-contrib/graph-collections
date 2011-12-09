@@ -19,6 +19,8 @@
  */
 package org.neo4j.collections.indexedrelationship;
 
+import java.util.Iterator;
+
 import org.neo4j.collections.NodeCollection;
 import org.neo4j.collections.NodeCollectionLoader;
 import org.neo4j.graphdb.Direction;
@@ -26,8 +28,6 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-
-import java.util.Iterator;
 
 /**
  * A specialized relationship type using a {@link NodeCollection} index.

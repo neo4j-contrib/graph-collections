@@ -24,10 +24,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.collections.graphdb.Connection;
 import org.neo4j.collections.graphdb.ConnectionMode;
 import org.neo4j.collections.graphdb.Connector;
@@ -38,6 +34,10 @@ import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.LeftRestrictedConnectionMode;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.VertexType;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
 
 
 public class EdgeImpl extends VertexImpl implements Edge{

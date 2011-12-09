@@ -21,25 +21,25 @@ package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.BinaryEdge;
 import org.neo4j.collections.graphdb.BinaryEdgeType;
+import org.neo4j.collections.graphdb.ConnectorDescription;
 import org.neo4j.collections.graphdb.ConnectorType;
 import org.neo4j.collections.graphdb.ConnectorTypeDescription;
-import org.neo4j.collections.graphdb.Edge;
-import org.neo4j.collections.graphdb.Vertex;
-import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.collections.graphdb.VertexType;
-import org.neo4j.graphdb.Node;
+import org.neo4j.collections.graphdb.Edge;
+import org.neo4j.collections.graphdb.EdgeType;
 import org.neo4j.collections.graphdb.PropertyType;
 import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.collections.graphdb.ConnectorDescription;
 import org.neo4j.collections.graphdb.SortableBinaryEdgeType;
-import org.neo4j.graphdb.index.IndexManager;
+import org.neo4j.collections.graphdb.Vertex;
+import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.event.KernelEventHandler;
 import org.neo4j.graphdb.event.TransactionEventHandler;
+import org.neo4j.graphdb.index.IndexManager;
 
 public class GraphDatabaseImpl implements DatabaseService {
 
