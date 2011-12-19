@@ -55,6 +55,8 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.test.ImpermanentGraphDatabase;
+import org.neo4j.visualization.graphviz.GraphvizWriter;
+import org.neo4j.walk.Walker;
 
 public class TimelineIndexProviderTest
 {
@@ -65,6 +67,7 @@ public class TimelineIndexProviderTest
     public void setup() throws Exception
     {
         db = new ImpermanentGraphDatabase();
+        db.cleanContent( false );
     }
 
     @Test
@@ -78,7 +81,7 @@ public class TimelineIndexProviderTest
     }
 
     @Test
-    public void testAddToIndex()
+    public void testAddToIndex() throws Exception
     {
         Map<String, String> config = TimelineIndexProvider.CONFIG;
         IndexManager indexMan = db.index();
@@ -86,14 +89,18 @@ public class TimelineIndexProviderTest
         assertNotNull( index );
         Transaction tx = db.beginTx();
         Node n1 = db.createNode();
-        Node n2 = db.createNode();
-        Node n3 = db.createNode();
+        n1.setProperty( "time", 123 );
         index.add( n1, "timestamp", 123L );
+        Node n2 = db.createNode();
+        n2.setProperty( "time", 123 );
         index.add( n2, "timestamp", 123L );
+        Node n3 = db.createNode();
+        n3.setProperty( "time", 124 );
         index.add( n3, "timestamp", 124L );
         tx.success();
         tx.finish();
-        
+        GraphvizWriter writer = new GraphvizWriter();
+        writer.emit( System.out, Walker.fullGraph( db ));
         IndexHits<Node> hits = index.get( "timestamp", 123L );
         assertEquals(2, hits.size());
         hits = index.query( "[122 TO 125]" );
