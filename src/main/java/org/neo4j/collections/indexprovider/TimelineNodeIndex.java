@@ -137,4 +137,16 @@ public class TimelineNodeIndex implements Index<Node>
         timeline.delete();
         
     }
+
+    @Override
+    public GraphDatabaseService getGraphDatabase()
+    {
+        return timeline.getUnderlyingNode().getGraphDatabase();
+    }
+
+    @Override
+    public Node putIfAbsent( Node entity, String key, Object value )
+    {
+        return entity;
+    }
 }
