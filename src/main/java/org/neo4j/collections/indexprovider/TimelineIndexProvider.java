@@ -19,21 +19,17 @@
  */
 package org.neo4j.collections.indexprovider;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.index.Index;
-import org.neo4j.graphdb.index.IndexImplementation;
-import org.neo4j.graphdb.index.IndexManager;
-import org.neo4j.graphdb.index.IndexProvider;
-import org.neo4j.graphdb.index.RelationshipIndex;
+import org.neo4j.graphdb.index.*;
 import org.neo4j.helpers.Service;
 import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.KernelData;
 import org.neo4j.kernel.KernelExtension;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service.Implementation( KernelExtension.class )
 public class TimelineIndexProvider extends IndexProvider
@@ -89,7 +85,7 @@ public class TimelineIndexProvider extends IndexProvider
                 Map<String, String> config )
         {
             throw new UnsupportedOperationException(
-                    "Spatial relationship indexing is not supported at the moment. Please use the node index." );
+                    "timeline relationship indexing is not supported at the moment. Please use the node index." );
         }
 
         @Override
@@ -99,18 +95,13 @@ public class TimelineIndexProvider extends IndexProvider
         }
 
         @Override
-        public boolean configMatches( Map<String, String> stringStringMap,
-                Map<String, String> stringStringMap1 )
+        public boolean configMatches( Map<String, String> config1,
+                Map<String, String> config2 )
         {
-            return false;
+            return config1.equals(config2);
         }
     }
 
     public static final Map<String, String> CONFIG = Collections.unmodifiableMap( MapUtil.stringMap(
             IndexManager.PROVIDER, SERVICE_NAME ) );
-    // public static final Map<String, String> SIMPLE_POINT_CONFIG_WKT =
-    // Collections.unmodifiableMap( MapUtil.stringMap(
-    // IndexManager.PROVIDER, SERVICE_NAME, GEOMETRY_TYPE ,
-    // LayerNodeIndex.POINT_PARAMETER, LayerNodeIndex.WKT_PROPERTY_KEY, "wkt")
-    // );
 }
