@@ -38,13 +38,9 @@
  */
 package org.neo4j.collections.indexprovider;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Test;
+import org.neo4j.collections.timeline.Timeline;
 import org.neo4j.cypher.commands.Query;
 import org.neo4j.cypher.javacompat.CypherParser;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
@@ -58,6 +54,12 @@ import org.neo4j.test.ImpermanentGraphDatabase;
 import org.neo4j.visualization.graphviz.GraphvizWriter;
 import org.neo4j.walk.Walker;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 public class TimelineIndexProviderTest
 {
 
@@ -67,7 +69,7 @@ public class TimelineIndexProviderTest
     public void setup() throws Exception
     {
         db = new ImpermanentGraphDatabase();
-        db.cleanContent( false );
+        db.cleanContent( true );
     }
 
     @Test
@@ -76,6 +78,19 @@ public class TimelineIndexProviderTest
         Map<String, String> config = TimelineIndexProvider.CONFIG;
         IndexManager indexMan = db.index();
         Index<Node> index = indexMan.forNodes( "timeline1", config );
+        assertNotNull( index );
+
+    }
+    @Test
+    public void testLoadIndexWithRootNode()
+    {
+        Map<String, String> config = new HashMap<String, String> (TimelineIndexProvider.CONFIG);
+        final Node startNode = db.getReferenceNode();
+        config.put(TimelineNodeIndex.START_NODE_ID,String.valueOf(startNode.getId()));
+        IndexManager indexMan = db.index();
+        Index<Node> index = indexMan.forNodes( "timeline1", config );
+        final Timeline timeline = ((TimelineNodeIndex) index).getTimeline();
+        assertEquals(startNode, timeline.getUnderlyingNode());
         assertNotNull( index );
 
     }
