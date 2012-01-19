@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2012 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -19,22 +19,13 @@
  */
 package org.neo4j.collections.timeline;
 
+import org.neo4j.collections.btree.BTree;
+import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Traverser.Order;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import org.neo4j.collections.btree.BTree;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.ReturnableEvaluator;
-import org.neo4j.graphdb.StopEvaluator;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.TraversalPosition;
-import org.neo4j.graphdb.Traverser;
-import org.neo4j.graphdb.Traverser.Order;
 
 /**
  * An implementation of {@link TimelineIndex} on top of Neo4j, using
@@ -867,6 +858,5 @@ public class Timeline implements TimelineIndex
                 rel = null;
             }
         }
-        underlyingNode.delete();
     }
 }

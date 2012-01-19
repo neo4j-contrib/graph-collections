@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2012 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -19,10 +19,6 @@
  */
 package org.neo4j.collections.indexprovider;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.neo4j.collections.timeline.Timeline;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -30,11 +26,16 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class TimelineNodeIndex implements Index<Node>
 {
 
 
-    private static final String TIMESTAMP = "timestamp";
+    public static final String TIMESTAMP = "timestamp";
+    public static final String START_NODE_ID = "start_node_id";
     private Timeline timeline;
     private final String indexName;
 
@@ -43,10 +44,25 @@ public class TimelineNodeIndex implements Index<Node>
     {
         this.indexName = indexName;
         Transaction tx = db.beginTx();
-        Node node = db.createNode();
-        timeline = new Timeline( indexName, node, true, db );
+        Node underlyingNode = getOrCreateStartNode(db, config);
+        timeline = new Timeline( indexName, underlyingNode, false, db );
         tx.success();
         tx.finish();
+    }
+
+    private Node getOrCreateStartNode(GraphDatabaseService db, Map<String, String> config) {
+        if (underlyingNodeWasProvided(config)) {
+            return db.getNodeById(Long.parseLong(config.get(START_NODE_ID)));
+        }
+        return db.getReferenceNode();
+    }
+
+    private boolean underlyingNodeWasProvided(Map<String, String> config) {
+        return config.containsKey(START_NODE_ID);
+    }
+
+    public Timeline getTimeline() {
+        return timeline;
     }
 
     @Override
@@ -135,7 +151,6 @@ public class TimelineNodeIndex implements Index<Node>
     public void delete()
     {
         timeline.delete();
-        
     }
 
     @Override
