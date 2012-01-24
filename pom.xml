@@ -9,7 +9,7 @@
 
   <groupId>org.neo4j</groupId>
   <artifactId>neo4j-graph-collections</artifactId>
-  <version>1.6-SNAPSHOT</version>
+  <version>1.7-SNAPSHOT</version>
   <name>Neo4j - Collections</name>
   <description>Providing in-graph collections.</description>
   <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
@@ -17,7 +17,7 @@
   <properties>
     <bundle.namespace>org.neo4j.collections</bundle.namespace>
     <short-name>collections</short-name>
-    <neo4j.version>1.6</neo4j.version>
+    <neo4j.version>1.7</neo4j.version>
     <license-text.header>GPL-3-header.txt</license-text.header>
   </properties>
 
