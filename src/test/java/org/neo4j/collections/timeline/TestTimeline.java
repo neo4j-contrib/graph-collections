@@ -504,4 +504,36 @@ public class TestTimeline extends Neo4jTestCase
             nodes[i].delete();
         }
     }
+	
+	@Test
+    public void shouldNotDegradePerformanceWhenAddingMoreStuff()
+    {
+        Node tlNode = graphDb().createNode();
+        Timeline indexedTimeline = new Timeline( "test", tlNode, true, graphDb() );
+        for ( int i = 1; i < 100000; i++ )
+        {
+            if (i %1000 ==0) {
+                System.out.print(".");
+                restartTx();
+            }
+            indexedTimeline.addNode( graphDb().createNode(), i );
+        }
+        System.out.println("done inserting");
+        indexedTimeline.delete(5000);
+    }
+	
+	@Test
+    public void shouldDeleteNicely()
+    {
+        Node tlNode = graphDb().createNode();
+        Timeline indexedTimeline = new Timeline( "test", tlNode, true, 4, graphDb() );
+        for ( int i = 0; i < 10; i++ )
+        {
+            indexedTimeline.addNode( graphDb().createNode(), i );
+        }
+        restartTx();
+        indexedTimeline.delete(1);
+    }
+	
+	
 }

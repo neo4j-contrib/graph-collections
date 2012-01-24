@@ -22,10 +22,12 @@ package org.neo4j.collections.timeline;
 import org.neo4j.collections.btree.BTree;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.Traverser.Order;
+import org.neo4j.kernel.AbstractGraphDatabase;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 
 /**
  * An implementation of {@link TimelineIndex} on top of Neo4j, using
@@ -48,7 +50,7 @@ public class Timeline implements TimelineIndex
     private static final String TIMELINE_NAME = "timeline_name";
     private static final String TIMELINE_IS_INDEXED = "timeline_indexed";
     private static final String INDEX_COUNT = "index_count";
-    private static final int INDEX_TRIGGER_COUNT = 1000;
+    private static int INDEX_TRIGGER_COUNT = 1000;
 
     private final Node underlyingNode;
     private final boolean indexed;
@@ -108,6 +110,13 @@ public class Timeline implements TimelineIndex
             tx.finish();
         }
     }
+    
+    public Timeline( String name, Node underlyingNode, boolean indexed, int indexTriggerCount,
+            GraphDatabaseService graphDb ) 
+    {
+        this(name, underlyingNode, indexed, graphDb);
+        INDEX_TRIGGER_COUNT = indexTriggerCount;
+    }
 
     private void assertPropertyIsSame( String key, Object value )
     {
@@ -161,9 +170,6 @@ public class Timeline implements TimelineIndex
         {
             return lastNode;
         }
-        Transaction tx = graphDb.beginTx();
-        try
-        {
             Relationship rel = underlyingNode.getSingleRelationship(
                     RelTypes.TIMELINE_NEXT_ENTRY, Direction.INCOMING );
             if ( rel == null )
@@ -172,13 +178,7 @@ public class Timeline implements TimelineIndex
             }
             lastNode = rel.getStartNode().getRelationships(
                     RelTypes.TIMELINE_INSTANCE, Direction.OUTGOING ).iterator().next().getEndNode();
-            tx.success();
             return lastNode;
-        }
-        finally
-        {
-            tx.finish();
-        }
     }
 
     public Node getFirstNode()
@@ -187,9 +187,6 @@ public class Timeline implements TimelineIndex
         {
             return firstNode;
         }
-        Transaction tx = graphDb.beginTx();
-        try
-        {
             Relationship rel = underlyingNode.getSingleRelationship(
                     RelTypes.TIMELINE_NEXT_ENTRY, Direction.OUTGOING );
             if ( rel == null )
@@ -198,13 +195,7 @@ public class Timeline implements TimelineIndex
             }
             firstNode = rel.getEndNode().getRelationships(
                     RelTypes.TIMELINE_INSTANCE, Direction.OUTGOING ).iterator().next().getEndNode();
-            tx.success();
             return firstNode;
-        }
-        finally
-        {
-            tx.finish();
-        }
     }
 
     public void addNode( Node nodeToAdd, long timestamp )
@@ -427,8 +418,8 @@ public class Timeline implements TimelineIndex
         newIndexedNode.setProperty( INDEX_COUNT, currentCount - timesToTraverse );
         return newCount;
     }
-
-    public void removeNode( Node nodeToRemove )
+    
+    public void removeNode(Node nodeToRemove, boolean transactional)
     {
         if ( nodeToRemove == null )
         {
@@ -541,8 +532,16 @@ public class Timeline implements TimelineIndex
         }
         finally
         {
-            tx.finish();
+            if(transactional)
+            {
+                tx.finish();
+            }
         }
+    }
+
+    public void removeNode( Node nodeToRemove )
+    {
+        removeNode( nodeToRemove, true );
     }
 
     public Iterable<Node> getAllNodes( Long afterTimestampOrNull,
@@ -859,4 +858,41 @@ public class Timeline implements TimelineIndex
             }
         }
     }
+    
+    public void delete(int commitInterval)
+    {
+        int count = 0;
+        while(this.getLastNode()!=null) {
+            
+            this.removeNode( this.getLastNode() );
+            count++;
+            if ( count > commitInterval )
+            {
+                System.out.print(".");
+                restartTx();
+                count = 0;
+            }
+        }
+        if ( indexed )
+        {
+            indexBTree.delete(commitInterval);
+        }
+    }
+    
+    private void restartTx() {
+            try
+            {
+                javax.transaction.Transaction tx = ((AbstractGraphDatabase)graphDb).getConfig().getTxModule()
+                    .getTxManager().getTransaction();
+                if ( tx != null )
+                {
+                    tx.commit();
+                }
+            }
+            catch ( Exception e )
+            {
+                throw new RuntimeException( e );
+            }
+            graphDb.beginTx();
+        }
 }
