@@ -41,7 +41,7 @@ package org.neo4j.collections.indexprovider;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.timeline.Timeline;
-import org.neo4j.cypher.commands.Query;
+import org.neo4j.cypher.internal.commands.Query;
 import org.neo4j.cypher.javacompat.CypherParser;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
