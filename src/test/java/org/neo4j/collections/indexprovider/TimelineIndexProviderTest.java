@@ -41,7 +41,6 @@ package org.neo4j.collections.indexprovider;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.timeline.Timeline;
-import org.neo4j.cypher.internal.commands.Query;
 import org.neo4j.cypher.javacompat.CypherParser;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
@@ -123,8 +122,7 @@ public class TimelineIndexProviderTest
         
         CypherParser parser = new CypherParser();
         ExecutionEngine engine = new ExecutionEngine( db );
-        Query query = parser.parse( "start n=node:timeline1('[100 TO 200]') return n" );
-        ExecutionResult result = engine.execute( query );
+        ExecutionResult result = engine.execute( "start n=node:timeline1('[100 TO 200]') return n" );
         System.out.println( result.toString() );
 
     }
