@@ -9,7 +9,7 @@
 
   <groupId>org.neo4j</groupId>
   <artifactId>neo4j-graph-collections</artifactId>
-  <version>1.6-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <name>Neo4j - Collections</name>
   <description>Providing in-graph collections.</description>
   <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
@@ -23,13 +23,14 @@
 
   <packaging>jar</packaging>
 
-  <scm>
-  </scm>
-<licenses>
-    <license>
-      <name>GNU General Public License, Version 3</name>
-      <url>http://www.gnu.org/licenses/gpl-3.0-standalone.html</url>
-      <comments>The software ("Software") developed and owned by Network Engine for
+    <scm>
+        <url>https://github.com/neo4j/graph-collections</url>
+    </scm>
+    <licenses>
+        <license>
+            <name>GNU General Public License, Version 3</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0-standalone.html</url>
+            <comments>The software ("Software") developed and owned by Network Engine for
                 Objects in Lund AB (referred to in this notice as "Neo Technology") is
                 licensed under the GNU GENERAL PUBLIC LICENSE Version 3 to all third
                 parties and that license is included below.
@@ -42,9 +43,8 @@
                 Version 3 and you may use the Software solely pursuant to the terms of
                 the relevant Commercial Agreement.
             </comments>
-    </license>
-  </licenses>
-
+        </license>
+    </licenses>
   <dependencies>
     <dependency>
       <groupId>org.neo4j</groupId>
