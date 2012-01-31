@@ -25,6 +25,8 @@
 
     <scm>
         <url>https://github.com/neo4j/graph-collections</url>
+        <connection>scm:git:git://github.com/neo4j/graph-collections.git</connection>
+        <developerConnection>scm:git:git@github.com:neo4j/graph-collections.git</developerConnection>
     </scm>
     <licenses>
         <license>
