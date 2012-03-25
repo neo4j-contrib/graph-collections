@@ -160,8 +160,7 @@ class TreeNode
 		    AbstractGraphDatabase graphDb = (AbstractGraphDatabase) bTree.getGraphDb();
             try
             {
-                Transaction tx = graphDb.getConfig().getTxModule()
-                    .getTxManager().getTransaction();
+                Transaction tx = graphDb.getTxManager().getTransaction();
                 if ( tx != null )
                 {
                     tx.commit();

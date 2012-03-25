@@ -882,8 +882,7 @@ public class Timeline implements TimelineIndex
     private void restartTx() {
             try
             {
-                javax.transaction.Transaction tx = ((AbstractGraphDatabase)graphDb).getConfig().getTxModule()
-                    .getTxManager().getTransaction();
+                javax.transaction.Transaction tx = ((AbstractGraphDatabase)graphDb).getTxManager().getTransaction();
                 if ( tx != null )
                 {
                     tx.commit();

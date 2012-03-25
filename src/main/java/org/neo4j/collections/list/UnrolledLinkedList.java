@@ -503,9 +503,9 @@ public class UnrolledLinkedList implements NodeCollection
         GraphDatabaseService graphDb = baseNode.getGraphDatabase();
         if ( lockType == LockType.READ && graphDb instanceof AbstractGraphDatabase )
         {
-            Config config = ((AbstractGraphDatabase) baseNode.getGraphDatabase()).getConfig();
-            config.getLockManager().getReadLock( baseNode );
-            config.getLockReleaser().addLockToTransaction( baseNode, LockType.READ );
+            final AbstractGraphDatabase graphDatabase = (AbstractGraphDatabase) baseNode.getGraphDatabase();
+            graphDatabase.getLockManager().getReadLock( baseNode );
+            graphDatabase.getLockReleaser().addLockToTransaction( baseNode, LockType.READ );
         }
         else
         {

@@ -19,6 +19,7 @@
  */
 package org.neo4j.collections.indexprovider;
 
+import org.neo4j.graphdb.DependencyResolver;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.*;
@@ -43,12 +44,13 @@ public class TimelineIndexProvider extends IndexProvider
     }
 
     @Override
-    public IndexImplementation load( KernelData kernelData ) throws Exception
+    public IndexImplementation load(DependencyResolver dependencyResolver) throws Exception
     {
-        return new TimelineIndexImplementation( kernelData.graphDatabase() );
+        final GraphDatabaseService gds = dependencyResolver.resolveDependency(GraphDatabaseService.class);
+        return new TimelineIndexImplementation(gds);
     }
 
-    private class TimelineIndexImplementation extends IndexImplementation
+    private class TimelineIndexImplementation implements IndexImplementation
     {
 
         private GraphDatabaseService db;
