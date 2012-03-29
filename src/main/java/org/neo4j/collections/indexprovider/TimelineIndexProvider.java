@@ -25,6 +25,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.*;
 import org.neo4j.helpers.Service;
 import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.kernel.Config;
 import org.neo4j.kernel.KernelData;
 import org.neo4j.kernel.KernelExtension;
 
@@ -65,7 +66,7 @@ public class TimelineIndexProvider extends IndexProvider
         @Override
         public String getDataSourceName()
         {
-            return null;
+            return Config.DEFAULT_DATA_SOURCE_NAME;
         }
 
         @Override
