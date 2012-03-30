@@ -22,13 +22,13 @@ package org.neo4j.collections.graphdb;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.collections.graphdb.impl.BinaryEdgeImpl;
 import org.neo4j.collections.graphdb.impl.PropertyImpl;
 import org.neo4j.collections.graphdb.impl.VertexTypeImpl;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.collections.Neo4jTestCase;
 
 public class TestEnhancedAPI extends Neo4jTestCase
 {

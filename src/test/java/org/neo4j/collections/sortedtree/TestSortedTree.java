@@ -19,13 +19,13 @@
  */
 package org.neo4j.collections.sortedtree;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Node;
-
-import static org.junit.Assert.assertTrue;
 
 public class TestSortedTree extends Neo4jTestCase
 {

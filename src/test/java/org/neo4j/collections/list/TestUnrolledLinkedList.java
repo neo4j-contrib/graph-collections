@@ -19,17 +19,17 @@
  */
 package org.neo4j.collections.list;
 
-import org.junit.Test;
-import org.neo4j.collections.NodeCollectionLoader;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
+import org.junit.Test;
+import org.neo4j.collections.NodeCollectionLoader;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 /**
  * The normal order of adding to an UnrolledLinkedList would be in the end of the list forwards order, e.g. adding

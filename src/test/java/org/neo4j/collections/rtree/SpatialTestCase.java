@@ -19,7 +19,8 @@
  */
 package org.neo4j.collections.rtree;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Direction;

@@ -19,19 +19,22 @@
  */
 package org.neo4j.collections.indexprovider;
 
-import org.neo4j.graphdb.DependencyResolver;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.index.*;
-import org.neo4j.helpers.Service;
-import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.kernel.Config;
-import org.neo4j.kernel.KernelData;
-import org.neo4j.kernel.KernelExtension;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.neo4j.graphdb.DependencyResolver;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.IndexImplementation;
+import org.neo4j.graphdb.index.IndexManager;
+import org.neo4j.graphdb.index.IndexProvider;
+import org.neo4j.graphdb.index.RelationshipIndex;
+import org.neo4j.helpers.Service;
+import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.kernel.KernelExtension;
+import org.neo4j.kernel.configuration.Config;
 
 @Service.Implementation( KernelExtension.class )
 public class TimelineIndexProvider extends IndexProvider

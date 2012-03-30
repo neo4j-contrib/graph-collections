@@ -19,6 +19,12 @@
  */
 package org.neo4j.collections.indexedrelationship;
 
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.collections.list.UnrolledLinkedList;
@@ -26,12 +32,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-
-import java.util.ArrayList;
-import java.util.Collections;
-
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TestUnrolledLinkedListIndexedRelationship extends Neo4jTestCase
 {

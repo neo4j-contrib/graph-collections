@@ -38,6 +38,12 @@
  */
 package org.neo4j.collections.indexprovider;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.timeline.Timeline;
@@ -52,12 +58,6 @@ import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.test.ImpermanentGraphDatabase;
 import org.neo4j.visualization.graphviz.GraphvizWriter;
 import org.neo4j.walk.Walker;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class TimelineIndexProviderTest
 {

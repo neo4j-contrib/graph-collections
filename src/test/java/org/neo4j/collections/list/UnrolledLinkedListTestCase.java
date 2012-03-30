@@ -19,19 +19,19 @@
  */
 package org.neo4j.collections.list;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.neo4j.collections.GraphCollection;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 
 /**
  * @author Bryce Ewing

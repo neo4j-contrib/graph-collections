@@ -19,6 +19,8 @@
  */
 package org.neo4j.collections.indexedrelationship;
 
+import static junit.framework.Assert.assertEquals;
+
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.collections.list.UnrolledLinkedList;
@@ -26,8 +28,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-
-import static junit.framework.Assert.assertEquals;
 
 public class TestUnrolledLinkedListRelationshipProperties extends Neo4jTestCase
 {

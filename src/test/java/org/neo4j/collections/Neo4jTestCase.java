@@ -33,8 +33,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.neo4j.collections.graphdb.DatabaseService;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.collections.graphdb.impl.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.Transaction;
 
 public abstract class Neo4jTestCase
 {

@@ -30,8 +30,8 @@ import java.util.LinkedList;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.graphdb.Node;
 import org.neo4j.collections.Neo4jTestCase;
+import org.neo4j.graphdb.Node;
 
 public class TestTimeline extends Neo4jTestCase
 {

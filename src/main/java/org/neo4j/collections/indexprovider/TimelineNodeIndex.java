@@ -19,16 +19,16 @@
  */
 package org.neo4j.collections.indexprovider;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.neo4j.collections.timeline.Timeline;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class TimelineNodeIndex implements Index<Node>
 {
