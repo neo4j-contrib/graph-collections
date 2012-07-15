@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.TransactionFailureException;
 
 public class TestTimeline extends Neo4jTestCase
 {
@@ -241,49 +242,63 @@ public class TestTimeline extends Neo4jTestCase
 	@Test
     public void testIllegalStuff()
 	{
-		Node node1 = graphDb().createNode();
-		long stamp1 = System.currentTimeMillis();
-		try 
-		{ 
-			new Timeline( "blabla", null, true, graphDb() );
-			fail( "Null parameter should throw exception" );
-		} 
-		catch ( IllegalArgumentException e ) { // good
-		}
-		try 
-		{ 
-			new Timeline( "blabla", node1, false, null );
-			fail( "Null parameter should throw exception" );
-		} 
-		catch ( IllegalArgumentException e ) { // good
-		}
 
-		node1.setProperty( "timestamp", stamp1 );
-		timeline.addNode( node1, stamp1 );
-		try 
-		{ 
-			timeline.addNode( node1, stamp1 );
-			fail( "Re-adding node should throw exception" );
-		} 
-		catch ( IllegalArgumentException e ) { // good
-		}
-		try 
-		{ 
-			timeline.removeNode( timeline.getUnderlyingNode() );
-			fail( "Removing underlying node should throw exception" );
-		} 
-		catch ( IllegalArgumentException e ) { // good
-		}
-		timeline.removeNode( node1 );
-		try 
-		{ 
-			timeline.removeNode( node1 );
-			fail( "Removing non added node should throw exception" );
-		} 
-		catch ( IllegalArgumentException e ) { // good
-		}
+		// finish enclosing tx to decouple this
+		restartTx();
 		
-		node1.delete();
+		Node node1 = graphDb().createNode();
+		
+		try {
+
+			long stamp1 = System.currentTimeMillis();
+			try 
+			{ 
+				new Timeline( "blabla", null, true, graphDb() );
+				fail( "Null parameter should throw exception" );
+			} 
+			catch ( IllegalArgumentException e ) { // good
+			}
+			try 
+			{ 
+				new Timeline( "blabla", node1, false, null );
+				fail( "Null parameter should throw exception" );
+			} 
+			catch ( IllegalArgumentException e ) { // good
+			}
+
+			node1.setProperty( "timestamp", stamp1 );
+			timeline.addNode( node1, stamp1 );
+			try 
+			{ 
+				timeline.addNode( node1, stamp1 );
+				fail( "Re-adding node should throw exception" );
+			} 
+			catch ( IllegalArgumentException e ) { // good
+			}
+			try 
+			{ 
+				timeline.removeNode( timeline.getUnderlyingNode() );
+				fail( "Removing underlying node should throw exception" );
+			} 
+			catch ( IllegalArgumentException e ) { // good
+			}
+			timeline.removeNode( node1 );
+			
+			try 
+			{ 
+				timeline.removeNode( node1 );
+				fail( "Removing non added node should throw exception" );
+			} 
+			catch ( IllegalArgumentException e ) { // good
+			}
+		
+			finishTx(true);
+			fail( "Transaction should have been rolled back" );
+			
+			//node1.delete(); // not necessary because top level transaction failed
+		
+		} catch (TransactionFailureException e) { // good
+		}
 	}
 	
 	@Test
