@@ -17,7 +17,7 @@
   <properties>
     <bundle.namespace>org.neo4j.collections</bundle.namespace>
     <short-name>collections</short-name>
-    <neo4j.version>1.8-SNAPSHOT</neo4j.version>
+    <neo4j.version>1.8.M06</neo4j.version>
     <license-text.header>GPL-3-header.txt</license-text.header>
   </properties>
 
@@ -91,13 +91,21 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
     </plugins>
+    
   </build>
 
   <distributionManagement>
     <site>
       <id>neo4j-site</id>
-      <url>scpexe://components.neo4j.org/home/neo/components/${project.artifactId}/${project.version}</url>
+      <url>scpexe://static.neo4j.org/var/www/components.neo4j.org/${project.artifactId}/${project.version}</url>
     </site>
   </distributionManagement>
 
