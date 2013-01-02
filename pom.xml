@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.neo4j.build</groupId>
-    <artifactId>parent-central</artifactId>
-    <version>35</version>
-  </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>parent-pom</artifactId>
+        <groupId>org.neo4j.build</groupId>
+        <version>35</version>
+    </parent>
 
-  <groupId>org.neo4j</groupId>
-  <artifactId>neo4j-graph-collections</artifactId>
-  <version>0.5-SNAPSHOT</version>
-  <name>Neo4j - Collections</name>
-  <description>Providing in-graph collections.</description>
-  <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
+    <groupId>org.neo4j</groupId>
+    <artifactId>neo4j-graph-collections</artifactId>
+    <version>0.5-SNAPSHOT</version>
+    <name>Neo4j - Collections</name>
+    <description>Providing in-graph collections.</description>
+    <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
-  <properties>
-    <bundle.namespace>org.neo4j.collections</bundle.namespace>
-    <short-name>collections</short-name>
-    <neo4j.version>1.8.RC1</neo4j.version>
-    <license-text.header>GPL-3-header.txt</license-text.header>
-  </properties>
+    <properties>
+        <bundle.namespace>org.neo4j.collections</bundle.namespace>
+        <short-name>collections</short-name>
+        <neo4j.version>1.8.1</neo4j.version>
+        <license-text.header>GPL-3-header.txt</license-text.header>
+    </properties>
 
-  <packaging>jar</packaging>
+    <packaging>jar</packaging>
 
     <scm>
         <url>https://github.com/neo4j/graph-collections</url>
@@ -47,67 +48,67 @@
             </comments>
         </license>
     </licenses>
-  <dependencies>
-    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j</artifactId>
-      <version>${neo4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j-lucene-index</artifactId>
-      <version>${neo4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j-kernel</artifactId>
-      <version>${neo4j.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-     </dependency>
-    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j-graphviz</artifactId>
-      <version>${neo4j.version}</version>
-      <scope>test</scope>
-     </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j</artifactId>
+            <version>${neo4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-lucene-index</artifactId>
+            <version>${neo4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-kernel</artifactId>
+            <version>${neo4j.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-graphviz</artifactId>
+            <version>${neo4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>${bundle.namespace}.Main</mainClass>
-              <packageName>${bundle.namespace}</packageName>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-    </plugins>
-    
-  </build>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${bundle.namespace}.Main</mainClass>
+                            <packageName>${bundle.namespace}</packageName>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
 
-  <distributionManagement>
-    <site>
-      <id>neo4j-site</id>
-      <url>scpexe://static.neo4j.org/var/www/components.neo4j.org/${project.artifactId}/${project.version}</url>
-    </site>
-  </distributionManagement>
+    </build>
+
+    <distributionManagement>
+        <site>
+            <id>neo4j-site</id>
+            <url>scpexe://static.neo4j.org/var/www/components.neo4j.org/${project.artifactId}/${project.version}</url>
+        </site>
+    </distributionManagement>
 
 
 </project>
