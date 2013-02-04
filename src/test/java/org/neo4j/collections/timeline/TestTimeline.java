@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2002-2012 "Neo Technology,"
+ * Copyright (c) 2002-2013 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -29,6 +29,7 @@ import java.util.LinkedList;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.collections.Neo4jTestCase;
 import org.neo4j.graphdb.Node;
@@ -521,6 +522,7 @@ public class TestTimeline extends Neo4jTestCase
     }
 	
 	@Test
+    @Ignore("crashes the VM")
     public void shouldNotDegradePerformanceWhenAddingMoreStuff()
     {
         Node tlNode = graphDb().createNode();
