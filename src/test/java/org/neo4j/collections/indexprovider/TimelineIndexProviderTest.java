@@ -38,12 +38,6 @@
  */
 package org.neo4j.collections.indexprovider;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.collections.timeline.Timeline;
@@ -58,70 +52,72 @@ import org.neo4j.test.ImpermanentGraphDatabase;
 import org.neo4j.visualization.graphviz.GraphvizWriter;
 import org.neo4j.walk.Walker;
 
-public class TimelineIndexProviderTest
-{
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+public class TimelineIndexProviderTest {
 
     private ImpermanentGraphDatabase db;
 
     @Before
-    public void setup() throws Exception
-    {
+    public void setup() throws Exception {
         db = new ImpermanentGraphDatabase();
-        db.cleanContent( true );
+        db.cleanContent(true);
     }
 
     @Test
-    public void testLoadIndex()
-    {
+    public void testLoadIndex() {
         Map<String, String> config = TimelineIndexProvider.CONFIG;
         IndexManager indexMan = db.index();
-        Index<Node> index = indexMan.forNodes( "timeline1", config );
-        assertNotNull( index );
+        Index<Node> index = indexMan.forNodes("timeline1", config);
+        assertNotNull(index);
 
     }
+
     @Test
-    public void testLoadIndexWithRootNode()
-    {
-        Map<String, String> config = new HashMap<String, String> (TimelineIndexProvider.CONFIG);
+    public void testLoadIndexWithRootNode() {
+        Map<String, String> config = new HashMap<String, String>(TimelineIndexProvider.CONFIG);
         final Node startNode = db.getReferenceNode();
-        config.put(TimelineNodeIndex.START_NODE_ID,String.valueOf(startNode.getId()));
+        config.put(TimelineNodeIndex.START_NODE_ID, String.valueOf(startNode.getId()));
         IndexManager indexMan = db.index();
-        Index<Node> index = indexMan.forNodes( "timeline1", config );
+        Index<Node> index = indexMan.forNodes("timeline1", config);
         final Timeline timeline = ((TimelineNodeIndex) index).getTimeline();
         assertEquals(startNode, timeline.getUnderlyingNode());
-        assertNotNull( index );
+        assertNotNull(index);
 
     }
 
     @Test
-    public void testAddToIndex() throws Exception
-    {
+    public void testAddToIndex() throws Exception {
         Map<String, String> config = TimelineIndexProvider.CONFIG;
         IndexManager indexMan = db.index();
-        Index<Node> index = indexMan.forNodes( "timeline1", config );
-        assertNotNull( index );
+        Index<Node> index = indexMan.forNodes("timeline1", config);
+        assertNotNull(index);
         Transaction tx = db.beginTx();
         Node n1 = db.createNode();
-        n1.setProperty( "time", 123 );
-        index.add( n1, "timestamp", 123L );
+        n1.setProperty("time", 123);
+        index.add(n1, "timestamp", 123L);
         Node n2 = db.createNode();
-        n2.setProperty( "time", 123 );
-        index.add( n2, "timestamp", 123L );
+        n2.setProperty("time", 123);
+        index.add(n2, "timestamp", 123L);
         Node n3 = db.createNode();
-        n3.setProperty( "time", 124 );
-        index.add( n3, "timestamp", 124L );
+        n3.setProperty("time", 124);
+        index.add(n3, "timestamp", 124L);
         tx.success();
         tx.finish();
         GraphvizWriter writer = new GraphvizWriter();
-        writer.emit( System.out, Walker.fullGraph( db ));
-        IndexHits<Node> hits = index.get( "timestamp", 123L );
+        writer.emit(System.out, Walker.fullGraph(db));
+        IndexHits<Node> hits = index.get("timestamp", 123L);
         assertEquals(2, hits.size());
-        hits = index.query( "[122 TO 125]" );
+        hits = index.query("[122 TO 125]");
         assertEquals(3, hits.size());
-        
-        ExecutionEngine engine = new ExecutionEngine( db );
-        ExecutionResult result = engine.execute( "start n=node:timeline1('[100 TO 200]') return n" );
-        System.out.println( result.toString() );
+
+        ExecutionEngine engine = new ExecutionEngine(db);
+        ExecutionResult result = engine.execute("start n=node:timeline1('[100 TO 200]') return n");
+        System.out.println(result.toString());
 
     }
 
