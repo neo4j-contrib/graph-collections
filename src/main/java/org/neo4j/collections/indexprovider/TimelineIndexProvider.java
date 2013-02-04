@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2002-2012 "Neo Technology,"
+ * Copyright (c) 2002-2013 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -31,12 +31,9 @@ import org.neo4j.graphdb.index.IndexImplementation;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.IndexProvider;
 import org.neo4j.graphdb.index.RelationshipIndex;
-import org.neo4j.helpers.Service;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.kernel.KernelExtension;
 import org.neo4j.kernel.configuration.Config;
 
-@Service.Implementation( KernelExtension.class )
 public class TimelineIndexProvider extends IndexProvider
 {
 
@@ -54,7 +51,7 @@ public class TimelineIndexProvider extends IndexProvider
         return new TimelineIndexImplementation(gds);
     }
 
-    private class TimelineIndexImplementation implements IndexImplementation
+    static class TimelineIndexImplementation implements IndexImplementation
     {
 
         private GraphDatabaseService db;

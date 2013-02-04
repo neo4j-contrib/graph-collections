@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>parent-pom</artifactId>
+        <artifactId>parent-central</artifactId>
         <groupId>org.neo4j.build</groupId>
-        <version>35</version>
+        <version>36</version>
     </parent>
 
     <groupId>org.neo4j</groupId>
@@ -18,7 +18,7 @@
     <properties>
         <bundle.namespace>org.neo4j.collections</bundle.namespace>
         <short-name>collections</short-name>
-        <neo4j.version>1.8.1</neo4j.version>
+        <neo4j.version>1.9.M04</neo4j.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
     </properties>
 
@@ -53,11 +53,13 @@
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j</artifactId>
             <version>${neo4j.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-lucene-index</artifactId>
             <version>${neo4j.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>

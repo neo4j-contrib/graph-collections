@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2002-2012 "Neo Technology,"
+ * Copyright (c) 2002-2013 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -27,13 +27,13 @@ import java.util.NoSuchElementException;
 
 import org.neo4j.collections.GraphCollection;
 import org.neo4j.collections.NodeCollection;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.kernel.AbstractGraphDatabase;
+import org.neo4j.graphdb.*;
+import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.kernel.impl.transaction.LockType;
+import org.neo4j.kernel.impl.transaction.Locker;
+
+import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
 
 /**
  * Implementation of an UnrolledLinkedList for storage of nodes. This collection is primarily for use within an
@@ -65,6 +65,8 @@ import org.neo4j.kernel.impl.transaction.LockType;
  */
 public class UnrolledLinkedList implements NodeCollection
 {
+    private final Locker locker;
+
     private static enum RelationshipTypes implements RelationshipType
     {
         NEXT_PAGE, HEAD
@@ -110,6 +112,7 @@ public class UnrolledLinkedList implements NodeCollection
         {
             throw new IllegalStateException( "Unable to re-instantiate UnrolledLinkedList from graph data structure.", e );
         }
+        locker = Locker.getInstance(baseNode.getGraphDatabase());
     }
 
     /**
@@ -156,6 +159,7 @@ public class UnrolledLinkedList implements NodeCollection
         };
         this.pageSize = pageSize;
         this.margin = margin;
+        locker = Locker.getInstance(graphDb);
     }
 
     @Override
@@ -499,18 +503,38 @@ public class UnrolledLinkedList implements NodeCollection
 
     private void acquireLock( LockType lockType )
     {
-        GraphDatabaseService graphDb = baseNode.getGraphDatabase();
-        if ( lockType == LockType.READ && graphDb instanceof AbstractGraphDatabase )
+        locker.acquireLock(lockType, baseNode);
+    }
+
+    private void acquireLock(LockType lockType, PropertyContainer element) {
+        GraphDatabaseService graphDb = element.getGraphDatabase();
+        if ( lockType == LockType.READ)
         {
-            final AbstractGraphDatabase graphDatabase = (AbstractGraphDatabase) baseNode.getGraphDatabase();
-            graphDatabase.getLockManager().getReadLock( baseNode );
-            graphDatabase.getLockReleaser().addLockToTransaction( baseNode, LockType.READ );
+            Transaction tx = getCurrentTransaction(graphDb);
+            tx.acquireReadLock(element);
+            //graphDatabase.getLockManager().getReadLock( baseNode );
+            //graphDatabase.getLockReleaser().addLockToTransaction( baseNode, LockType.READ );
         }
         else
         {
             // default to write lock if read locks unavailable
-            baseNode.removeProperty( "___dummy_property_to_acquire_lock___" );
+            element.removeProperty("___dummy_property_to_acquire_lock___");
         }
+    }
+
+
+    private Transaction getCurrentTransaction(GraphDatabaseService graphDatabaseService) {
+        try {
+            if (graphDatabaseService instanceof GraphDatabaseAPI) {
+                GraphDatabaseAPI graphDatabaseAPI = (GraphDatabaseAPI) graphDatabaseService;
+                TransactionManager txManager = graphDatabaseAPI.getTxManager();
+                return (Transaction)txManager.getTransaction();
+                
+            }
+        } catch (SystemException e) {
+            throw new RuntimeException("Error accessing current transaction",e);
+        }
+        throw new RuntimeException("Error accessing current transaction, not a GraphDatabaseAPI "+graphDatabaseService);
     }
 
     private static abstract class ItemIterator<T> implements Iterator<T>
