@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.neo4j.build</groupId>
-    <artifactId>parent-central</artifactId>
-    <version>35</version>
-  </parent>
 
   <groupId>org.neo4j</groupId>
   <artifactId>neo4j-graph-collections</artifactId>
-  <version>0.4</version>
+  <version>0.4-neo4j-1.8-SNAPSHOT</version>
   <name>Neo4j - Collections</name>
   <description>Providing in-graph collections.</description>
   <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
@@ -17,7 +12,7 @@
   <properties>
     <bundle.namespace>org.neo4j.collections</bundle.namespace>
     <short-name>collections</short-name>
-    <neo4j.version>1.8.RC1</neo4j.version>
+    <neo4j.version>1.8.2</neo4j.version>
     <license-text.header>GPL-3-header.txt</license-text.header>
   </properties>
 
@@ -74,6 +69,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <version>4.11</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -103,10 +99,18 @@
   </build>
 
   <distributionManagement>
-    <site>
-      <id>neo4j-site</id>
-      <url>scpexe://static.neo4j.org/var/www/components.neo4j.org/${project.artifactId}/${project.version}</url>
-    </site>
+    <repository>
+      <id>releases@repo.neo4j.org</id>
+      <name>releases@repo.neo4j.org</name>
+      <uniqueVersion>false</uniqueVersion>
+      <url>http://m2.neo4j.org/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots@repo.neo4j.org</id>
+      <name>snapshots@repo.neo4j.org</name>
+      <uniqueVersion>false</uniqueVersion>
+      <url>http://m2.neo4j.org/content/repositories/snapshots</url>
+    </snapshotRepository>
   </distributionManagement>
 
 
