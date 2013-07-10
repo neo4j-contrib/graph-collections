@@ -80,7 +80,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 			parent = chooseSubTree(parent, geomNode);
 		}
 		
-		if (countChildren(parent, RTreeRelationshipTypes.RTREE_REFERENCE) == maxNodeReferences) {
+		if (countChildren(parent, RTreeRelationshipTypes.RTREE_REFERENCE) >= maxNodeReferences) {
 			insertInLeaf(parent, geomNode);
 			splitAndAdjustPathBoundingBox(parent);
 		} else {
