@@ -37,6 +37,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -113,6 +114,7 @@ public class TestUnrolledLinkedListConcurrency extends UnrolledLinkedListTestCas
     }
 
     @Test
+    @Ignore("Not relevant anymore as there are no non-transactional reads")
     public void testAddInSamePageHavingReadPastWithoutReadTransaction() throws Exception
     {
         final ArrayList<Node> nodes = createNodes( 4 );

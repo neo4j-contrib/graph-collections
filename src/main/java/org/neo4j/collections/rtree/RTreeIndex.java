@@ -20,6 +20,7 @@
 package org.neo4j.collections.rtree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -260,10 +261,10 @@ public class RTreeIndex implements SpatialIndexWriter {
 			if (rel == null) {
 				isStopNode = false;
 				isReturnableNode = false;
-			} else if (rel.getType().equals(RTreeRelationshipTypes.RTREE_CHILD)) {
+			} else if (rel.isType(RTreeRelationshipTypes.RTREE_CHILD)) {
 				isReturnableNode = false;
 				isStopNode = !filter.needsToVisit(getIndexNodeEnvelope(node));
-			} else if (rel.getType().equals(RTreeRelationshipTypes.RTREE_REFERENCE)) {
+			} else if (rel.isType(RTreeRelationshipTypes.RTREE_REFERENCE)) {
 				isReturnableNode = filter.geometryMatches(node);
 				isStopNode = true;
 			}
@@ -315,7 +316,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 	// Private methods
 
 	private Envelope getChildNodeEnvelope(Node child, RelationshipType relType) {
-	    if (relType == RTreeRelationshipTypes.RTREE_REFERENCE) {
+	    if (relType.name().equals(RTreeRelationshipTypes.RTREE_REFERENCE.name())) {
 	    	return getLeafNodeEnvelope(child);
 	    } else {
 	    	return getIndexNodeEnvelope(child);
@@ -344,6 +345,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 		
 		double[] bbox = (double[]) indexNode.getProperty(PROP_BBOX);
     	// Envelope parameters: xmin, xmax, ymin, ymax
+        System.out.println("bbox = " + Arrays.toString(bbox));
         return new Envelope(bbox[0], bbox[2], bbox[1], bbox[3]);
 	}
 		
@@ -721,7 +723,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 	/**
 	 * Adjust IndexNode bounding box according to the new child inserted
 	 * @param parent IndexNode
-	 * @param child geomNode inserted
+	 * @param childBBox geomNode inserted
 	 * @return is bbox changed?
 	 */
 	private boolean expandParentBoundingBoxAfterNewChild(Node parent, double[] childBBox) {

@@ -49,6 +49,7 @@ public class TestTimeline extends Neo4jTestCase
 	@After
 	public void tearDownTimeline() throws Exception
 	{
+        restartTx(true);
 		timeline.delete();
 	}
 	
@@ -326,7 +327,7 @@ public class TestTimeline extends Neo4jTestCase
 		while ( nodes.iterator().hasNext() )
 		{
 			Node nodeToRemove = nodes.iterator().next();
-			assert nodeToRemove.equals( after.removeFirst() );
+			assertEquals(nodeToRemove, after.removeFirst());
 			timeline.removeNode( nodeToRemove );
 			nodes = timeline.getAllNodesBefore( 65 );
 			if ( nodes.iterator().hasNext() )
@@ -344,8 +345,8 @@ public class TestTimeline extends Neo4jTestCase
 			assert nodeToRemove.equals( before.removeLast() );
 			timeline.removeNode( nodeToRemove );
 		}
-		assert !tlNode.getRelationships( 
-			Timeline.RelTypes.TIMELINE_NEXT_ENTRY ).iterator().hasNext();
+		assertFalse(tlNode.getRelationships(
+			Timeline.RelTypes.TIMELINE_NEXT_ENTRY ).iterator().hasNext());
 		timeline.delete();
 	}
 	

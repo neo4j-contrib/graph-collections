@@ -32,14 +32,11 @@ import org.neo4j.collections.graphdb.PropertyType.ComparablePropertyType;
 import org.neo4j.collections.graphdb.SortableBinaryEdgeType;
 import org.neo4j.collections.graphdb.Vertex;
 import org.neo4j.collections.graphdb.VertexType;
-import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.event.KernelEventHandler;
 import org.neo4j.graphdb.event.TransactionEventHandler;
 import org.neo4j.graphdb.index.IndexManager;
+import org.neo4j.graphdb.schema.Schema;
 
 public class GraphDatabaseImpl implements DatabaseService {
 
@@ -93,7 +90,12 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return graphDb.createNode();
 	}
 
-	@Override
+    @Override
+    public Node createNode(Label... labels) {
+        return graphDb.createNode(labels);
+    }
+
+    @Override
 	public Vertex createVertex() {
 		return new VertexImpl(this, getGraphDatabaseService().createNode().getId());
 	}
@@ -103,7 +105,12 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return graphDb.getAllNodes();
 	}
 
-	@Override
+    @Override
+    public ResourceIterable<Node> findNodesByLabelAndProperty(Label label, String s, Object o) {
+        return null;
+    }
+
+    @Override
 	public Iterable<Vertex> getAllVertices() {
 		return new NodeIterable(getGraphDatabaseService().getAllNodes());
 	}
@@ -290,7 +297,12 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return graphDb.unregisterKernelEventHandler(arg0);
 	}
 
-	@Override
+    @Override
+    public Schema schema() {
+        return null;
+    }
+
+    @Override
 	public <T> TransactionEventHandler<T> unregisterTransactionEventHandler(
 			TransactionEventHandler<T> arg0) {
 		return graphDb.unregisterTransactionEventHandler(arg0);

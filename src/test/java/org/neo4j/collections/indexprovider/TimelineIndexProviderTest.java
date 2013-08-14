@@ -70,6 +70,7 @@ public class TimelineIndexProviderTest {
 
     @Test
     public void testLoadIndex() {
+        db.beginTx();
         Map<String, String> config = TimelineIndexProvider.CONFIG;
         IndexManager indexMan = db.index();
         Index<Node> index = indexMan.forNodes("timeline1", config);
@@ -79,6 +80,7 @@ public class TimelineIndexProviderTest {
 
     @Test
     public void testLoadIndexWithRootNode() {
+        db.beginTx();
         Map<String, String> config = new HashMap<String, String>(TimelineIndexProvider.CONFIG);
         final Node startNode = db.getReferenceNode();
         config.put(TimelineNodeIndex.START_NODE_ID, String.valueOf(startNode.getId()));
@@ -92,11 +94,11 @@ public class TimelineIndexProviderTest {
 
     @Test
     public void testAddToIndex() throws Exception {
+        Transaction tx = db.beginTx();
         Map<String, String> config = TimelineIndexProvider.CONFIG;
         IndexManager indexMan = db.index();
         Index<Node> index = indexMan.forNodes("timeline1", config);
         assertNotNull(index);
-        Transaction tx = db.beginTx();
         Node n1 = db.createNode();
         n1.setProperty("time", 123);
         index.add(n1, "timestamp", 123L);
@@ -108,6 +110,8 @@ public class TimelineIndexProviderTest {
         index.add(n3, "timestamp", 124L);
         tx.success();
         tx.finish();
+
+        tx = db.beginTx();
         GraphvizWriter writer = new GraphvizWriter();
         writer.emit(System.out, Walker.fullGraph(db));
         IndexHits<Node> hits = index.get("timestamp", 123L);
@@ -118,7 +122,8 @@ public class TimelineIndexProviderTest {
         ExecutionEngine engine = new ExecutionEngine(db);
         ExecutionResult result = engine.execute("start n=node:timeline1('[100 TO 200]') return n");
         System.out.println(result.toString());
-
+        tx.success();
+        tx.finish();
     }
 
 }

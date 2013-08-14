@@ -26,12 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public abstract class Locker {
     public static Locker getInstance(GraphDatabaseService graphDatabaseService) {
-        try {
-            return newLockerInstance("Neo4j19Locker", graphDatabaseService);
-        } catch (Exception e) {
-            // ignore
-        }
-        return newLockerInstance("Neo4j18Locker", graphDatabaseService);
+        return new Neo4j19Locker(graphDatabaseService);
     }
 
     private static Locker newLockerInstance(String subClass, GraphDatabaseService graphDatabaseService) {

@@ -588,7 +588,7 @@ public class Timeline implements TimelineIndex
                     {
                         Relationship last = position.lastRelationshipTraversed();
                         if ( last != null
-                             && last.getType().equals(
+                             && last.isType(
                                      RelTypes.TIMELINE_INSTANCE ) )
                         {
                             return true;
@@ -693,7 +693,7 @@ public class Timeline implements TimelineIndex
                 }
                 Relationship last = position.lastRelationshipTraversed();
                 if ( !timeOk && last != null
-                     && last.getType().equals( RelTypes.TIMELINE_NEXT_ENTRY ) )
+                     && last.isType( RelTypes.TIMELINE_NEXT_ENTRY ) )
                 {
                     Node node = position.currentNode();
                     long currentTime = (Long) node.getProperty( TIMESTAMP );
@@ -701,7 +701,7 @@ public class Timeline implements TimelineIndex
                     return false;
                 }
                 if ( timeOk
-                     && last.getType().equals( RelTypes.TIMELINE_INSTANCE ) )
+                     && last.isType( RelTypes.TIMELINE_INSTANCE ) )
                 {
                     return true;
                 }
@@ -737,7 +737,7 @@ public class Timeline implements TimelineIndex
                 }
                 Relationship last = position.lastRelationshipTraversed();
                 if ( !timeOk && last != null
-                     && last.getType().equals( RelTypes.TIMELINE_NEXT_ENTRY ) )
+                     && last.isType( RelTypes.TIMELINE_NEXT_ENTRY ) )
                 {
                     Node node = position.currentNode();
                     long currentTime = (Long) node.getProperty( TIMESTAMP );
@@ -756,7 +756,7 @@ public class Timeline implements TimelineIndex
             {
                 Relationship last = position.lastRelationshipTraversed();
                 if ( last != null
-                     && last.getType().equals( RelTypes.TIMELINE_NEXT_ENTRY ) )
+                     && last.isType( RelTypes.TIMELINE_NEXT_ENTRY ) )
                 {
                     Node node = position.currentNode();
                     long currentTime = (Long) node.getProperty( TIMESTAMP );
@@ -770,7 +770,7 @@ public class Timeline implements TimelineIndex
             {
                 Relationship last = position.lastRelationshipTraversed();
                 if ( last != null
-                     && last.getType().equals( RelTypes.TIMELINE_INSTANCE ) )
+                     && last.isType( RelTypes.TIMELINE_INSTANCE) )
                 {
                     return true;
                 }
@@ -800,7 +800,7 @@ public class Timeline implements TimelineIndex
                     return true;
                 }
                 if ( last != null
-                     && last.getType().equals( RelTypes.TIMELINE_NEXT_ENTRY ) )
+                     && last.isType( RelTypes.TIMELINE_NEXT_ENTRY ) )
                 {
                     Node node = position.currentNode();
                     long currentTime = (Long) node.getProperty( TIMESTAMP );
@@ -820,7 +820,7 @@ public class Timeline implements TimelineIndex
                 }
                 Relationship last = position.lastRelationshipTraversed();
                 if ( !timeOk && last != null
-                     && last.getType().equals( RelTypes.TIMELINE_NEXT_ENTRY ) )
+                     && last.isType( RelTypes.TIMELINE_NEXT_ENTRY ) )
                 {
                     Node node = position.currentNode();
                     long currentTime = (Long) node.getProperty( TIMESTAMP );
@@ -828,7 +828,7 @@ public class Timeline implements TimelineIndex
                     return false;
                 }
                 if ( timeOk
-                     && last.getType().equals( RelTypes.TIMELINE_INSTANCE ) )
+                     && last.isType( RelTypes.TIMELINE_INSTANCE ) )
                 {
                     return true;
                 }

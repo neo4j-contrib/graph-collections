@@ -106,7 +106,7 @@ public class IndexedRelationshipExpander implements RelationshipExpander
                         Relationship relationship = path.lastRelationship();
                         if ( path.length() == 1 )
                         {
-                            if ( relationship.getType().equals( NodeCollection.RelationshipTypes.VALUE ) ) {
+                            if ( relationship.getType().name().equals( NodeCollection.RelationshipTypes.VALUE.name() ) ) {
                                 String relationshipType = (String) relationship.getProperty(
                                     IndexedRelationship.RELATIONSHIP_TYPE, null );
                                 String relationshipDirection = (String) relationship.getProperty(
@@ -122,7 +122,7 @@ public class IndexedRelationshipExpander implements RelationshipExpander
                             return Evaluation.EXCLUDE_AND_PRUNE;
                         }
 
-                        if ( relationship.getType().equals( IndexedRelationship.RelationshipTypes.NODE_COLLECTION ) )
+                        if ( relationship.getType().name().equals( IndexedRelationship.RelationshipTypes.NODE_COLLECTION.name() ) )
                         {
                             return Evaluation.INCLUDE_AND_PRUNE;
                         }

@@ -27,6 +27,8 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
+import java.util.Arrays;
+
 
 public abstract class SpatialTestCase extends Neo4jTestCase {
 
@@ -62,7 +64,8 @@ public abstract class SpatialTestCase extends Neo4jTestCase {
 //			ymin = ymax;
 //			ymax = ny;
 //		}
-    	node.setProperty("bbox", new double[] { xmin, ymin, xmax, ymax });		
+        System.out.println("node = " + Arrays.toString(new double[] { xmin, ymin, xmax, ymax }));
+        node.setProperty("bbox", new double[] { xmin, ymin, xmax, ymax });
     	return node;
 	}
 	
@@ -92,7 +95,7 @@ public abstract class SpatialTestCase extends Neo4jTestCase {
 		sb.append(obj);
 	}
 	
-	private void printTree(Node root, int depth) {
+	protected void printTree(Node root, int depth) {
 		StringBuffer tab = new StringBuffer();
 		for (int i = 0; i < depth; i++) {
 			tab.append("  ");
