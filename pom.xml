@@ -12,7 +12,7 @@
     <properties>
         <bundle.namespace>org.neo4j.collections</bundle.namespace>
         <short-name>collections</short-name>
-        <neo4j.version>2.0.0-M04</neo4j.version>
+        <neo4j.version>2.0.0-M05</neo4j.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
     </properties>
 

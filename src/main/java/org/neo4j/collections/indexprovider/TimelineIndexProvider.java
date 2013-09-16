@@ -32,6 +32,7 @@ import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.IndexProvider;
 import org.neo4j.graphdb.index.RelationshipIndex;
 import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.index.impl.lucene.LuceneDataSource;
 import org.neo4j.kernel.configuration.Config;
 
 public class TimelineIndexProvider extends IndexProvider
@@ -66,7 +67,7 @@ public class TimelineIndexProvider extends IndexProvider
         @Override
         public String getDataSourceName()
         {
-            return Config.DEFAULT_DATA_SOURCE_NAME;
+            return LuceneDataSource.DEFAULT_NAME;
         }
 
         @Override
