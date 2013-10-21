@@ -12,7 +12,7 @@
     <properties>
         <bundle.namespace>org.neo4j.collections</bundle.namespace>
         <short-name>collections</short-name>
-        <neo4j.version>2.0.0-M05</neo4j.version>
+        <neo4j.version>2.0.0-M06</neo4j.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
     </properties>
 
@@ -76,6 +76,14 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>

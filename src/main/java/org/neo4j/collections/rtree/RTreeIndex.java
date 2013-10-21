@@ -196,14 +196,11 @@ public class RTreeIndex implements SpatialIndexWriter {
 	
 	@Override
     public void clear(final Listener monitor) {
-        removeAll(false, new NullListener());
-        Transaction tx = database.beginTx();
-        try {
+        try (Transaction tx = database.beginTx()) {
+            removeAll(false, new NullListener());
             initIndexRoot();
             initIndexMetadata();            
             tx.success();
-        } finally {
-            tx.finish();
         }
     }
 	

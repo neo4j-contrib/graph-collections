@@ -37,6 +37,8 @@ import org.neo4j.graphdb.event.KernelEventHandler;
 import org.neo4j.graphdb.event.TransactionEventHandler;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.schema.Schema;
+import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
+import org.neo4j.graphdb.traversal.TraversalDescription;
 
 public class GraphDatabaseImpl implements DatabaseService {
 
@@ -273,7 +275,17 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return graphDb.index();
 	}
 
-	@Override
+    @Override
+    public TraversalDescription traversalDescription() {
+        return graphDb.traversalDescription();
+    }
+
+    @Override
+    public BidirectionalTraversalDescription bidirectionalTraversalDescription() {
+        return graphDb.bidirectionalTraversalDescription();
+    }
+
+    @Override
 	public KernelEventHandler registerKernelEventHandler(KernelEventHandler arg0) {
 		return graphDb.registerKernelEventHandler(arg0);
 	}
