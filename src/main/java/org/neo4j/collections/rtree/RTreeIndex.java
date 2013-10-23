@@ -206,7 +206,11 @@ public class RTreeIndex implements SpatialIndexWriter {
 	
 	@Override
 	public Envelope getBoundingBox() {
-		return getIndexNodeEnvelope(getIndexRoot());
+        try (Transaction tx = database.beginTx()) {
+            Envelope result = getIndexNodeEnvelope(getIndexRoot());
+            tx.success();
+            return result;
+        }
 	}
 	
 	@Override
@@ -306,7 +310,7 @@ public class RTreeIndex implements SpatialIndexWriter {
 	}
 	
 	public Node getIndexRoot() {
-		return getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_ROOT, Direction.OUTGOING).getEndNode();
+        return getRootNode().getSingleRelationship(RTreeRelationshipTypes.RTREE_ROOT, Direction.OUTGOING).getEndNode();
 	}
 	
 		
@@ -342,7 +346,6 @@ public class RTreeIndex implements SpatialIndexWriter {
 		
 		double[] bbox = (double[]) indexNode.getProperty(PROP_BBOX);
     	// Envelope parameters: xmin, xmax, ymin, ymax
-        System.out.println("bbox = " + Arrays.toString(bbox));
         return new Envelope(bbox[0], bbox[2], bbox[1], bbox[3]);
 	}
 		
