@@ -4,7 +4,7 @@
 
     <groupId>org.neo4j</groupId>
     <artifactId>neo4j-graph-collections</artifactId>
-    <version>0.6-neo4j-1.9-SNAPSHOT</version>
+    <version>0.6-neo4j-1.9.5</version>
     <name>Neo4j - Collections</name>
     <description>Providing in-graph collections.</description>
     <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
@@ -12,7 +12,7 @@
     <properties>
         <bundle.namespace>org.neo4j.collections</bundle.namespace>
         <short-name>collections</short-name>
-        <neo4j.version>1.9</neo4j.version>
+        <neo4j.version>1.9.5</neo4j.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
     </properties>
 
@@ -94,6 +94,15 @@
                 <artifactId>maven-gpg-plugin</artifactId>
                 <configuration>
                     <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
         </plugins>
