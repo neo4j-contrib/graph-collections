@@ -108,21 +108,17 @@
         </plugins>
 
     </build>
-
-  <distributionManagement>
-    <repository>
-      <id>releases@repo.neo4j.org</id>
-      <name>releases@repo.neo4j.org</name>
-      <uniqueVersion>false</uniqueVersion>
-      <url>http://m2.neo4j.org/content/repositories/releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>snapshots@repo.neo4j.org</id>
-      <name>snapshots@repo.neo4j.org</name>
-      <uniqueVersion>false</uniqueVersion>
-      <url>http://m2.neo4j.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
+    
+    <distributionManagement>
+        <repository>
+            <id>repo</id>
+            <url>https://raw.github.com/neo4j-contrib/m2/master/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshot-repo</id>
+            <url>https://raw.github.com/neo4j-contrib/m2/master/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>
 
