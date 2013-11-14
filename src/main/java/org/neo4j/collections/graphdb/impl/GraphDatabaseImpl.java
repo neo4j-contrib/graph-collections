@@ -296,4 +296,8 @@ public class GraphDatabaseImpl implements DatabaseService {
 		return graphDb.unregisterTransactionEventHandler(arg0);
 	}
 
+	public boolean isAvailable(long l) {
+		return graphDb.isAvailable(l);
+	}
+
 }
