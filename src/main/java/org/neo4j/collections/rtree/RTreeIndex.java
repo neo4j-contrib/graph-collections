@@ -840,8 +840,12 @@ public class RTreeIndex implements SpatialIndexWriter {
 
 	
 	// Attributes
-	
-	private GraphDatabaseService database;
+
+    public GraphDatabaseService getDatabase() {
+        return database;
+    }
+
+    private GraphDatabaseService database;
 	
 	private Node rootNode;
 	private EnvelopeDecoder envelopeDecoder;	
