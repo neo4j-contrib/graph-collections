@@ -20,6 +20,7 @@
 package org.neo4j.collections.btree;
 
 import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import org.neo4j.collections.btree.AbstractBTree.RelTypes;
 import org.neo4j.graphdb.Direction;
@@ -160,7 +161,7 @@ class TreeNode
 		    AbstractGraphDatabase graphDb = (AbstractGraphDatabase) bTree.getGraphDb();
             try
             {
-                Transaction tx = graphDb.getTxManager().getTransaction();
+                Transaction tx = graphDb.getDependencyResolver().resolveDependency(TransactionManager.class).getTransaction();
                 if ( tx != null )
                 {
                     tx.commit();

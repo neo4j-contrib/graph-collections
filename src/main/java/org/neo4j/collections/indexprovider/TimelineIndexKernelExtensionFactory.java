@@ -24,12 +24,10 @@ import org.neo4j.graphdb.index.IndexProviders;
 import org.neo4j.kernel.extension.KernelExtensionFactory;
 import org.neo4j.kernel.lifecycle.Lifecycle;
 
-import static org.neo4j.collections.indexprovider.TimelineIndexProvider.TimelineIndexImplementation;
-
 public class TimelineIndexKernelExtensionFactory extends KernelExtensionFactory<TimelineIndexKernelExtensionFactory.Depencies> {
 
     public TimelineIndexKernelExtensionFactory() {
-        super(TimelineIndexProvider.SERVICE_NAME);
+        super(TimelineNodeIndex.SERVICE_NAME);
     }
 
     @Override
@@ -60,12 +58,12 @@ public class TimelineIndexKernelExtensionFactory extends KernelExtensionFactory<
         @Override
         public void start() throws Throwable {
             TimelineIndexImplementation indexImplementation = new TimelineIndexImplementation(graphDatabaseService);
-            indexProviders.registerIndexProvider(TimelineIndexProvider.SERVICE_NAME, indexImplementation);
+            indexProviders.registerIndexProvider(TimelineNodeIndex.SERVICE_NAME, indexImplementation);
         }
 
         @Override
         public void stop() throws Throwable {
-            indexProviders.unregisterIndexProvider(TimelineIndexProvider.SERVICE_NAME);
+            indexProviders.unregisterIndexProvider(TimelineNodeIndex.SERVICE_NAME);
         }
 
         @Override

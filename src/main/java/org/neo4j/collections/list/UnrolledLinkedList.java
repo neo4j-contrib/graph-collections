@@ -527,7 +527,7 @@ public class UnrolledLinkedList implements NodeCollection
         try {
             if (graphDatabaseService instanceof GraphDatabaseAPI) {
                 GraphDatabaseAPI graphDatabaseAPI = (GraphDatabaseAPI) graphDatabaseService;
-                TransactionManager txManager = graphDatabaseAPI.getTxManager();
+                TransactionManager txManager = graphDatabaseAPI.getDependencyResolver().resolveDependency(TransactionManager.class);
                 return (Transaction)txManager.getTransaction();
                 
             }

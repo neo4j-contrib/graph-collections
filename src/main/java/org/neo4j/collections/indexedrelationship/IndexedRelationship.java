@@ -296,13 +296,6 @@ public class IndexedRelationship implements Iterable<Relationship>
         }
 
         @Override
-        @Deprecated
-        public Iterable<Object> getPropertyValues()
-        {
-            return keyValueRelationship.getPropertyValues();
-        }
-
-        @Override
         public boolean hasProperty( String key )
         {
             return keyValueRelationship.hasProperty( key );

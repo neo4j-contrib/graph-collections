@@ -37,6 +37,8 @@ import org.neo4j.graphdb.Traverser;
 import org.neo4j.graphdb.Traverser.Order;
 import org.neo4j.kernel.AbstractGraphDatabase;
 
+import javax.transaction.TransactionManager;
+
 
 /**
  * An implementation of {@link TimelineIndex} on top of Neo4j, using
@@ -891,7 +893,8 @@ public class Timeline implements TimelineIndex
     private void restartTx() {
             try
             {
-                javax.transaction.Transaction tx = ((AbstractGraphDatabase)graphDb).getTxManager().getTransaction();
+                TransactionManager transactionManager = ((AbstractGraphDatabase) graphDb).getDependencyResolver().resolveDependency(TransactionManager.class);
+                javax.transaction.Transaction tx = transactionManager.getTransaction();
                 if ( tx != null )
                 {
                     tx.commit();

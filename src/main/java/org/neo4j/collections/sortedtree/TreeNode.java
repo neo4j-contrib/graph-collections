@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import org.neo4j.collections.NodeCollection;
 import org.neo4j.collections.graphdb.PropertyComparator;
@@ -147,7 +148,7 @@ class TreeNode {
 			AbstractGraphDatabase graphDb = (AbstractGraphDatabase) bTree
 					.getGraphDb();
 			try {
-				Transaction tx = graphDb.getTxManager().getTransaction();
+				Transaction tx = graphDb.getDependencyResolver().resolveDependency(TransactionManager.class).getTransaction();
 				if (tx != null) {
 					tx.commit();
 				}

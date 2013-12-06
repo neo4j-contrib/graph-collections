@@ -20,6 +20,7 @@
 package org.neo4j.collections.indexprovider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.graphdb.index.IndexManager;
+import org.neo4j.helpers.collection.MapUtil;
 
 public class TimelineNodeIndex implements Index<Node>
 {
@@ -36,6 +39,9 @@ public class TimelineNodeIndex implements Index<Node>
 
     public static final String TIMESTAMP = "timestamp";
     public static final String START_NODE_ID = "start_node_id";
+    public static final String SERVICE_NAME = "graph-collections-timeline";
+    public static final Map<String, String> CONFIG = Collections.unmodifiableMap(MapUtil.stringMap(
+            IndexManager.PROVIDER, SERVICE_NAME));
     private Timeline timeline;
     private final String indexName;
 

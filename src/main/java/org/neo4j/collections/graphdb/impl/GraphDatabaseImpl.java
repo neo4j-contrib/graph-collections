@@ -199,16 +199,6 @@ public class GraphDatabaseImpl implements DatabaseService {
 	}
 
 	@Override
-	public Node getReferenceNode() {
-		return graphDb.getReferenceNode();
-	}
-
-	@Override
-	public Vertex getReferenceVertex() {
-		return new VertexImpl(this, getGraphDatabaseService().getReferenceNode().getId());
-	}
-
-	@Override
 	public Relationship getRelationshipById(long id) {
 		return graphDb.getRelationshipById(id);
 	}
@@ -312,6 +302,11 @@ public class GraphDatabaseImpl implements DatabaseService {
     @Override
     public Schema schema() {
         return null;
+    }
+
+    @Override
+    public boolean isAvailable(long timeout) {
+        return graphDb.isAvailable(timeout);
     }
 
     @Override

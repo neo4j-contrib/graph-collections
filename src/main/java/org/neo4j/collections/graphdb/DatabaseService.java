@@ -32,8 +32,6 @@ public interface DatabaseService extends GraphDatabaseService{
 
 	public Iterable<Vertex> getAllVertices();
 
-	public Vertex getReferenceVertex();
-	
 	public Vertex getVertex(Node node);
 	
 	public VertexType getRootType();

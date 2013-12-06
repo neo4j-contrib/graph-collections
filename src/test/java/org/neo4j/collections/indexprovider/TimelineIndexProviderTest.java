@@ -71,7 +71,7 @@ public class TimelineIndexProviderTest {
     @Test
     public void testLoadIndex() {
         db.beginTx();
-        Map<String, String> config = TimelineIndexProvider.CONFIG;
+        Map<String, String> config = TimelineNodeIndex.CONFIG;
         IndexManager indexMan = db.index();
         Index<Node> index = indexMan.forNodes("timeline1", config);
         assertNotNull(index);
@@ -81,7 +81,7 @@ public class TimelineIndexProviderTest {
     @Test
     public void testLoadIndexWithRootNode() {
         db.beginTx();
-        Map<String, String> config = new HashMap<String, String>(TimelineIndexProvider.CONFIG);
+        Map<String, String> config = new HashMap<String, String>(TimelineNodeIndex.CONFIG);
         final Node startNode = db.getReferenceNode();
         config.put(TimelineNodeIndex.START_NODE_ID, String.valueOf(startNode.getId()));
         IndexManager indexMan = db.index();
@@ -95,7 +95,7 @@ public class TimelineIndexProviderTest {
     @Test
     public void testAddToIndex() throws Exception {
         Transaction tx = db.beginTx();
-        Map<String, String> config = TimelineIndexProvider.CONFIG;
+        Map<String, String> config = TimelineNodeIndex.CONFIG;
         IndexManager indexMan = db.index();
         Index<Node> index = indexMan.forNodes("timeline1", config);
         assertNotNull(index);
