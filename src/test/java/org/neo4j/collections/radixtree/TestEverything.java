@@ -25,6 +25,7 @@ import static org.junit.Assert.assertFalse;
 import java.util.List;
 
 import org.junit.Test;
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.graphdb.Node;
 
 
@@ -44,7 +45,7 @@ public class TestEverything extends RadixTreeTestCase {
 			"rubicundus",
 			"romulus" });
 		
-		debugIndexTree(index, graphDb().getReferenceNode());  
+		debugIndexTree(index, ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode());  
 
 		String[] users = new String[] {
 				"RoadGeek_MD99",

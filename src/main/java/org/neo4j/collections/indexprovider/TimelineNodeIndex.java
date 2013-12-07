@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.collections.timeline.Timeline;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -49,18 +50,18 @@ public class TimelineNodeIndex implements Index<Node>
             Map<String, String> config )
     {
         this.indexName = indexName;
-        Transaction tx = db.beginTx();
+//        Transaction tx = db.beginTx();
         Node underlyingNode = getOrCreateStartNode(db, config);
         timeline = new Timeline( indexName, underlyingNode, false, db );
-        tx.success();
-        tx.finish();
+//        tx.success();
+//        tx.finish();
     }
 
     private Node getOrCreateStartNode(GraphDatabaseService db, Map<String, String> config) {
         if (underlyingNodeWasProvided(config)) {
             return db.getNodeById(Long.parseLong(config.get(START_NODE_ID)));
         }
-        return db.getReferenceNode();
+        return ReferenceNodes.getOrCreateInstance(db).getReferenceNode();
     }
 
     private boolean underlyingNodeWasProvided(Map<String, String> config) {

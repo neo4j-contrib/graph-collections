@@ -28,13 +28,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.*;
 import org.neo4j.collections.graphdb.DatabaseService;
 import org.neo4j.collections.graphdb.impl.EmbeddedGraphDatabase;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.test.TestGraphDatabaseFactory;
 
 public abstract class Neo4jTestCase
 {

@@ -20,6 +20,7 @@
 package org.neo4j.collections.radixtree;
 
 import org.neo4j.collections.Neo4jTestCase;
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -34,7 +35,7 @@ public abstract class RadixTreeTestCase extends Neo4jTestCase {
 	}
 	
 	protected RadixTree createIndex() {
-		return new RadixTreeImpl(graphDb(), graphDb().getReferenceNode());
+		return new RadixTreeImpl(graphDb(), ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode());
 	}
 	
 	public static void debugIndexTree(RadixTree index, Node rootNode) {

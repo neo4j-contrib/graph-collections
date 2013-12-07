@@ -20,6 +20,7 @@
 package org.neo4j.collections.graphdb.impl;
 
 import org.neo4j.collections.graphdb.DatabaseService;
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.collections.graphdb.VertexType;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -113,7 +114,7 @@ public class VertexTypeImpl extends VertexImpl implements VertexType {
 	}
 
 	private static Node getOrCreateTypeSubRef(DatabaseService db) {
-        Node refNode = db.getReferenceNode();
+        Node refNode = ReferenceNodes.getOrCreateInstance(db).getReferenceNode();
 		RelationshipType relType = RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_TYPE_SUBREF;
 		if (refNode.hasRelationship(relType, Direction.OUTGOING)) {
 			return refNode.getSingleRelationship(relType, Direction.OUTGOING)

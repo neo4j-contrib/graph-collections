@@ -21,6 +21,7 @@ package org.neo4j.collections.rtree;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.graphdb.Node;
 
 
@@ -30,8 +31,9 @@ public class TestRemove extends SpatialTestCase {
     @Ignore("Bug in Neo4j")
 	public void testAddMoreThanMaxNodeRefThenDeleteAll() throws Exception {
 		int rtreeMaxNodeReferences = 100;
-		
-		RTreeIndex index = new RTreeIndex(graphDb(), graphDb().getReferenceNode(), 
+
+        Node referenceNode = ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode();
+        RTreeIndex index = new RTreeIndex(graphDb(), referenceNode, 
 				new EnvelopeDecoderFromDoubleArray("bbox"), rtreeMaxNodeReferences);
 		
         long[] ids = new long[rtreeMaxNodeReferences + 1];
@@ -42,17 +44,17 @@ public class TestRemove extends SpatialTestCase {
         	assertEnvelopeEquals(new Envelope(0, i + 1, 0, i + 1), index.getBoundingBox());
         }
 
-        debugIndexTree(index, graphDb().getReferenceNode());        
+        debugIndexTree(index, referenceNode);        
         
         for (int i = 0; i < ids.length; i++) {
         	System.out.println("removing " + new Envelope(i, i + 1, i, i + 1));
-        	debugIndexTree(index, graphDb().getReferenceNode());
+        	debugIndexTree(index, referenceNode);
         	assertEnvelopeEquals(new Envelope(i, 101, i, 101), index.getBoundingBox());
         	index.remove(ids[i], true);
         }
         
         assertEnvelopeEquals(new Envelope(0, 0, 0, 0), index.getBoundingBox());
         
-        debugIndexTree(index, graphDb().getReferenceNode());
+        debugIndexTree(index, referenceNode);
     }
 }

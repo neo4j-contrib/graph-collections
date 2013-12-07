@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.neo4j.collections.Neo4jTestCase;
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -44,7 +45,7 @@ public abstract class SpatialTestCase extends Neo4jTestCase {
 	}	
 	
 	protected RTreeIndex createIndex() {
-		return new RTreeIndex(graphDb(), graphDb().getReferenceNode(), 
+		return new RTreeIndex(graphDb(), ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode(), 
 				new EnvelopeDecoderFromDoubleArray("bbox"));
 	}
 

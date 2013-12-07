@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.collections.rtree.filter.SearchCoveredByEnvelope;
 import org.neo4j.collections.rtree.filter.SearchEqualEnvelopes;
 import org.neo4j.collections.rtree.filter.SearchFilter;
@@ -35,7 +36,7 @@ public class TestSearch extends SpatialTestCase {
 	
 	@Test
 	public void myFirstTest() {
-		RTreeIndex index = new RTreeIndex(graphDb(), graphDb().getReferenceNode(), 
+		RTreeIndex index = new RTreeIndex(graphDb(), ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode(), 
 				new EnvelopeDecoderFromDoubleArray("bbox"));
 
 		assertTrue(index.isEmpty());
@@ -79,7 +80,7 @@ public class TestSearch extends SpatialTestCase {
 		index.clear(new NullListener());
 		assertEquals(0, index.count());
 		
-		debugIndexTree(index, graphDb().getReferenceNode());
+		debugIndexTree(index, ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode());
 	}
 
 }

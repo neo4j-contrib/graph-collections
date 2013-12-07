@@ -40,6 +40,7 @@ package org.neo4j.collections.indexprovider;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.collections.timeline.Timeline;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
@@ -65,7 +66,7 @@ public class TimelineIndexProviderTest {
     @Before
     public void setup() throws Exception {
         db = new ImpermanentGraphDatabase();
-        db.cleanContent(true);
+        db.cleanContent();
     }
 
     @Test
@@ -82,7 +83,7 @@ public class TimelineIndexProviderTest {
     public void testLoadIndexWithRootNode() {
         db.beginTx();
         Map<String, String> config = new HashMap<String, String>(TimelineNodeIndex.CONFIG);
-        final Node startNode = db.getReferenceNode();
+        final Node startNode = ReferenceNodes.getOrCreateInstance(db).getReferenceNode();
         config.put(TimelineNodeIndex.START_NODE_ID, String.valueOf(startNode.getId()));
         IndexManager indexMan = db.index();
         Index<Node> index = indexMan.forNodes("timeline1", config);
