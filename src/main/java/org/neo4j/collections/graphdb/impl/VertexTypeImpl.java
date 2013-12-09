@@ -114,7 +114,7 @@ public class VertexTypeImpl extends VertexImpl implements VertexType {
 	}
 
 	private static Node getOrCreateTypeSubRef(DatabaseService db) {
-        Node refNode = ReferenceNodes.getOrCreateInstance(db).getReferenceNode();
+        Node refNode = ReferenceNodes.getReferenceNode(db);
 		RelationshipType relType = RelTypes.ORG_NEO4J_COLLECTIONS_GRAPHDB_TYPE_SUBREF;
 		if (refNode.hasRelationship(relType, Direction.OUTGOING)) {
 			return refNode.getSingleRelationship(relType, Direction.OUTGOING)

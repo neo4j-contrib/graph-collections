@@ -83,7 +83,7 @@ public class TimelineIndexProviderTest {
     public void testLoadIndexWithRootNode() {
         db.beginTx();
         Map<String, String> config = new HashMap<String, String>(TimelineNodeIndex.CONFIG);
-        final Node startNode = ReferenceNodes.getOrCreateInstance(db).getReferenceNode();
+        final Node startNode = ReferenceNodes.getReferenceNode(db);
         config.put(TimelineNodeIndex.START_NODE_ID, String.valueOf(startNode.getId()));
         IndexManager indexMan = db.index();
         Index<Node> index = indexMan.forNodes("timeline1", config);

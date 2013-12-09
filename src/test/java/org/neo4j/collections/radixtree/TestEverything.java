@@ -45,7 +45,7 @@ public class TestEverything extends RadixTreeTestCase {
 			"rubicundus",
 			"romulus" });
 		
-		debugIndexTree(index, ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode());  
+		debugIndexTree(index, ReferenceNodes.getReferenceNode(graphDb()));
 
 		String[] users = new String[] {
 				"RoadGeek_MD99",

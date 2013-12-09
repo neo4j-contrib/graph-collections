@@ -32,7 +32,7 @@ public class TestRemove extends SpatialTestCase {
 	public void testAddMoreThanMaxNodeRefThenDeleteAll() throws Exception {
 		int rtreeMaxNodeReferences = 100;
 
-        Node referenceNode = ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode();
+        Node referenceNode = ReferenceNodes.getReferenceNode(graphDb());
         RTreeIndex index = new RTreeIndex(graphDb(), referenceNode, 
 				new EnvelopeDecoderFromDoubleArray("bbox"), rtreeMaxNodeReferences);
 		

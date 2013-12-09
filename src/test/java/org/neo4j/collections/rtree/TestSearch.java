@@ -36,7 +36,7 @@ public class TestSearch extends SpatialTestCase {
 	
 	@Test
 	public void myFirstTest() {
-		RTreeIndex index = new RTreeIndex(graphDb(), ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode(), 
+		RTreeIndex index = new RTreeIndex(graphDb(), ReferenceNodes.getReferenceNode(graphDb()),
 				new EnvelopeDecoderFromDoubleArray("bbox"));
 
 		assertTrue(index.isEmpty());
@@ -80,7 +80,7 @@ public class TestSearch extends SpatialTestCase {
 		index.clear(new NullListener());
 		assertEquals(0, index.count());
 		
-		debugIndexTree(index, ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode());
+		debugIndexTree(index, ReferenceNodes.getReferenceNode(graphDb()));
 	}
 
 }

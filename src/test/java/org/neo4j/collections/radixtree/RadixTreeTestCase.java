@@ -35,7 +35,7 @@ public abstract class RadixTreeTestCase extends Neo4jTestCase {
 	}
 	
 	protected RadixTree createIndex() {
-		return new RadixTreeImpl(graphDb(), ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode());
+		return new RadixTreeImpl(graphDb(), ReferenceNodes.getReferenceNode(graphDb()));
 	}
 	
 	public static void debugIndexTree(RadixTree index, Node rootNode) {

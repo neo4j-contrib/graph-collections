@@ -28,6 +28,7 @@ import org.neo4j.collections.rtree.filter.SearchCoveredByEnvelope;
 import org.neo4j.collections.rtree.filter.SearchEqualEnvelopes;
 import org.neo4j.collections.rtree.filter.SearchFilter;
 import org.neo4j.collections.rtree.filter.SearchResults;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 
@@ -35,7 +36,8 @@ public class TestSearchFilter extends SpatialTestCase {
 	
 	@Test
 	public void searchIndexWithFilter() {
-		RTreeIndex index = new RTreeIndex(graphDb(), ReferenceNodes.getOrCreateInstance(graphDb()).getReferenceNode(),  
+        GraphDatabaseService db = graphDb();
+        RTreeIndex index = new RTreeIndex(db, ReferenceNodes.getReferenceNode(db),
 				new EnvelopeDecoderFromDoubleArray("bbox"));
 
 		// equal bbox test

@@ -28,7 +28,6 @@ import org.neo4j.collections.graphdb.ReferenceNodes;
 import org.neo4j.collections.timeline.Timeline;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.IndexManager;
@@ -61,7 +60,7 @@ public class TimelineNodeIndex implements Index<Node>
         if (underlyingNodeWasProvided(config)) {
             return db.getNodeById(Long.parseLong(config.get(START_NODE_ID)));
         }
-        return ReferenceNodes.getOrCreateInstance(db).getReferenceNode();
+        return ReferenceNodes.getReferenceNode(db);
     }
 
     private boolean underlyingNodeWasProvided(Map<String, String> config) {
