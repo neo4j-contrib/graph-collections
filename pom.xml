@@ -13,7 +13,7 @@
     <properties>
         <bundle.namespace>org.neo4j.collections</bundle.namespace>
         <short-name>collections</short-name>
-        <neo4j.version>2.0.0-RC1</neo4j.version>
+        <neo4j.version>2.0.0</neo4j.version>
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>1.4</maven-gpg-plugin.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
