@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.neo4j</groupId>
     <artifactId>neo4j-graph-collections</artifactId>
-    <version>0.7.1-neo4j-2.0.0</version>
+    <version>0.7.1-neo4j-2.0.2</version>
     <name>Neo4j - Collections</name>
     <description>Providing in-graph collections.</description>
     <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
@@ -13,7 +12,7 @@
     <properties>
         <bundle.namespace>org.neo4j.collections</bundle.namespace>
         <short-name>collections</short-name>
-        <neo4j.version>2.0.0</neo4j.version>
+        <neo4j.version>2.0.2</neo4j.version>
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>1.4</maven-gpg-plugin.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
@@ -25,7 +24,8 @@
         <url>https://github.com/neo4j/graph-collections</url>
         <connection>scm:git:git://github.com/neo4j/graph-collections.git</connection>
         <developerConnection>scm:git:git@github.com:neo4j/graph-collections.git</developerConnection>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
     <licenses>
         <license>
             <name>GNU General Public License, Version 3</name>
