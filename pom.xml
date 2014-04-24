@@ -4,7 +4,7 @@
 
     <groupId>org.neo4j</groupId>
     <artifactId>neo4j-graph-collections</artifactId>
-    <version>0.7.1-neo4j-2.0.2</version>
+    <version>0.7.2-neo4j-2.0.2</version>
     <name>Neo4j - Collections</name>
     <description>Providing in-graph collections.</description>
     <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
