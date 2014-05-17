@@ -82,6 +82,24 @@ public class SortedTree implements NodeCollection//Iterable<Relationship>
     }
 
     /**
+     * Instantiate a previously stored SortedTree with specific comparator.
+     *
+     * This constructor is necessary to subclass SortedTree from JRuby (ie. Pacer).
+     *
+     * @param baseNode the base node of the sorted tree.
+     * @param nodeComparator the {@link java.util.Comparator} to use to sort the nodes.
+     */
+    public SortedTree(Node baseNode, Comparator<Node> nodeComparator)
+    {
+        this.baseNode = baseNode;
+        this.nodeComparator = nodeComparator;
+        Relationship rel = baseNode.getSingleRelationship( RelTypes.TREE_ROOT, Direction.OUTGOING );
+        this.treeName = (String) rel.getProperty( TREE_NAME );
+        this.isUniqueIndex = (Boolean) rel.getProperty( IS_UNIQUE_INDEX );
+        this.treeRoot = new TreeNode( this, rel.getEndNode() );
+    }
+
+    /**
      * Create a new sorted tree within the graph database.
      * 
 	 * @param graphDb the {@link org.neo4j.graphdb.GraphDatabaseService} instance.
