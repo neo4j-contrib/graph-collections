@@ -47,13 +47,20 @@ import org.neo4j.helpers.collection.IteratorUtil;
 import static org.neo4j.helpers.collection.MapUtil.map;
 
 public class ReferenceNodes {
+
+    private static ExecutionEngine engine;
+    private static GraphDatabaseService dbRef;
+
     public static Node getReferenceNode(GraphDatabaseService db) {
         return getReferenceNode(db, "rtree");
     }
 
     public static Node getReferenceNode(GraphDatabaseService db, String name) {
-        ExecutionEngine engine = new ExecutionEngine(db);
-        ExecutionResult result = engine.execute("MERGE (ref:ReferenceNode {name:{name}}) RETURN ref",map("name", name));
+        if (engine == null || db != dbRef) {
+            engine = new ExecutionEngine(db);
+            ReferenceNodes.dbRef = db;
+        }
+        ExecutionResult result = engine.execute("MERGE (ref:ReferenceNode {name:{name}}) RETURN ref", map("name", name));
         return IteratorUtil.single(result.<Node>columnAs("ref"));
     }
 }
